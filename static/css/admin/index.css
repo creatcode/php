@@ -1,0 +1,822 @@
+#content-wrapper {
+    padding: 0;
+}
+#admin-main {
+    height: 100%;
+    position: relative;
+}
+
+#dashboard {
+    height: 52px;
+    background: #FFF;
+    border-bottom: 1px solid #CCC;
+}
+#dashboard-content {
+    overflow: hidden;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 52px;
+    bottom: 0;
+}
+@media (max-width: 767px) {
+    #dashboard-content {
+        top: 0;
+    }
+}
+#map-n-statistics {
+    overflow: hidden;
+    height: 100%;
+}
+
+#map-toolbar {
+    background: #FCFCFC;
+    padding: 0 5px;
+    box-shadow: 0 0 3px 0px #333333;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    max-height: 40px;
+    white-space : nowrap;
+}
+
+#map-toolbar > div {
+    display: inline-block;
+    margin-right: 5px;
+}
+.cooperator-selecter {
+    border: none;
+    font-size: 14px;
+    vertical-align: baseline;
+    background-color:white;
+}
+.region-selecter {
+    border: none;
+    font-size: 14px;
+    vertical-align: baseline;
+    background-color:white;
+}
+.br-after-region-selecter {
+    display: none;
+}
+#map {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: 40px;
+    bottom: 80px;
+}
+#map-toolbar .btn-alert > i {
+    position: relative;
+    color: #666;
+}
+
+#map-toolbar .btn-alert > i > em {
+    font-size: 9px;
+    display: block;
+    padding: 5px 3px;
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    text-decoration: none;
+    font-style: normal;
+    background: #ED1C24;
+    color: #fff;
+    min-width: 13px;
+    border-radius: 13px;
+    max-height: 13px;
+    line-height: 8px;
+    font-weight: 700;
+    vertical-align: baseline;
+    white-space: nowrap;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,1);
+    box-sizing: content-box;
+}
+#treeview {
+    width: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+}
+.dropdown-menu > ul {
+    margin-bottom: 0;
+}
+#server-time {
+    display: inline-block;
+    margin: 10px 0;
+    padding: 0 5px;
+    line-height: 20px;
+    border-radius: 5px;
+    background: #EEEEEE;
+    font-size: 9px;
+}
+.skin-blue .sidebar-form {
+    border-color: #e2e2e2;
+    margin: 10px 15px;
+}
+
+.skin-blue .sidebar-form input[type="text"], .skin-blue .sidebar-form .btn {
+    /*background-color: #fff;*/
+}
+
+h1.dashboard-title {
+    font-size: 20px;
+    margin: 5px 0;
+}
+.col-sm-3 h1.dashboard-title {
+    font-size: 16px;
+}
+
+h1.dashboard-title span {
+    display: block;
+    font-size: 14px;
+    line-height: 20px;
+    color: #AAA;
+    margin-left: 32px;
+}
+.col-sm-3 h1.dashboard-title span {
+    margin-left: 26px;
+}
+
+#sparks {
+    display: block;
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    text-align: right;
+}
+#sparks li {
+    display: inline-block;
+    max-height: 47px;
+    overflow: hidden;
+    text-align: left;
+    box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box;
+}
+#sparks li {
+    border-left: 1px dotted #c7c7c7;
+    padding: 0 10px;
+}
+#sparks li:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+.sparks-info {
+    min-width: 70px;
+}
+#sparks li h5 {
+    color: #555;
+    float: left;
+    font-size: 11px;
+    font-weight: 400;
+    margin: -3px 0 0 0;
+    padding: 0;
+    border: none;
+    text-transform: uppercase;
+    line-height: normal;
+}
+#sparks li span {
+    color: #636363;
+    display: block;
+}
+.sparks-info span {
+    font-size: 18px;
+    line-height: 20px;
+    margin: 0;
+    text-transform: none;
+}
+.sparks-info .sparkline {
+    display: block;
+    float: right;
+    margin: 3px 0 0 20px;
+}
+.txt-color-blue {
+    color: #57889c !important;
+}
+.txt-color-purple {
+    color: #6e587a !important;
+}
+.txt-color-greenDark {
+    color: #496949 !important;
+}
+.txt-color-orangeDark{
+    color:#a57225 !important;
+}
+#bikes {
+    border-left: 2px solid #ccc;
+    height: 100%;
+    background-color: #f5f5f5;
+}
+@media (min-width: 768px) {
+    #map-n-statistics {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 200px;
+    }
+    #bikes {
+        width: 200px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+}
+/*#bikes > form {
+    margin:5px 0 0;
+}
+.skin-blue .sidebar-form {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+}*/
+#bikes .show-bike-type-select {
+    margin-right: 0;
+}
+#bikes .show-bike-type-select > button {
+    font-size: 14px;
+    width: 100%;
+    text-align: left;
+    border-bottom: 1px solid #cccccc;
+    border-radius: 0px;
+    padding: 10px;
+    outline: none;
+}
+
+#bikes .show-bike-type-select > button .caret {
+    margin-top: 10px;
+}
+
+#bikes .show-bike-type-select .checkbox {
+    margin: 5px 0;
+}
+
+#bikes .show-bike-type-select .checkbox label {
+    width: 100%;
+}
+
+#bikes .btn-no-border:hover,#bikes .btn-no-border:active, #bikes .btn-no-border:focus,#bikes .btn-no-border.focus, #bikes .open>.dropdown-toggle.btn-default{
+    border-color: transparent;
+    border-bottom: 1px solid #cccccc;
+}
+
+.bike-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.bike-list li {
+    padding: 5px 10px;
+    border-bottom: 1px solid #e2e2e2;
+    width: 100%;
+    cursor: pointer;
+}
+.bike-list li:hover {
+    background: #a3d0ef;
+}
+
+#statistics {
+    background: #FFFFFF;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 80px;
+    box-shadow: 0 0 3px 0px #333333;
+}
+#statistics > div > * {
+    display: inline-block;
+}
+#statistics ul li {
+    display: inline-block;
+    margin-right: 20px;
+}
+#statistics ul li > div {
+    display: inline-block;
+    vertical-align: bottom;
+}
+.statistics-block-title {
+    font-size: 16px;
+    font-weight: bold;
+    width: 60px;
+    height: 60px;
+    line-height: 56px;
+    border: 2px solid #333333;
+    color: #333333;
+    border-radius: 30px;
+    text-align: center;
+    margin-top: 10px;
+}
+.statistics-block {
+    height: 60px;
+    border-right: 1px solid #CCCCCC;
+    padding-right: 10px;
+    text-align: right;
+}
+.statistics-block.tow-lines-block {
+    line-height: 30px;
+}
+.statistics-block.three-lines-block {
+    line-height: 20px;
+}
+#statistics ul li:last-child .statistics-block {
+    border-right: none;
+}
+
+.bike-info {
+    font-size: 12px;
+    box-shadow: 0 0 0.5px rgba(0,0,100,.6);
+    background: #fff;
+    border-radius: 2px;
+    text-align: left;
+    border: 1px solid silver;
+}
+.bike-info-title {
+    font-size: 14px;
+    background-color: #404045;
+    line-height: 26px;
+    padding: 0px 0 0 6px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #FFF;
+}
+ul.bike-info-tabs {
+    padding: 0;
+    margin: 0;
+}
+.bike-info-tabs > li {
+    list-style: none;
+    display: inline-block;
+    width: 16.6666%;
+    border-bottom: 1px solid silver;
+    border-right: 1px solid silver;
+    text-align: center;
+    cursor: pointer;
+    padding: 5px 0;
+    background-color: #f2f2f2;
+    font-size: 14px;
+}
+.bike-info-tabs > li.active {
+    border-bottom: none;
+    background-color: #ffffff;
+}
+.bike-info-tabs > li:last-child {
+    border-right: none;
+}
+.bike-info-body {
+    width: 350px;
+    padding: 10px;
+    height: 250px;
+    position: relative;
+}
+.bike-info-body > div {
+    display: none;
+    position: relative;
+}
+.bike-info-body > div.active {
+    display: block;
+}
+.bike-info-body > div > hr {
+    margin: 5px 0;
+}
+.bike-info-body > div.loading-mask {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0,0,0,0.2);
+}
+.bike-info-body > div.loading-mask > div{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    -o-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+.bike-info-body.loading > div.loading-mask {
+    display: block;
+}
+.icon-info-wrapper {
+    width: 48px;
+    height: 65px;
+    display: inline-block;
+    text-align: center;
+    position: relative;
+}
+.icon-info-wrapper > div:first-child {
+    width: 48px;
+    height: 48px;
+    background-position:center;
+    background-repeat: no-repeat;
+}
+@-webkit-keyframes rotateBg{
+    from{
+        -webkit-transform:rotateZ(0deg);
+    }
+    to{
+        -webkit-transform:rotateZ(360deg);
+    }
+}
+@keyframes rotateBg{
+    from{
+        transform:rotateZ(0deg);
+    }
+    to{
+        transform:rotateZ(360deg);
+    }
+}
+.bike-battery.battery-0 {
+    background-image: url(../../images/map_icon/icon_q00.png);
+}
+.bike-battery.battery-1 {
+    background-image: url(../../images/map_icon/icon_q01.png);
+}
+.bike-battery.battery-2 {
+    background-image: url(../../images/map_icon/icon_q02.png);
+}
+.bike-battery.battery-3 {
+    background-image: url(../../images/map_icon/icon_q03.png);
+}
+.bike-info.online .bike-battery.battery-0 {
+    background-image: url(../../images/map_icon/icon_q0.png);
+}
+.bike-info.online .bike-battery.battery-1 {
+    background-image: url(../../images/map_icon/icon_q1.png);
+}
+.bike-info.online .bike-battery.battery-2 {
+    background-image: url(../../images/map_icon/icon_q2.png);
+}
+.bike-info.online .bike-battery.battery-3 {
+    background-image: url(../../images/map_icon/icon_q3.png);
+}
+.bike-status.bike-status-locked {
+    background-image: url(../../images/map_icon/icon_l01.png);
+}
+.bike-status.bike-status-unlocked {
+    background-image: url(../../images/map_icon/icon_l02.png);
+}
+.bike-status.bike-status-error {
+    background-image: url(../../images/map_icon/icon_l03.png);
+}
+.bike-info.online .bike-status.bike-status-locked {
+    background-image: url(../../images/map_icon/icon_l1.png);
+}
+.bike-info.online .bike-status.bike-status-unlocked {
+    background-image: url(../../images/map_icon/icon_l2.png);
+}
+.bike-info.online .bike-status.bike-status-error {
+    background-image: url(../../images/map_icon/icon_l3.png);
+}
+.bike-alarm.static-status {
+    background-image: url(../../images/map_icon/icon_r02.png);
+}
+
+.bike-alarm.moving-status {
+    background-image: url(../../images/map_icon/icon_r01.png);
+    /*animation:rotateBg 1s linear infinite;*/
+}
+.bike-alarm.low-battery-alarm {
+    background-image: url(../../images/map_icon/icon_qr04.png);
+}
+.bike-alarm.illegal-moving-alarm {
+    background-image: url(../../images/map_icon/icon_ring0.png);
+}
+.bike-info.online .bike-alarm.static-status {
+    background-image: url(../../images/map_icon/icon_r2.png);
+}
+.bike-info.online .bike-alarm.moving-status {
+    background-image: url(../../images/map_icon/icon_r1.png);
+    /*animation:rotateBg 1s linear infinite;*/
+}
+.bike-info.online .bike-alarm.low-battery-alarm {
+    background-image: url(../../images/map_icon/icon_qr4.png);
+}
+.bike-info.online .bike-alarm.illegal-moving-alarm {
+    background-image: url(../../images/map_icon/icon_ring.png);
+}
+.bike-gprs.signal-0, .bike-gps.signal-0 {
+    background-image: url(../../images/map_icon/icon_s0.png);
+}
+.bike-gprs.signal-1, .bike-gps.signal-1 {
+    background-image: url(../../images/map_icon/icon_s1.png);
+}
+.bike-gprs.signal-2, .bike-gps.signal-2 {
+    background-image: url(../../images/map_icon/icon_s2.png);
+}
+.bike-gprs.signal-3, .bike-gps.signal-3 {
+    background-image: url(../../images/map_icon/icon_s3.png);
+}
+.bike-gprs.signal-4, .bike-gps.signal-4 {
+    background-image: url(../../images/map_icon/icon_s4.png);
+}
+.bike-gprs.signal-5, .bike-gps.signal-5 {
+    background-image: url(../../images/map_icon/icon_s5.png);
+}
+.horizontal-info {
+    display: inline-block;
+    font-size: 14px;
+    line-height: 22px;
+    margin-left: 10px;
+    border-left: 1px solid #eee;
+    padding-left: 10px;
+}
+
+.font14 {
+    font-size: 14px;
+}
+.bike-cooperator {
+    display: inline-block;
+    width: 50%;
+}
+.bike-lock-info {
+    cursor: pointer;
+}
+ul.bike-info-list {
+    margin: 0;
+    padding: 0;
+    height: 230px;
+    overflow-y: auto;
+}
+ul.bike-info-list > li {
+    list-style: none;
+    border-bottom: 1px solid #eee;
+    padding: 5px 0;
+}
+ul.bike-info-list > li:last-child {
+    border-bottom: none;
+}
+.bike-info-list-img {
+    width: 100px;
+    display: inline-block;
+    vertical-align: top;
+    cursor: pointer;
+}
+.bike-info-list-img img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+.bike-info-list-detail {
+    width: 200px;
+    display: inline-block;
+}
+ul.bike-info-list > li.has-more > button {
+    background: transparent;
+    border-color: transparent;
+    width: 100%;
+}
+.bike-instruction > button {
+    margin: 0 10px 10px 0;
+}
+.bike-instruction > div.input-group {
+    margin-bottom: 10px;
+}
+.bike-instruction > div.input-group > input {
+    padding: 6px 10px;
+}
+.bike-info-sharp {
+    margin: 0 auto;
+    bottom: 1px;
+    position: relative;
+    background: url(http://webapi.amap.com/theme/v1.3/images/amap-info.png) -5px -564px no-repeat;
+    width: 18px;
+    height: 9px;
+}
+.bike-info-close {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    background: url(http://webapi.amap.com/images/close.png) center center no-repeat;
+    width: 18px;
+    height: 18px;
+    text-indent: -9999em;
+}
+.bike-info-qrcode {
+    max-width: 230px !important;
+    max-height: 230px !important;
+    margin: 0 50px;
+}
+.bike-info-qrcode-trigger {
+    position: absolute;
+    top: 2px;
+    right: 22px;
+    width: 18px;
+    height: 18px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 16px;
+}
+.bike-info-refresh {
+    position: absolute;
+    top: 2px;
+    right: 44px;
+    width: 18px;
+    height: 18px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 15px;
+}
+/*全屏地图*/
+body.map-maximized > div.wrapper, body.map-maximized .ajax-content, body.map-maximized .content-wrapper {
+    height: 100% !important;
+}
+body.map-maximized .main-header, body.map-maximized .main-sidebar, body.map-maximized #dashboard, body.map-maximized #statistics, body.map-maximized #bikes {
+    display: none !important;
+}
+body.map-maximized .content-wrapper {
+    margin-left: 0;
+}
+body.map-maximized #dashboard-content {
+    top: 0;
+}
+body.map-maximized #map-n-statistics {
+    right: 0;
+}
+body.map-maximized #map{
+    top: 0;
+    bottom: 0;
+}
+/*单车编号Marker*/
+.bike-number-text-marker {
+    width: 60px;
+    height: 25px;
+    padding: 0 0 5px;
+    box-sizing: border-box;
+    text-align: center;
+}
+.bike-number-text-marker.offline {
+    background: transparent url(../../images/map_icon/b4.png);
+}
+.bike-number-text-marker.battery-ok {
+    background: transparent url(../../images/map_icon/b1.png);
+}
+.bike-number-text-marker.battery-warning {
+    background: transparent url(../../images/map_icon/b3.png);
+}
+.bike-number-text-marker.battery-low {
+    background: transparent url(../../images/map_icon/b2.png);
+}
+
+.skin-blue .search-form {
+    border-radius: 3px;
+    border: 1px solid #e2e2e2;
+    margin: 10px 15px;
+}
+.search-form {
+    overflow: hidden;
+    text-overflow: clip;
+}
+.skin-blue .search-form input[type="text"] {
+    color: #666;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 2px;
+}
+.skin-blue .search-form input[type="text"], .skin-blue .search-form .btn {
+    box-shadow: none;
+    background-color: #fff;
+    border: 1px solid transparent;
+    height: 35px;
+}
+#bikes-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    z-index: 1070;
+    background-color: rgba(0,0,0,0.5);
+}
+
+/** 移动端CSS **/
+@media (max-width: 767px) {
+    #map-toolbar {
+        max-height: 80px;
+        white-space: normal;
+        padding:0;
+    }
+    .cooperator-selecter, .region-selecter{
+        width: 49%;
+    }
+    .separator-after-region-selecter {
+        display: none;
+    }
+    .br-after-region-selecter {
+        display: inline;
+    }
+    #statistics {
+        display: none;
+    }
+    #map {
+        bottom:0;
+    }
+    #bikes {
+        width: 200px;
+        position: absolute;
+        top: 0;
+        right: -200px;
+        bottom: 0;
+        z-index: 1080;
+        -webkit-transition: right 0.3s ease-in-out;
+        -o-transition: right 0.3s ease-in-out;
+        transition: right 0.3s ease-in-out;
+    }
+    .open-search-panel #bikes {
+        right: 0;
+    }
+    .open-search-panel #bikes-bg {
+        display: block;
+    }
+}
+#user-modal-info, #user-modal-coupon > form {
+    padding: 10px;
+}
+.user-modal-credit-outter {
+    width: 50px;
+    height: 50px;
+    line-height: 40px;
+    border: 3px solid #EB474C;
+    position: relative;
+    transform: translate(-50%,0);
+    left: 50%;
+    margin-top: 10px;
+    border-radius: 50%;
+    text-align: center;
+}
+
+.user-modal-credit-inner {
+    border: 1px solid #EB474C;
+    margin: 2px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.bike-marker {
+    width: 35px;
+    height: 35px;
+    position: relative;
+    background: transparent url(../../images/map_icon/bike_markers.png) 0 0 no-repeat;
+}
+
+.bike-marker-lan {
+    width: 35px;
+    height: 35px;
+    position: relative;
+    background: transparent url(../../images/map_icon/home_map_ic4@3x.png) 0 0 no-repeat;
+}
+
+.bike-marker > .bike-marker-bike-number {
+    display: none;
+    position: absolute;
+    top: -38px;
+    left: -28px;
+    background: url(../../images/map_icon/No.png) 0 0 no-repeat;
+    background-size: 100% 100%;
+    color: white;
+    padding: 8px 8px 8px 31px;
+    z-index: 9999;
+}
+.bike-marker.using {
+    background-position: -35px 0;
+}
+.bike-marker.offline {
+    background-position: -70px 0;
+}
+.bike-marker.cant_finish {
+    background-position: -175px -35px;
+}
+.bike-marker.no-used-5-plus-days {
+    background-position: -140px -35px;
+}
+.bike-marker.no-used-5-days {
+    background-position: -105px -35px;
+}
+.bike-marker.no-used-4-days {
+    background-position: -70px -35px;
+}
+.bike-marker.no-used-3-days {
+    background-position: -35px -35px;
+}
+.bike-marker.no-used-2-days {
+    background-position: 0 -35px; 
+}
+.bike-marker.low-battery {
+    background-position: -140px 0;
+}
+.bike-marker.illegal-parking {
+    background-position: -175px 0;
+}
+.bike-marker.fault {
+    background-position: -105px 0;
+}

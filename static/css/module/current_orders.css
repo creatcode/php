@@ -1,0 +1,75 @@
+.centercontent {margin-left: 0; position: relative;}
+body.withvernav {background: none;min-height: 1000px;}
+.content-box {
+    background-color: #fff;
+    border: 5px solid #78ce07;
+    height: 520px;
+    left: 60px;
+    margin: 0 auto;
+    position: absolute;
+    top: 60px;
+    width: 1000px;
+    display: none;
+    box-shadow: 0 0 12px #9e9e9e;
+}
+
+.confirm {
+    display: none;
+    position: absolute;
+    width: 800px;
+    height: 350px;
+    top: 140px;
+    left: 160px;
+}
+
+.box-header {
+    border-bottom: 1px solid #78ce07;
+    height: 32px;
+    padding: 8px 0 0 8px;
+}
+.box-header h2 {
+    float: left;
+}
+
+.box-content {
+    padding: 6px;
+}
+button.close {
+    background: rgba(0, 0, 0, 0) none repeat scroll 0 0;
+    border: 0 none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.close {
+    color: #000;
+    float: right;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0.2;
+    text-shadow: 0 1px 0 #fff;
+    margin-right: 6px;
+}
+
+.confirm .box-footer {
+    border-top: 1px solid #78ce07;
+    padding-top: 10px;
+    text-align: center;
+}
+
+.price-input {
+    width: 72px !important; 
+    margin-left: 6px; 
+    padding: 6px !important;
+}
+
+#total_price {
+    color: #e4393c;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+#max_passenger {
+    margin-left: 8px;
+}

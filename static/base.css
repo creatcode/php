@@ -1,0 +1,124 @@
+body{
+	/*min-width: 1600px;*/
+	overflow: visible;
+}
+#content-wrapper{
+	padding: 5px;
+}
+#content-wrapper table{
+	background-color: #ffffff;
+}
+#content-wrapper table td{
+	word-break: break-all;
+}
+
+.excel-form-position{
+	margin:15px;
+	text-align: right;
+	display: inline-block;
+	float: right;
+}
+.excel-form-position span{
+	vertical-align: middle;
+}
+
+.excel-form-export-btn{
+	float: right;
+	margin-right: 25px;
+	margin-bottom: 15px;
+}
+.driver-pic,.user-pic{
+	max-width: 150px;
+}
+
+.pagination>li>a.current{
+	color:#00acd6;
+}
+
+.upload-img{
+	cursor: pointer;
+}
+
+.treeview-menu-two{
+	display: none;
+}
+.all-icons{
+	position: fixed;
+	z-index:1000;
+	top:0px;
+	background-color: #ffffff;
+}
+.open .dropdown-menu{
+	webkit-animation-name: flipInX;
+	-moz-animation-name: flipInX;
+	-o-animation-name: flipInX;
+	animation-name: flipInX;
+	-webkit-animation-duration: .5s;
+	-moz-animation-duration: .5s;
+	-o-animation-duration: .5s;
+	animation-duration: .5s;
+	-webkit-animation-fill-mode: both;
+	-moz-animation-fill-mode: both;
+	-o-animation-fill-mode: both;
+	animation-fill-mode: both;
+}
+.content-box-header {
+	padding: 0 15px;
+}
+.content-box-header > h1 {
+	margin:0;
+	font-size: 24px;
+	line-height: 34px;
+}
+
+#message-dropdown {
+	position: absolute;
+	width: 700px;
+	height: 400px;
+	background: white;
+}
+#message-dropdown > div.btn-group {
+	padding: 10px;
+}
+#message-dropdown > span.update-info {
+	font-size: 13px;
+	display: block;
+	padding: 5px;
+	line-height: 22px;
+	border-top: 1px solid #CCCCCC;
+}
+#message-dropdown .message-list {
+	display: block;
+	height: 303px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	position: relative;
+}
+.loader-wrapper {
+	display: none;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	background: #fff;
+}
+.loader {
+	display: block;
+	background: #fff url(images/loaders/loader1.gif) no-repeat left center;
+	padding-left: 20px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	-o-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+.btn-no-border{
+	background-color: transparent;
+	border-color: transparent;
+}

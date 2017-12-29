@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>我的消息</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<!--<header class="mui-bar mui-bar-nav bgBlack shadowNone">
+	    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left cWhite"></a>
+	</header>-->
+	<div class="mui-content mui-scroll-wrapper" id="scroll">
+		<div class="mui-scroll">
+			<div class="mui-content-padded myTrip" id="myNewsList" style="margin-bottom: 0px !important;"></div>
+			<!--转转-->
+			<div class="mui-text-center mui-content-padded" id="listLoad"><span class="mui-spinner"></span></div>
+		</div>
+	</div>
+	
+	
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/mui.pullToRefresh.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	var page=0;
+  	app.check(function(){
+  		//获取我的消息列表
+  		app.ajax('route=account/account/getMessages',{
+  			'user_id':user_id,
+  			'sign':sign,
+  			'page':page+=1
+  		},function(){
+  			console.log('分页page： '+page);
+  			
+			app.pullToRefresh({
+				data:resData.data.items,
+				start:function(){
+					//加载数据
+					loveData(resData.data.items);
+				},
+				end:function(){
+					$('#myNewsList').html('<div class="bgTran mui-text-center f_16 padding10">暂无消息</div>');
+				},
+				//如果总页数 > 当前页码 触发上拉加载函数
+				judge:resData.data.total_pages>resData.data.page,
+				wrap:'#scroll .mui-scroll',
+				success:function(zhe){
+					app.ajax('route=account/account/getMessages',{
+						'user_id':user_id,
+						'sign':sign,
+						'page':page+=1
+					},function(){
+						console.log('分页page： '+page);
+						setTimeout(function(){
+							
+							//加载数据
+							loveData(resData.data.items);
+							
+							//如果总页数==当前页面 停止上拉加载函数 true停止/false继续
+							if(resData.data.total_pages==resData.data.page){
+								zhe.endPullUpToRefresh(true);
+							}else{
+								zhe.endPullUpToRefresh(false);
+							}
+								
+						},200);
+					});
+				}
+			});
+			
+  		});
+  		
+  		
+  		
+  		//加载数据
+		function loveData(a){
+			var htmlK = '';
+			
+			mui.each(a,function(i,val){
+				//还原时间戳
+				var time=app.formatTime({
+					type:1,
+					time:val.msg_time
+				});
+				
+				//消息类型判断	0普通消息/1跟进消息
+				var img,link,fault_id;
+				if(val.msg_type==1){
+					img='./img/newsFollow.jpg';
+					link='./progressFollow.html';
+					fault_id=val.fault_id;
+				}else{
+					img=val.msg_image;
+					link=val.msg_link;
+					fault_id='';
+				}
+				
+				htmlK+='<section data-link=\"'+link+'\" data-fault_id=\"'+fault_id+'\">\
+					<p class="mui-text-center marginT10">'+time+'</p>\
+					<ul class="mui-table-view lineNone">\
+						<li class="newsImg" style="background-image: url('+img+');"></li>\
+						<li class="mui-table-view-cell bgTran">\
+							<div class="f_14 marginB5 cBlack">'+val.msg_title+'</div>\
+							<div class="f_12 cGray">'+val.msg_abstract+'</div>\
+						</li>\
+					</ul>\
+				</section>';
+			});
+			$('#myNewsList').append(htmlK);
+		}
+  	});
+	
+	//文章详情
+	$('#myNewsList').on('tap','section',function(){
+		var zhe=$(this);
+		var link=zhe.data('link');
+		if(!!link&&link=='./progressFollow.html'){
+			var fault_id=zhe.data('fault_id');
+			window.location=link+'?fault_id='+fault_id;
+		}else if(!!link){
+			window.location=link;
+		}
+	});
+
+  	
+</script>
+
+</html>

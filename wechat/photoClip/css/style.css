@@ -1,0 +1,17 @@
+﻿@charset "utf-8";
+
+
+
+.half { width: 80px; height: 80px; float: left; overflow: hidden; position: relative; }
+.half > a { width: 80px; display: inline-block; height: 80px; overflow: hidden; }
+.half > a  img { width: 100%; height: 100%; }.logo { border-radius: 100% }
+.htmleaf-container { margin: 0 auto; text-align: center; overflow: hidden; width: 100%; height: 100%; position: fixed; top: 0; background: #000; display: none; z-index: 9999999; }
+#clipArea { height: 90%; }
+
+/*上传图标*/
+#file { float: left; height: 100%; }
+#clipBtn { float: right; height: 100%; width: 50%; border: 0; outline: none;font-size: 16px; z-index: 999;background-color:white; }
+.foot-use { background: #fff; height: 10%; width: 100%; position: relative; }
+.uploader1 { position: absolute; width: 50%; cursor: default; height: 100%; float: left; }
+.buttonOpen { float: left; height: 100%; display: inline-block; outline: 0 none; margin: 0; cursor: pointer; width: 100%; font-size: 16px !important;border: none !important;border-radius: 0 !important;}
+.uploader1 input[type=file] { position: absolute; top: 0; left: 0; bottom: 0; border: 0; padding: 0; margin: 0; width: 100%;opacity: 0; }

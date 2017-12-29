@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>蓝牙测试</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+
+</head>
+
+
+<body class="bgWhite">
+	<div class="mui-content-padded">
+		<p>测试调起微信扫码</p>
+		<div class="bgGrayF5 marginB10"><img src="img/violation.png" class="padding10 mui-pull-left inlineBlock margin0" width="40px" height="40px" id="stopCode">&nbsp;&nbsp;
+			<input type="number" class=" bgTran margin0 violStop" id="scanNum" placeholder="扫码或输入车辆编号" />
+		</div>
+	</div>
+	<div class="mui-content-padded">
+		<button type="button" id="b1" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10">扫描蓝牙</button>
+	</div>
+	
+	<!--<div  id="look"></div>-->
+	<input type="text"class="padding15"  id="look" />
+	
+</body>
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+	//调起 微信 jssdk
+	app.wechat_ble(function(){
+		//扫描二维码
+		app.scan('stopCode','scanNum');
+
+		$('#b1').on('tap',function(){
+			app.openWXDeviceLib(function(){
+				
+//				app.loading('show','扫描设备');
+				
+				//停止蓝牙扫描 更好兼容性
+				app.stopScanWXDevice();
+				
+				app.startScanWXDevice(function(){
+					wx.invoke('getWXDeviceTicket',{"deviceId":"gh_62145a65e139_d8cd993796ed1452","type":1},function(res){
+					    	
+					    	$('#look').val(JSON.stringify(res));
+					    	
+						    if(res.err_msg !="getWXDeviceTicket:ok"){
+						            alert("获取操作凭证失败，请重试");  
+						            return;
+						    }else{
+						        //2.将deviceID和操作凭证通过ajax传给后台 进行绑定   
+						        //后台应该是有当前用户的openId的，其实前端也可以获取到，但比较麻烦
+						        //我们这边的做法是，后台在数据库里保存了用户的openId,每次要用直接从数据库拿
+						        //就不用每次还去调微信的接口拿，太麻烦了
+						        //...此处ajax代码略      
+						    }
+						});
+					
+					//输出扫码结果
+//					wx.on('onScanWXDeviceResult',function(res){
+//						app.loading('hide');
+//						
+//					    //自己解析一下res，里面会有deviceid,扫描设备的目的就是为了得到这个
+//					    //然后就可以开始绑定了
+//					    alert(JSON.stringify(res));
+//					    
+//						app.stopScanWXDevice();
+//						alert(11111);
+//					    
+//						
+//						// 链接蓝牙
+////						app.connectWXDevice("gh_62145a65e139_d1edbc338e42c5c0", function(res) {
+////							alert(JSON.stringify(res));
+////						});
+//						
+//						wx.on('connectWXDevice',function(res){
+//							
+//						});
+//					});
+				});
+				
+			});
+			
+			
+		});
+	});
+	
+	
+
+</script>
+
+</html>
+
+
+
+
+
+
+
+
+
+

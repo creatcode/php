@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>余额充值</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+<style>
+	.depositPay button{transition-duration:0s !important;}
+</style>
+</head>
+
+
+<body>
+	<!--<a class="mui-icon mui-icon-back cGray padding10 mui-pull-left mui-action-back"></a>-->
+	<div class="mui-clearfix"></div>
+	
+	<div class=" depositPay moneyButton" id="superMoney" style="padding:10% 15px 5% 15px">
+		<div class="rechargeTitle mui-text-center">
+			<p class="marginCenter cBlack f_16">充值金额</p>
+		</div>
+		<div class="mui-text-center f_12 cGray" style="margin-bottom:10%;">温馨提示：余额充值不可退款</div>
+		<button type="button" class="mui-btn mui-btn-success mui-btn-outlined radius100  bgWhite cBlack padding10 marginB10 mui-pull-left active">10元</button>
+		<button type="button" class="mui-btn mui-btn-success mui-btn-outlined radius100  bgWhite cBlack padding10 marginB10 mui-pull-right">20元</button>
+		<button type="button" class="mui-btn mui-btn-success mui-btn-outlined radius100  bgWhite cBlack padding10 marginB10 mui-pull-left">50元</button>
+		<button type="button" class="mui-btn mui-btn-success mui-btn-outlined radius100  bgWhite cBlack padding10 marginB10 mui-pull-right">100元</button>
+		<div class="mui-clearfix"></div>
+	</div>
+	
+	
+	<div class="padding15">
+		<button type="button" class="mui-btn mui-btn-success width100 marginB10 radius100 padding10 marginT10" id="go">充 值</button>
+		<div class="f_12 mui-text-center cGray">点击充值，即表示同意 <a id="good1" class="mRed">《充值协议》</a></div>
+	</div>
+</body>
+
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	
+	//调起 微信 jssdk
+	app.wechat_jssdk(function(){
+		app.check(function(){
+			$('#go').on('tap',function(){
+				var zhe=$(this);
+				var amount=$('#superMoney').find('.active').text().replace('元','');
+				var btnArray = ['取消', '确认'];
+			    var moneyA=$('.moneyButton').find('.active').text();
+				mui.confirm('您确定充值'+moneyA+'到车费余额？','温馨提示',btnArray,function(e){
+					if (e.index == 1) {
+						//微信支付  1押金充值  / 2余额充值
+						app.pay(zhe,2,{
+							'user_id':user_id,
+							'sign':sign,
+							'amount':amount
+						},function(){
+							window.history.go(-1);
+						});
+					}
+				});
+			});
+			
+			
+			
+			//充值协议
+			app.articleLink($('#good1'),'setting-deposit-instructions');
+			
+		});
+	});
+	
+	//选项卡
+	$('#superMoney').on('tap','button',function(){
+		$(this).addClass('active').siblings('button').removeClass('active');
+	});
+	
+	
+	
+</script>
+
+</html>

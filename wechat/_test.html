@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<title>测试</title>
+		<link href="css/mui.css" rel="stylesheet" />
+		<link href="css/main.css" rel="stylesheet" />
+
+	</head>
+
+	<body>
+	</body>
+
+	<script src="js/mui.min.js"></script>
+	<script type="text/javascript" charset="utf-8">
+		//封装 ajax
+//		function haha(callBack) {
+			mui.ajax('https://cnodejs.org/api/v1', {
+				dataType: 'json',
+				type: 'get',
+				success: function(res) {
+					aa=999;
+//					callBack();
+				},
+				error: function(xhr, type, errorThrown) {
+					console.log(JSON.stringify(xhr));
+					console.log(type);
+					console.log(errorThrown);
+				}
+			});
+//		}
+		
+		//执行 ajax
+//		haha(function(){
+//			console.log(aa);
+//		});
+
+		setTimeout(function(){
+			console.log(aa);
+		},2000);
+		
+		
+
+	</script>
+
+</html>

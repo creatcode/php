@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>我的行程</title>
+<link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+<style>
+	.lineLeft0 .mui-table-view-cell:after,.mui-table-view:before,.mui-table-view:after{background-color: #eee;}
+	.mui-table-view:before{height: 0 !important;}
+</style>
+</head>
+
+
+<body>
+	<!--loading-->
+	<div class="loadWait" id="bikeLoadWait">
+		<div class="loadWaiting mui-text-center">
+			<div class="bikeRound">
+				<img src="img/ZZ1.png" class="bikeComplete"/>
+				<img src="img/ZZ2.png" class="wheel wheelBefore"/>
+				<img src="img/ZZ2.png" class="wheel wheelAfter"/>
+				<div class="cGray6 f_16 tipsText ">
+					<div class="loadBarWrap">
+						<div class="loadBar"></div>
+					</div>
+					<span>正在启动地图</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="mui-col-xs-12" id="myTripNow">
+		<!--<a class="mui-icon mui-icon-back cWhite padding10 mui-pull-left mui-action-back mapBack"></a>-->
+		<!--嵌入地图-->
+		<div class="roadMap">
+			<div id="container" style="height: 220px;"></div>
+		</div>
+		<div class="infoWrap now mui-content-padded bgWhite mui-text-center f_14 ">
+			
+			<div class="title cWhite f_16 padding10" id="infoChange">
+				<section><img src="img/C9.jpg" class="inlineBlock" height="22px"/>&nbsp;&nbsp;&nbsp;成功支付<span id="info7"></span>元</section>
+				<section style="display: none;"><img src="img/D9.jpg" class="inlineBlock" height="22px"/>&nbsp;&nbsp;&nbsp;骑行距离 <span id="info8"></span> <span class="f_12">km</span></section>
+			</div>
+			<div class="padding15" style="padding-top: 0 !important;">
+				<div class="infoChange">
+					<section>
+						<ul class="mui-table-view lineLeft0 marginB10 mui-text-left" >
+							<li class="mui-table-view-cell f_14 bgTran">
+								骑行时间<span class="mui-pull-right"><span id="info5"></span>分钟</span>
+							</li>
+							<li class="mui-table-view-cell f_14 bgTran">
+								优惠卷抵扣<span class="mui-pull-right"><span id="couponLook"></span></span>
+							</li>
+							<li class="mui-table-view-cell f_14 bgTran">
+								我的钱包<span class="mui-pull-right"><span id="info6"></span>元</span>
+							</li>
+							<li class="mui-table-view-cell f_14 bgTran" id="tabs">
+								<a class="mui-navigate-right bgTran">行程详情</a>
+							</li>
+						</ul>
+					</section>
+					<section style="display: none;">
+						<div class="padding10" style="border-bottom: 1px solid #eee;">单车编号  <span id="info4"></span></div>
+						<div class="mui-row paddingT10 infoCol">
+							<div class="mui-col-xs-4  paddingT10 paddingB10">
+								<img src="img/D1.jpg" class="marginCenter" height="40px"/>
+								<div class="f_12 marginB5">骑行时间(min)</div>
+								<div class="f_24 cBlack" id="info1"></div>
+							</div>
+							<div class="mui-col-xs-4  paddingT10 paddingB10">
+								<img src="img/D2.jpg" class="marginCenter" height="40px"/>
+								<div class="f_12 marginB5">节约碳排量(g)</div>
+								<div class="f_24 cBlack" id="info2"></div>
+							</div>
+							<div class="mui-col-xs-4  paddingT10 paddingB10">
+								<img src="img/D3.jpg" class="marginCenter" height="40px"/>
+								<div class="f_12 marginB5">卡路里(kcal)</div>
+								<div class="f_24 cBlack" id="info3"></div>
+							</div>
+						</div>
+					</section>
+				</div>
+				
+				<div class="mui-row paddingT10 paddingB10 infoCol f_14">
+					<div class="mui-col-xs-6" id="b1" >
+						<img src="img/F1.jpg" class="marginCenter" height="60px"/>
+						<div class="paddingT10" id="b1">拍停车照</div>
+					</div>
+					<!--<div class="mui-col-xs-4" id="b2">
+						<img src="img/F2.jpg" class="marginCenter" height="60px"/>
+						<div class="paddingT10">保留用车</div>
+					</div>-->
+					<div class="mui-col-xs-6 shareButton">
+						<img src="img/F3.jpg" class="marginCenter" height="60px"/>
+						<div class="paddingT10">分享行程</div>
+					</div>
+				</div>
+				
+				
+				<div class="mui-row infoCol"style="border-top:1px solid #eee;margin-bottom: -15px;">
+					<div class="mui-col-xs-6 paddingT10 paddingB10 mRed" style="border-right:1px solid #eee;font-weight: bold;"  onclick="app.downloadApp()">下载APP</div>
+					<div class="mui-col-xs-6 paddingT10 paddingB10 " id="goBackHome">返回首页</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+</body>
+
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="http://webapi.amap.com/maps?v=1.3&key=7c86e74a1b600bfc307e6f3b43a4e1f8&plugin=AMap.Geocoder,AMap.Polyline"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	
+  	
+  	//调起 微信 jssdk
+	app.wechat_jssdk(function(){
+		app.check(function(){
+			
+			var order_id = app.getRequest('order_id');
+			
+	  		//获取行程详情
+		  	app.ajax('route=account/account/getOrderDetail',{
+		  		'user_id':user_id,
+				'sign':sign,
+				'order_id':order_id
+		  	},function(){
+				
+				//骑行时间/节约碳排量/卡路里/单车编号/我的钱包/成功支付/骑行距离
+				$('#info1,#info5').html(resData.data.order_info.duration);
+				$('#info2').html(resData.data.order_info.emission);
+				$('#info3').html(resData.data.order_info.calorie);
+				$('#info4').html(resData.data.order_info.bicycle_sn);
+				$('#info6').html(resData.data.user_info.available_deposit);
+				$('#info7').html(resData.data.order_info.pay_amount);
+				$('#info8').html(resData.data.order_info.distance);
+				
+				
+				//判断有无使用优惠卷
+				var ju=resData.data.order_info.coupon_info;
+				if(ju!=''&&ju[0]&&ju[0]!=null){
+					$('#couponLook').addClass('mRed').html(ju[0].number+ju[0].unit);
+				}else{
+					$('#couponLook').html('无').parents('li').addClass('cGray');
+				}
+				
+				//单车轨迹
+				app.mapFit(resData);
+				
+				var locations=resData.data.locations;
+				var lng=locations[locations.length-1].lng;
+				var lat=locations[locations.length-1].lat;
+				var area_code=resData.data.order_info.area_code;
+				var bicycle_sn=resData.data.order_info.bicycle_sn;
+				
+				//保留用车
+			  	$('#b2').on('tap',function(){
+			  		app.loading('show');
+					app.ajax('route=account/order/book',{
+						'user_id':user_id,
+						'sign':sign,
+						'lng':lng,
+						'lat':lat,
+						'device_id':area_code+bicycle_sn
+					},function(){
+						mui.alert(resData.msg,'温馨提示',function(){
+							window.history.go(-1);
+						});
+					});
+			  	});
+			  	
+			  	
+			  	//拍停车照
+				$('#b1').on('tap',function(){
+					window.location='./photograph.html?order_id='+order_id+'&lng='+lng+'&lat='+lat+'&bicycle_sn='+bicycle_sn;
+				});
+				
+		  	});
+		  	
+		  	
+		  	//选项卡切换
+		  	$('#tabs').on('tap',function(){
+		  		$('#infoChange').find('section').eq(0).hide();
+		  		$('#infoChange').find('section').eq(1).show();
+		  		$(this).parents('section').hide().next().show();
+		  	});
+			//返回首页
+			$('#goBackHome').on('tap',function(){
+				window.history.go(-1);
+			});
+			
+			//分享控件
+			app.shareLove(order_id);
+	  	});
+	});
+	
+  	
+</script>
+
+</html>

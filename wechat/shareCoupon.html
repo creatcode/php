@@ -1,0 +1,271 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>小强单车</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="shareCoupon">
+		<div class="mui-text-center">
+			<img class="marginCenter couponHead radius100 marginB5" id="userImg"/>
+			<div class="f_16 realNameS" style="color:#95959f;"></div>
+			<div class="cWhite paddingT10 f_14" id="judge1" >
+				<div style="display: none;">您的好友 <span class="realNameS"></span> 正在使用 <span class="mRed">小强单车</span><br/>并完成一段骑行，一起加入吧~</div>
+				<div style="display: none;">您的好友 <span class="realNameS"></span> 邀请您一起体验 <span class="mRed">小强单车</span><br/>请输入您的手机号领取免费用车劵</div>
+			</div>
+		</div>
+		<img src="img/bgShare.png" class="bgShare"/>
+	</div>
+
+	<div id="judge2" class="mui-content-padded mui-text-center f_bold f_16 cBlack paddingT10 paddingB10">
+		<div style="display: none;">请输入您的手机号码领取用车劵</div>
+		<div style="display: none;">好友手机：<span id="loveTel" class="mRed"></span></div>
+	</div>
+
+
+	<div class="padding15">
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >手机号</label>
+				<input type="number" class="mui-input-clear" placeholder="请输入您的手机号" id="tel">
+			</div>
+		</div>
+
+		<div class="mui-input-group radius100 lineNone bgTran marginB10">
+			<div class="mui-input-row">
+				<label class="bgWhite" style="border-radius: 100px 0 0 100px;">验证码</label>
+				<input type="text" class="bgWhite" style="width: 28%;float: left;border-radius: 0 100px 100px 0;" id="code">
+			</div>
+			<button type="button" class="mui-btn mui-btn-success radius100" id="getCode" disabled>获取验证码</button>
+		</div>
+
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" id="go" disabled>领取用车劵</button>
+	</div>
+
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/gt.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+  	var encryptCode = app.getRequest('encryptCode'),
+  		order_id = app.getRequest('order_id');
+
+
+  	//获取个人信息
+  	app.ajax('route=account/account/getUserInfoByEncrypt',{
+  		'encrypt_code':encryptCode
+  	},function(){
+    	//头像/真实姓名/邀请码手机号
+		$('#userImg').attr('src',(resData.data.avatar==''||resData.data.avatar==null||resData.data.avatar==undefined)?'img/initHeader.jpg':resData.data.avatar);
+		$('.realNameS').html((resData.data.nickname==''||resData.data.nickname==null||resData.data.nickname==undefined)?resData.data.mobile:resData.data.nickname);
+		$('#loveTel').html(resData.data.mobile);
+
+		//邀请好友（首页分享）/分享行程
+		if(order_id==null||order_id==undefined||order_id==''){
+			$('#judge1').children('div').eq(1).show();
+			$('#judge2').children('div').eq(1).show();
+		}else{
+			$('#judge1').children('div').eq(0).show();
+			$('#judge2').children('div').eq(0).show();
+		}
+  	});
+
+
+
+  	//button高亮判断
+	$('#tel').on('input propertychange',function(){//验证码高亮
+		var zhi=$.trim($(this).val());
+		if(!$('#getCode').hasClass('notClick')){
+			if(app.telCheck(zhi)){
+				$('#getCode').prop('disabled',false);
+			}else{
+				$('#getCode').prop('disabled',true);
+			}
+		}
+	});
+
+  	//确认框高亮
+	$('#code,#tel').on('input propertychange',function(){
+		var zhi1=$.trim($('#code').val());
+		var zhi2=$.trim($('#tel').val());
+		if(zhi1!=''&& app.telCheck(zhi2)){
+			$('#go').prop('disabled',false);
+		}else{
+			$('#go').prop('disabled',true);
+		}
+	});
+
+	$('#go').on('click',function(){
+		var zhe=$(this);
+		var tel=$('#tel').val();
+		var code=$('#code').val();
+
+		//首页分享share_front	/行程分享share_trip
+		var shareType = zhe.data('share');
+
+		if(shareType!=''&&shareType!=undefined&&shareType!=null){
+			zhe.prop('disabled',true);
+
+			//首页分享share_front
+			if(shareType=='share_front'){
+				var goodUrl='route=account/coupon/getCouponFrontPage';
+				var goodData={'encrypt_code':encryptCode,'code':code,'mobile':tel};
+			}else if(shareType=='share_trip'){
+				//行程分享share_trip
+				var goodUrl='route=account/coupon/getCouponByShareTrip';
+				var goodData={'order_id':order_id,'encrypt_code':encryptCode,'code':code,'mobile':tel};
+			}
+
+
+			app.ajax(goodUrl,goodData,function(){
+				setTimeout(function(){
+					//领取成功
+					window.location='./couponReceive.html?encryptCode='+encryptCode+'&coupon_id='+resData.data.coupon_id+'&description='+resData.data.description+'&failure_time='+resData.data.failure_time+'&number='+resData.data.number+'&unit='+resData.data.unit+'&shareType='+shareType;
+				},200);
+			},function(){
+				//领取不成功
+				zhe.prop('disabled',false);
+			});
+		}else{
+			mui.alert('请重新获取验证码','验证失败');
+		}
+
+	});
+
+	var handler = function (captchaObj) {
+		var zhe = $('#getCode');
+        captchaObj.onReady(function () {
+            console.info('geetest is ready')
+        }).onClose(function () {
+            mui.toast('您需要请完成验证！');
+        }).onSuccess(function () {
+
+            /* 延迟到动画结束后再alert */
+            var lastUTC = new Date(), duration = 1100;
+            function _mui(msg) {
+                var elapsed = new Date() - lastUTC;
+                if (elapsed >= duration) { return mui.toast(msg) }
+                setTimeout(function () {
+                	mui.toast(msg)
+                }, duration - elapsed);
+            }
+
+            var result = captchaObj.getValidate();
+            if (!result) {
+            	return mui.alert('请完成验证');
+            }
+
+
+            app.ajax('route=account/account/sendShareCode',{
+            	mobile: $('#tel').val(),
+                encrypt_code:encryptCode,
+                order_id: order_id,
+                //user_id: $('#user_id').val(),
+                geetest_challenge: result.geetest_challenge,
+                geetest_validate: result.geetest_validate,
+                geetest_seccode: result.geetest_seccode
+            },function(){
+            	_mui('验证码已发送');
+		    	zhe.text("等待 "+time+" s");
+
+		      	//设置定时器 每1秒钟 执行一次
+		    	var t=setInterval(function () {
+		    		//time自身减1
+		            time--;
+		            zhe.text("等待 "+time+" s");
+
+		            //如果到0
+		            if (time==0) {
+		            	//清除定时器
+		                clearInterval(t);
+		                // 按钮样式复原
+		                zhe.text("重新发送");
+		                zhe.prop('disabled',false);
+		                zhe.removeClass('notClick');
+		            }
+		        },1000);
+
+		        //元素存储信息
+			    $('#go').attr('data-share',resData.data.type);
+            },function(){
+				zhe.prop('disabled',false);
+		        zhe.removeClass('notClick');
+
+		        //202 已经获取过验证码了
+		        if(resData.errorCode==202){
+		        	$(document).on('tap','.mui-popup-button-bold',function(){
+			        	window.location='./couponReceiveHistory.html?encryptCode='+encryptCode+'&coupon_type='+resData.data.coupon_type+'&number='+resData.data.number+'&unit='+resData.data.unit+'&failure_time='+resData.data.failure_time+'&used='+resData.data.used+'&expired='+resData.data.expired;
+			        });
+	        	}
+            });
+
+        });
+        
+        var time=0;
+        $('#getCode').on('click',function () {
+            time=60;
+			var zhe=$(this);
+			var tel=$('#tel').val();
+
+			//不能点击 背景变灰
+	    	zhe.prop('disabled',true);
+	    	zhe.addClass('notClick');
+
+			//邀请好友（首页分享）/分享行程
+			if(order_id==null||order_id==undefined||order_id==''){
+				var sendData={
+					'encrypt_code':encryptCode,
+					'mobile':tel
+				};
+			}else{
+				var sendData={
+					'order_id':order_id,
+					'encrypt_code':encryptCode,
+					'mobile':tel
+				};
+			}
+            captchaObj.verify();
+
+        })
+        // 更多前端接口说明请参见：http://docs.geetest.com/install/client/web-front/
+    };
+
+    $.ajax({
+        url: "http://bike.e-stronger.com/bike/api/index.php?route=account/account/startCaptchaSer&t=" + (new Date()).getTime(), // 加随机数防止缓存
+        type: "get",
+        dataType: "json",
+        success: function (data) {
+            console.log(data);
+            // 调用 initGeetest 进行初始化
+            // 参数1：配置参数
+            // 参数2：回调，回调的第一个参数验证码对象，之后可以使用它调用相应的接口
+            initGeetest({
+                // 以下 4 个配置参数为必须，不能缺少
+                gt: data.gt,
+                challenge: data.challenge,
+                offline: !data.success, // 表示用户后台检测极验服务器是否宕机
+                new_captcha: data.new_captcha, // 用于宕机时表示是新验证码的宕机
+
+                product: "bind", // 产品形式，包括：float，popup
+                width: "300px"
+                // 更多前端配置参数说明请参见：http://docs.geetest.com/install/client/web-front/
+            }, handler);
+        }
+    });
+
+
+</script>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>处理进度</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+</head>
+
+
+<body>
+	<div class="mui-text-center mui-content-padded" id="listLoad"><span class="mui-spinner"></span></div>
+	<section style="display: none;">
+		<div class="progressFollow marginB10" id="ing0">
+			<div class="progress mui-row">
+				<div class="mui-col-xs-12">
+					<div class="dot finish"><img src="img/A1.jpg"/></div>
+					<div class="dot now"><div></div></div>
+					<div class="dot future"><div></div></div>
+					<div class="progressIng"></div>
+				</div>
+			</div>
+			<div class="mui-row f_12 zi">
+				<div class="mui-col-xs-4">提交反馈</div>
+				<div class="mui-col-xs-4">处理中</div>
+				<div class="mui-col-xs-4">处理完成</div>
+			</div>
+		</div>
+		
+		<div class="progressFollow marginB10" id="ing1">
+			<div class="progress mui-row">
+				<div class="mui-col-xs-12">
+					<div class="dot finish"><img src="img/A1.jpg"/></div>
+					<div class="dot finish"><img src="img/A1.jpg"/></div>
+					<div class="dot finish"><img src="img/A1.jpg"/></div>
+					<div class="progressIng over"></div>
+				</div>
+			</div>
+			<div class="mui-row f_12 zi">
+				<div class="mui-col-xs-4">提交反馈</div>
+				<div class="mui-col-xs-4">处理中</div>
+				<div class="mui-col-xs-4">处理完成</div>
+			</div>
+		</div>
+		
+		<ul class="mui-table-view cGray6 f_12 progressFollowWrap line15">
+			<li class="mui-table-view-cell bgTran">
+				<div class="mui-media-body cBlack f_14">
+					自行车编号：<span id="bicycle_sn"></span>
+				</div>
+				<div class="mui-clearfix"></div>
+				<div class="mui-pull-left">
+					<img src="img/n1.png" class="iconSmall"/>车辆位置：
+				</div>
+				<div class="mui-media-body" id="address"></div>
+				<div class="mui-clearfix"></div>
+				<div class="mui-pull-left">
+					<img src="img/n2.png" class="iconSmall"/>反馈时间：
+				</div>
+				<div class="mui-media-body" id="add_time"></div>
+				<div class="mui-clearfix"></div>
+				<div class="mui-pull-left">
+					<img src="img/n3.png" class="iconSmall"/>故障类型：
+				</div>
+				<div class="mui-media-body mRed" id="fault_type"></div>
+			</li>
+			<li class="mui-table-view-cell bgTran">
+				<div class="mui-pull-left cBlack f_14 cBlack">
+					车辆位置：
+				</div>
+				<div class="mui-media-body f_14 cBlack" id="nickname"></div>
+				<div class="mui-clearfix"></div>
+				<div class="mui-pull-left">备注说明：</div>
+				<div class="mui-media-body" id="fault_content"></div>
+			</li>
+		</ul>
+		<ul class="mui-table-view lineNone">
+			<li class="mui-table-view-cell bgTran">
+				<img id="fault_image"/>
+			</li>
+		</ul>
+	</section>
+</body>
+<script src="http://webapi.amap.com/maps?v=1.3&key=7c86e74a1b600bfc307e6f3b43a4e1f8&plugin=AMap.Geocoder"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	app.check(function(){
+		var fault_id=app.getRequest('fault_id');
+		console.log(fault_id);
+		
+		//实例化逆编码插件
+		var geocoder = new AMap.Geocoder({
+        	radius: 1000,
+        	extensions: "all"
+        });        
+		
+		
+		app.ajax('route=account/account/getFaultInfo',{
+			user_id:user_id,
+			sign:sign,
+			fault_id:fault_id
+		},function(){
+			$('section').show();
+			$('#add_time').html(resData.data.add_time);
+			$('#bicycle_sn').html(resData.data.bicycle_sn);
+			$('#nickname').html(resData.data.nickname);
+			$('#fault_content').html(resData.data.fault_content);
+			$('#fault_type').html(resData.data.fault_type);
+			$('#fault_image').attr('src',resData.data.fault_image);
+			
+			//处理进度 类型判断
+			var processed=parseInt(resData.data.processed);
+			switch (processed){
+		        case 0: $('#ing0').show();break;
+		        case 1: $('#ing1').show();break;
+		    }
+			
+			//车辆违章地理位置
+			var lnglat=app.wgs84togcj02(resData.data.lng,resData.data.lat);
+			geocoder.getAddress(lnglat, function(status, resData) {
+	            if (status === 'complete' && resData.info === 'OK') {
+	                console.log('高德逆编码',resData);
+	                $('#address').html(resData.regeocode.formattedAddress);
+	            }
+	        });
+	        
+		});
+	});
+  	
+</script>
+
+</html>

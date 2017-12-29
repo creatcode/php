@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>更换新手机</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="padding15">
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >姓 名</label>
+				<input type="text" class="mui-input-clear" placeholder="请输真实姓名" style="padding-right: 30px;" id="input1">
+			</div>
+		</div>
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >身份证</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入身份证号码" style="padding-right: 30px;" id="input2">
+			</div>
+		</div>
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >手机号</label>
+				<input type="number" class="mui-input-clear" placeholder="请输入新手机号码" style="padding-right: 30px;" id="input3">
+			</div>
+		</div>
+		<div class="mui-input-group radius100 lineNone bgTran marginB10">
+			<div class="mui-input-row">
+				<label class="bgWhite" style="border-radius: 100px 0 0 100px;">验证码</label>
+				<input type="text" class="bgWhite" style="width: 28%;float: left;border-radius: 0 100px 100px 0;" id="code">
+			</div>
+			<button type="button" class="mui-btn mui-btn-success radius100" id="getCode" disabled>获取验证码</button>
+		</div>
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" id="go" disabled>授权更换手机</button>
+		<div class="f_12 mui-text-center cGray">3个月只允许更换一次手机号</div>
+	</div>
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	//button高亮判断
+	$('#input3').on('input propertychange',function(){//验证码高亮
+		var zhi1=$.trim($('#code').val());
+		var zhi2=$.trim($(this).val());
+		if(!$('#getCode').hasClass('notClick')){
+			if(app.telCheck(zhi2)){
+				$('#getCode').prop('disabled',false);
+			}else{
+				$('#getCode').prop('disabled',true);
+			}
+		}
+	});
+	
+	$('#code,#input1,#input2,#input3').on('input propertychange',function(){//确认框高亮
+		var zhi1=$.trim($('#input1').val());
+		var zhi2=$.trim($('#input2').val());
+		var zhi3=$.trim($('#input3').val());
+		var zhi4=$.trim($('#code').val());
+		if(zhi1!=''&& zhi2!=''&& app.telCheck(zhi3)&& zhi4!=''){
+			$('#go').prop('disabled',false);
+		}else{
+			$('#go').prop('disabled',true);
+		}
+	});
+	
+	
+	app.check(function(){
+		//获取验证码
+		$('#getCode').on('tap',function(){
+			var time=60;
+			var zhe=$(this);
+			var tel=$('#input3').val();
+			
+			//不能点击 背景变灰
+	    	zhe.prop('disabled',true);
+	    	zhe.addClass('notClick');
+			
+			app.ajax('route=account/account/sendRegisterCode',{
+				'mobile':tel
+			},function(){
+				mui.toast('验证码已发送');
+		    	zhe.text("等待 "+time+" s");
+		
+		      	//设置定时器 每1秒钟 执行一次
+		    	var t=setInterval(function () {
+		    		//time自身减1
+		            time--;
+		            zhe.text("等待 "+time+" s");
+		
+		            //如果到0
+		            if (time==0) {
+		            	//清除定时器
+		                clearInterval(t);
+		                // 按钮样式复原
+		                zhe.text("重新发送");
+		                zhe.prop('disabled',false);
+		                zhe.removeClass('notClick');
+		            }
+		        },1000);
+			},function(){
+				zhe.prop('disabled',false);
+		        zhe.removeClass('notClick');
+			});
+		});
+		
+		//提交
+	  	$('#go').on('tap',function(){
+	  		var input1=$('#input1').val(),
+	  			input2=$('#input2').val(),
+	  			input3=$('#input3').val(),
+	  			code=$('#code').val(),
+	  			zhe=$(this);
+	  			
+	  		zhe.prop('disabled',true);
+	  		app.loading('show');
+	  		
+	  		app.ajax('route=account/account/updateMobile',{
+	  			'user_id':user_id,
+				'sign':sign,
+				'mobile':input3,
+				'code':code,
+				'real_name':input1,
+				'identification':input2
+	  		},function(){
+	  			mui.toast('修改成功');
+		  		setTimeout(function(){
+		  			window.location='./index.html';
+		  		},400);
+	  		},function(){
+	  			zhe.prop('disabled',false);
+				app.loading('hide');
+	  		});
+	  		
+	  	});
+	});
+	
+</script>
+
+</html>

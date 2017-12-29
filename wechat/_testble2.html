@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>蓝牙测试</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+
+</head>
+
+
+<body class="bgWhite">
+	<!--loading-->
+	<div class="loadWait" id="bikeLoadWait" style="display: none;">
+		<div class="loadWaiting mui-text-center">
+			<div class="bikeRound">
+				<img src="img/ZZ1.png" class="bikeComplete"/>
+				<img src="img/ZZ2.png" class="wheel wheelBefore"/>
+				<img src="img/ZZ2.png" class="wheel wheelAfter"/>
+				<div class="cGray6 f_16 tipsText ">
+					<div class="loadBarWrap">
+						<div class="loadBar"></div>
+					</div>
+					<span>连接设备</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="mui-content-padded">
+		<p>测试调起微信扫码</p>
+	</div>
+	<div class="mui-content-padded">
+		<button type="button" id="b1" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10">扫码连接蓝牙</button>
+	</div>
+	<div class="mui-content-padded">
+		<input type="text"class="padding15"  id="look" readonly/>
+	</div>
+	
+	<div class="mui-content-padded">
+		<button type="button" id="b2" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10">扫描身边蓝牙</button>
+	</div>
+	
+	
+	
+</body>
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/jbase64.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	
+	app.check(function(){
+		//调起 微信 jssdk
+		app.wechat_ble(function(){
+			//扫码连接蓝牙
+			$('#b1').on('click',function(){
+				
+				app.loading('show','启动相机');
+				setTimeout(function(){
+					app.loading('hide');
+				},2000);
+				
+				//调起微信扫码
+				wx.scanQRCode({
+					needResult:1, // 默认为0，扫描结果由微信处理，1则直接返回扫描结果，
+					scanType:["qrCode", "barCode"], // 可以指定扫二维码还是一维码，默认二者都有
+					success: function(res) {
+						$('#bikeLoadWait').show();
+						
+						var codeStr = res.resultStr;
+						var bicycle_sn=codeStr.substring(codeStr.indexOf('=')+1);
+						$('#look').val('锁编号： '+bicycle_sn);
+						
+						// 初始化设备库
+						app.openWXDeviceLib(function(){
+							//请求设备ID
+							app.ajax('route=wechat/device/openlock',{        
+								bicycle_sn:bicycle_sn
+							},function(){
+								var device_id = resData.data.device_id;
+//								alert(JSON.stringify(resData));
+								
+								//获取绑定/解绑票据
+								app.getWXDeviceTicket(device_id, 1, function(res){
+									var bindTicket = res.ticket;
+									// 请求绑定接口
+									app.ajax('route=wechat/device/bind',{
+										'ticket' : bindTicket,
+										'device_id' : device_id,
+										'openid' : app.getCookie('openid')
+									},function(){
+//										alert(JSON.stringify(resData.data));
+
+										var connectLock=setInterval(function(){
+											// 开始连接锁
+											app.connectWXDevice(device_id, function(){
+												mui.toast("连接成功");
+												$('#bikeLoadWait').hide();
+												clearInterval(connectLock);
+												
+												// 发送获取锁token指令
+												var base64Data = BASE.encode("获取token指令");
+												app.sendDataToWXDevice(deviceId, base64Data, function(res){
+													alert('锁token获取成功！');
+													// 发送开锁指令
+													var base64Data = BASE.encode("开锁指令");
+													app.sendDataToWXDevice(deviceId, base64Data, function(res){
+														alert('开锁成功！');
+														// 监听关锁事件
+														wx.on('onReceiveDataFromWXDevice',function(res){
+															alert(JSON.stringify(res));
+														});
+													});
+												});
+											});
+										},500);
+										
+										
+	
+									});
+								});
+							}, function(){
+								alert(111);
+							});
+						});
+					}
+				});
+			});
+			
+			$('#b2').on('click',function(){
+				// 初始化设备库
+				app.openWXDeviceLib(function(){
+					app.loading('show','扫描设备');
+					//开始 扫描蓝牙
+					app.startScanWXDevice(function(){
+				
+						//输出扫码结果
+						wx.on('onScanWXDeviceResult',function(res){
+							app.loading('hide');
+							
+						    //自己解析一下res，里面会有deviceid,扫描设备的目的就是为了得到这个
+						    //然后就可以开始绑定了
+						    alert(JSON.stringify(res));
+						    
+						    wx.error(function(res){
+							    alert("wx.error错误："+JSON.stringify(res));
+							    //如果初始化出错了会调用此方法，没什么特别要注意的
+							});
+							
+						});
+						
+						wx.error(function(res){
+						    alert("wx.error错误："+JSON.stringify(res));
+						    //如果初始化出错了会调用此方法，没什么特别要注意的
+						});
+					});
+				});
+			});
+		});
+	});
+	
+	//连敏聪ID 测试用账号
+	app.setSettings(58,'user_id');
+</script>
+
+</html>

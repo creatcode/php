@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>小强单车</title>
+<link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	
+	<div class="mui-content-padded">
+		<p>开锁测试</p>
+		<button type="button" id="b1" class="mui-btn mui-btn-success width100 radius100 padding10 marginB10">扫二维码</button>
+		<button type="button" id="b2" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10">解锁单车</button>
+	</div>
+	<div class="mui-content-padded">
+		<p>锁编号： <span id="a1"></span></p>
+	</div>
+</body>
+
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	app.wechat_jssdk(function(){
+		//扫二维码 获取单车编号  
+		$('#b1').on('tap',function(){
+			
+			app.loading('show','启动相机');
+			setTimeout(function(){
+				app.loading('hide');
+			},2000);
+			
+			wx.scanQRCode({
+				needResult:1,
+				scanType:["qrCode", "barCode"],
+				success: function(res) {
+					var codeStr = res.resultStr;
+					var device_id=codeStr.substring(codeStr.indexOf('=')+1);
+					$('#a1').html(device_id);
+				}
+			});
+		});
+		
+		//解锁单车
+		$('#b2').on('tap',function(){
+			var html='<div class="loadWait" id="bikeLoadWait">\
+				<div class="loadWaiting mui-text-center">\
+					<div class="bikeRound">\
+						<img src="img/ZZ1.png" class="bikeComplete"/>\
+						<img src="img/ZZ2.png" class="wheel wheelBefore"/>\
+						<img src="img/ZZ2.png" class="wheel wheelAfter"/>\
+						<div class="cGray6 f_16 tipsText ">\
+							<div class="loadBarWrap">\
+								<div class="loadBar"></div>\
+							</div>\
+							<span>正在解锁</span>\
+						</div>\
+					</div>\
+				</div>\
+			</div>';
+			$('body').append(html);
+			
+			//解锁单车
+			app.ajax('route=operator/operator/openLock',{
+				'user_id':58,
+				'sign':'6c8dc27541017b41635da7437de0e132',
+				'device_id':76901377979,//单车编号
+				'lng':113.725365,
+				'lat':23.006268
+			},function(){//解锁成功
+				
+				//获取订单 SN
+				var order_sn=resData.data.order_sn;
+				var bikeInterval=setInterval(function(){
+					
+					//订单详情
+					orderInfo(order_sn,function(){
+						
+						//订单详情: -1已取消，0预约中，1骑行中，2结束
+						var orderState=resData.data.order_state;
+						
+						if(orderState==1){
+							mui.toast('解锁成功');
+							$('#bikeLoadWait').remove();
+							
+							//清楚定时器
+							clearInterval(bikeInterval);
+						}
+					});
+					
+				},2000);
+				
+				//十秒钟后再请求一次
+				setTimeout(function(){
+					//订单详情
+					orderInfo(order_sn,function(){
+						
+						//订单详情: -1已取消，0预约中，1骑行中，2结束
+						var orderState=resData.data.order_state;
+						
+						//如果为0，单车厂没有推送解锁消息给我们的后台
+						if(orderState!=1&&orderState!=2){
+							mui.toast('解锁失败');
+							$('#bikeLoadWait').remove();
+							//清楚定时器
+							clearInterval(bikeInterval);
+						}
+					});
+				},9500);
+				
+				
+			},function(){//解锁失败
+				$('#bikeLoadWait').remove();
+				mui.toast('解锁失败');
+			});
+		});
+	});
+	
+	
+	
+	//获取订单详情
+	function orderInfo(sn,callback){
+		app.ajax('route=account/order/getOrderInfo',{
+			'user_id':58,
+			'sign':'6c8dc27541017b41635da7437de0e132',
+			'order_sn':sn
+		},function(){
+			callback();
+		});
+	}
+	
+</script>
+</html>

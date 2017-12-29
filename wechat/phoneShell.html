@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>用户大回馈</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/mui.view.css" rel="stylesheet">
+<link href="picker/mui.picker.css" rel="stylesheet" />
+<link href="picker/mui.poppicker.css" rel="stylesheet" />
+<link href="css/main.css" rel="stylesheet"/>
+<style>
+	.addBox{background-color: #f5f5f5;border-top:4px #e8e8e8 solid;}
+	.addBox.hadAdd{border-top:4px #eb474c solid;}
+	.addressAdd li{font-size: 14px;padding-top: 0; padding-bottom: 0;}
+	.addressAdd li a{margin-top:0 !important; margin-bottom: 0 !important;}
+	.addressAdd li input{font-size: 14px;}
+	.mui-icon-clear{right: -10px !important;}
+</style>
+</head>
+<body>
+	<!--页面主结构开始-->
+	<div id="app" class="mui-views">
+		<div class="mui-view">
+			<!--头部-->
+			<div class="mui-navbar mui-hidden"></div>
+			<!--主体内容-->
+			<div class="mui-pages"></div>
+		</div>
+	</div>
+	
+	<!--默认页面-->
+	<div id="love" class="mui-page">
+		<!--页面标题栏开始-->
+		<div class="mui-navbar-inner mui-bar mui-bar-nav mui-hidden"></div>
+		<!--页面主内容区开始-->
+		<div class="mui-page-content bgWhite" style="overflow: auto;">
+			<img id="banner"/>
+			<div class="padding15 cGray f_12">
+				<div class="marginB5 cGray6 f_14">活动详情：</div>
+				<div id="description"></div>
+			</div>
+			<div class="padding15">
+				<div class="marginB10 cGray6 f_14">收货信息填写：</div>
+				<a class="addBox padding10" id="addBox" href="#agreement" style="display: block;">
+					<div class="noAdd mui-text-center cGray f_14 padding10">
+						<i class="mui-icon mui-icon-plus f_18"></i>&nbsp;&nbsp;填写收货地信息
+					</div>
+				</a>
+				<div class="f_12 cGray paddingT10 marginT10" id="express"></div>
+			</div>
+			<div class="padding15" style="display: none;" id="goSubmit">
+				<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10" id="go" disabled>确 定</button>
+			</div>
+		</div>
+	</div>
+	
+	
+	
+	<!--填写地址-->
+	<div id="agreement" class="mui-page">
+		<!--通过 mui-action-back 来控制返回-->
+		<div class="mui-navbar-inner mui-bar mui-bar-nav mui-hidden"></div>
+		<div class="mui-page-content" style="overflow: auto;">
+			<ul class="mui-table-view uesrCenter marginT10 addressAdd">
+				<li class="mui-table-view-cell mui-media bgWhite " id="inputName">
+					<div class="mui-input-group">
+						<div class="mui-input-row">
+							<label class="cBlack">收货人</label>
+							<input type="text" class="mui-text-right mui-input-clear paddingR20 cGray">
+						</div>
+					</div>
+				</li>
+				
+				<li class="mui-table-view-cell mui-media bgWhite" id="inputTel">
+					<div class="mui-input-group">
+						<div class="mui-input-row">
+							<label class="cBlack">联系电话</label>
+							<input type="number" class="mui-text-right mui-input-clear paddingR20 cGray">
+						</div>
+					</div>
+				</li>
+				
+				<li class="mui-table-view-cell mui-media bgWhite" id="shellStyle">
+					<a class="bgWhite mui-navigate-right">
+						<div class="mui-input-group">
+							<div class="mui-input-row">
+								<label class="cBlack">手机壳型号</label>
+								<input type="text" class="mui-text-right paddingR20 cGray" id="nickname" placeholder="请选择" readonly>
+							</div>
+						</div>
+					</a>
+				</li>
+				
+				<li class="mui-table-view-cell mui-media bgWhite" id="areaStyle">
+					<a class="bgWhite mui-navigate-right">
+						<div class="mui-input-group">
+							<div class="mui-input-row">
+								<label class="cBlack">所在地区</label>
+								<input type="text" class="mui-text-right paddingR20 cGray" id="nickname" placeholder="请选择" readonly>
+							</div>
+						</div>
+					</a>
+				</li>
+				
+				<li class="mui-table-view-cell mui-media bgWhite padding0" id="inputAdd">
+					<textarea rows="2" class="borderNone bgTran f_14 margin0" placeholder="请填写详细地址"></textarea>
+				</li>
+				
+			</ul>
+			
+			
+			
+			<div class="padding15 mui-text-center marginT10">
+				<button type="button" class="mui-btn mui-btn-success width100 marginT10 marginB10 radius100 padding10" id="doIt">保 存</button>
+				<button type="button" class="mui-btn mui-btn-success mui-btn-outlined mui-action-back marginT10 width100 padding10 radius100">返 回</button>
+			</div>
+		</div>
+	</div>
+	
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/mui.view.js"></script>
+<script src="picker/mui.picker.min.js"></script>
+<script src="picker/mui.poppicker.js"></script>
+<script src="picker/area.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+
+	
+	//初始化单页view
+	var viewApi = mui('#app').view({
+		defaultPage: '#love'
+	});
+	
+	var view = viewApi.view;
+	//处理view的后退与webview后退
+	var oldBack = mui.back;
+	mui.back = function() {
+		if (viewApi.canBack()) { //如果view可以后退，则执行view的后退（本页面 后退）
+			viewApi.back();
+		} else { //执行webview后退（跨页面 后退）
+			oldBack();
+		}
+	};
+	
+	
+//	appValue(58,'bef39a8cc4c6bc39d2a1ca651f03510a','iOS');
+	function appValue(user_id,sign,phoneSystem){
+		
+		console.log('user_id = ',user_id);
+		console.log('sign = ',sign);
+		console.log('phoneSystem = ',phoneSystem);
+		
+		//获取礼品活动信息
+		app.ajax('route=account/gift',{
+			user_id:user_id,
+			sign:sign,
+			activity_id:1
+		},function(){
+			//banner/描述
+			$('#banner').attr('src',resData.data.activity_image);
+			$('#description').html(resData.data.activity_description);
+			
+			//有无下单 0无/1有
+			if(resData.data.has_order==0){
+				$('#goSubmit').show();
+			}else{
+				//收货人信息
+				var htmlK='<div class="f_12 cGray">\
+							<span class="mui-pull-left">'+resData.data.order_info.consignee+'&nbsp;&nbsp;&nbsp;'+resData.data.order_info.phone+'</span>\
+							<span class="mui-pull-right">'+resData.data.order_info.gift_name+'</span>\
+							<div class="mui-clearfix"></div>\
+							<div class="paddingT10">'+resData.data.order_info.address+'</div>\
+						</div>';
+				$('#addBox').html(htmlK).addClass('hadAdd').removeAttr('href');
+				
+				//物流信息 0无/1有
+				if(resData.data.order_info.state==1){
+					var htmlV='<div class="marginB5 cGray6 f_14">快递信息：</div>快递公司：'+resData.data.order_info.shipping_company+'<br/>运单编号：'+resData.data.order_info.shipping_code+'<br/>（请自行查询快递进度，谢谢合作）';
+					$('#express').html(htmlV);
+				}
+			}
+		});
+		
+		//请求后台数据
+		app.ajax('route=account/gift/getGiftList',{
+			user_id:user_id,
+			sign:sign,
+			activity_id:1,
+			page:1
+		},function(){
+			//手机壳 弹框对象
+			var shellPicker = new mui.PopPicker({layer: 1});
+			var shellData = [],
+				shellList = resData.data.items;
+			shellList.forEach(function(val,i){
+				shellData.push(val.gift_name);
+			});
+			console.log('礼品名称列表：',shellData);
+			shellPicker.setData(shellData);
+			$('#shellStyle').on('tap',function(){
+				var zhe=$(this);
+				//其余输入框失去焦点
+				$('input,textarea').blur();
+				shellPicker.show(function(items) {
+					var shellText=items[0];
+					if(shellText!=undefined){
+						shellList.forEach(function(val,i){
+							if(shellText==val.gift_name){
+								zhe.find('input').attr('data-id',val.gift_id).val(shellText);
+								return;
+							}
+						});
+					}
+					//返回 false 可以阻止选择框的关闭
+					//return false;
+				});
+			});
+			
+			//地区 弹框对象
+			var areaPicker = new mui.PopPicker({layer: 3});
+			areaPicker.setData(cityData);
+			$('#areaStyle').on('tap',function(){
+				var zhe=$(this);
+				//其余输入框失去焦点
+				$('input,textarea').blur();
+				areaPicker.show(function(items) {
+					if(items[0].text!=undefined && items[1].text!=undefined){
+						var textAdd='';
+						if(items[2].text!=undefined){
+							textAdd=(items[0] || {}).text + " " + (items[1] || {}).text + " " + (items[2] || {}).text;
+						}else{
+							textAdd=(items[0] || {}).text + " " + (items[1] || {}).text;
+						}
+						zhe.find('input').val(textAdd);
+					}
+					
+					//返回 false 可以阻止选择框的关闭
+					//return false;
+				});
+			});
+			
+			
+			
+			//收货人信息
+			$('#doIt').on('tap',function(){
+				var inputName=$('#inputName').find('input').val(),
+					inputTel=$('#inputTel').find('input').val(),
+					shellStyle=$('#shellStyle').find('input').val(),
+					areaStyle=($('#areaStyle').find('input').val()).replace(/\s+/g, ''),
+					inputAdd=$('#inputAdd').find('textarea').val();
+				if(inputName==''){
+					mui.alert('请输入收货人姓名','温馨提示');
+				}else if(!app.telCheck(inputTel)){
+					mui.alert('请输入正确的手机格式','温馨提示');
+				}else if(shellStyle==''){
+					mui.alert('请选择手机壳型号','温馨提示');
+				}else if(areaStyle==''){
+					mui.alert('请输入所在区域','温馨提示');
+				}else if(inputAdd==''){
+					mui.alert('请输入详细地址','温馨提示');
+				}else{
+					var htmlK='<div class="f_12 cGray">\
+							<span class="mui-pull-left">'+inputName+'&nbsp;&nbsp;&nbsp;'+inputTel+'</span>\
+							<span class="mui-pull-right">'+shellStyle+'</span>\
+							<div class="mui-clearfix"></div>\
+							<div class="paddingT10">'+areaStyle+inputAdd+'</div>\
+						</div>';
+					$('#addBox').addClass('hadAdd').html(htmlK);
+					$('#go').prop('disabled',false);
+					mui.toast('保存成功');
+					setTimeout(function(){
+						viewApi.back();
+					},400);
+					
+				}
+			});
+			
+			//全部提交
+			$('#go').on('tap',function(){
+				var zhe=$(this);
+				
+				var consignee=$('#inputName').find('input').val(),
+					phone=$('#inputTel').find('input').val(),
+					gift_id=$('#shellStyle').find('input').data('id'),
+					areaStyle=($('#areaStyle').find('input').val()).replace(/\s+/g, ''),
+					inputAdd=$('#inputAdd').find('textarea').val();
+				
+				zhe.prop('disabled',true);
+	  			app.loading('show','正在提交');
+	  			
+	  			//提交数据
+	  			app.ajax('route=account/gift/exchange',{
+	  				user_id:user_id,
+					sign:sign,
+					activity_id:1,
+					gift_id:gift_id,
+					consignee:consignee,
+					phone:phone,
+					address:areaStyle+inputAdd
+	  			},function(){
+	  				mui.toast('提交成功');
+	  				setTimeout(function(){
+		  				if(phoneSystem=='iOS'){
+		  					//执行苹果语法 关闭webview
+		  					appApi.closeWebView();
+		  				}else if(phoneSystem=='And'){
+		  					//执行安卓语法 关闭webview
+		  					window.android.yyy();
+		  				}
+						zhe.prop('disabled',false);
+						app.loading('hide');
+					},400);
+	  			},function(){
+	  				zhe.prop('disabled',false);
+					app.loading('hide');
+	  			});
+			});
+		});
+	}
+	
+	
+	
+	
+</script>
+
+</html>
+
+
+
+
+
+
+
+
+
+

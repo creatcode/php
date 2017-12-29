@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>钱包明细</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="mui-content mui-scroll-wrapper" id="scroll">
+		<div class="mui-scroll">
+			<ul class="mui-table-view" id="moneyList"></ul>
+			<!--转转-->
+			<div class="mui-text-center mui-content-padded" id="listLoad"><span class="mui-spinner"></span></div>
+		</div>
+	</div>
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/mui.pullToRefresh.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	var page=0;
+	app.check(function(){
+		//获取钱包明细
+		app.ajax('route=account/account/getWalletDetail',{
+			'user_id':user_id,
+			'sign':sign,
+			'page':page+=1
+		},function(){
+			console.log('分页page： '+page);
+			
+			app.pullToRefresh({
+				data:resData.data.items,
+				start:function(){
+					//加载数据
+					loveData(resData.data.items);
+				},
+				end:function(){
+					$('#moneyList').html('<div class="bgTran mui-text-center f_16 padding10">暂无记录</div>');
+				},
+				//如果总页数 > 当前页码 触发上拉加载函数
+				judge:resData.data.total_pages>resData.data.page,
+				wrap:'#scroll .mui-scroll',
+				success:function(zhe){
+					app.ajax('route=account/account/getWalletDetail',{
+						'user_id':user_id,
+						'sign':sign,
+						'page':page+=1
+					},function(){
+						console.log('分页page： '+page);
+						setTimeout(function(){
+							
+							//加载数据
+							loveData(resData.data.items);
+							
+							//如果总页数==当前页面 停止上拉加载函数 true停止/false继续
+							if(resData.data.total_pages==resData.data.page){
+								zhe.endPullUpToRefresh(true);
+							}else{
+								zhe.endPullUpToRefresh(false);
+							}
+						},200);
+					});
+				}
+			});
+			
+		});
+		
+		//加载数据
+		function loveData(a){
+			var htmlK='';
+			
+			mui.each(a,function(i,val){
+				//还原时间戳
+				var time=app.formatTime({
+					type:1,
+					time:val.pdl_add_time
+				});
+				
+				htmlK+='<li class="mui-table-view-cell bgTran">\
+					<div class="mui-media-body mui-row">\
+						<div class="mui-col-xs-6">\
+							<div class="f_16 marginB5">'+val.deposit_type+'</div>\
+							<div class="f_14 cGray">'+time+'</div>\
+						</div>\
+						<div class="mui-col-xs-6 mui-text-right">\
+							<div class="f_16 marginB5 mRed">'+val.pdl_available_amount+'</div>\
+							<div class="f_14 cGray">'+val.pdl_payment_name+'</div>\
+						</div>\
+					</div>\
+				</li>';
+			});
+			$('#moneyList').append(htmlK);
+		}
+	});
+	
+	
+	
+</script>
+
+</html>

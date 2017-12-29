@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>关注小强单车</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+</head>
+
+
+<body class="">
+	<div class="mui-content-padded mui-text-center">
+		<img src="img/followMe.jpg" class="inlineBlock marginT10 marginB10" width="50%" style="border: 6px solid white;"/>
+		<p>长按关注公众号</p>
+	</div>
+	<div class="padding10"></div>
+	<ul class="mui-table-view f_14 lineLeft0 cBlack followMe" id="visitGo">
+		<li class="mui-table-view-cell ">
+			<a class="mui-navigate-right bgTran">
+				<img src="img/J2.jpg" class="inlineBlock" height="18px" width="18px" style="position: relative; top: -2px;"/>&nbsp;&nbsp;联系电话<span class="mui-pull-right cGray paddingR20" id="m2"></span>
+			</a>
+		</li>
+		<li class="mui-table-view-cell ">
+			<a class="mui-navigate-right bgTran ">
+				<img src="img/J4.jpg" class="inlineBlock" height="18px" width="18px" style="position: relative; top: -2px;"/>&nbsp;&nbsp;官方网站<span class="mui-pull-right cGray paddingR20" id="m4"></span>
+			</a>
+		</li>
+		<li class="mui-table-view-cell bgTran">
+			<img src="img/J3.jpg" class="inlineBlock" height="18px" width="18px" style="position: relative; top: -2px;"/>&nbsp;&nbsp;邮箱地址<span class="mui-pull-right cGray" id="m3"></span>
+		</li>
+		<li class="mui-table-view-cell bgTran">
+			<img src="img/J1.jpg" class="inlineBlock" height="18px" width="18px" style="position: relative; top: -2px;"/>&nbsp;&nbsp;微信公众号<span class="mui-pull-right cGray" id="m1"></span>
+		</li>
+	</ul>
+	<p class="f_10 mui-text-center paddingT10 ">copyright © 2013-2017 广东亦强科技有限公司</p>
+	
+	
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+
+  	//关于我们
+	app.ajax('route=system/common/contact',{},function(){
+		$('#m1').html(resData.data.wechat);
+		$('#m2').html(resData.data.phone);
+		$('#m3').html(resData.data.email);
+		$('#m4').html(resData.data.web);
+	});
+	
+	
+</script>
+
+</html>
+
+
+
+
+
+
+
+
+
+

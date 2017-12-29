@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>小强单车</title>
+<link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+</head>
+
+
+<body>
+	<!--loading-->
+	<div class="loadWait" id="bikeLoadWait">
+		<div class="loadWaiting mui-text-center">
+			<div class="bikeRound">
+				<img src="img/ZZ1.png" class="bikeComplete"/>
+				<img src="img/ZZ2.png" class="wheel wheelBefore"/>
+				<img src="img/ZZ2.png" class="wheel wheelAfter"/>
+				<div class="cGray6 f_16 tipsText ">
+					<div class="loadBarWrap">
+						<div class="loadBar"></div>
+					</div>
+					<span>正在启动地图</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--行程详情-->
+	<div class="mui-col-xs-12" id="myTripInfo">
+		<!--嵌入地图-->
+		<div class="roadMap">
+			<div id="container" style="height: 220px;"></div>
+		</div>
+		<div class="cutBottom"></div>
+		
+		
+		<!--详情-->
+		<div class="infoWrap mui-content-padded bgWhite mui-text-center f_14 padding15">
+			<div class="mui-col-xs-12">
+				<img class="radius100 infoHeader">
+			</div>
+			<div style="padding-top: 30px;" class="marginB10" id="nickname"></div>
+			<div class="padding10">骑行距离</div>
+			<div class="marginB10 paddingB10 "><span class="f_35 cBlack" id="finishLong"></span>&nbsp;km</div>
+			<div class="padding10" style="border-top:1px solid #eee;border-bottom: 1px solid #eee;">单车编号：<span id="bikeSn"></span></div>
+			<div class="mui-row paddingT10 paddingB10 infoCol">
+				<div class="mui-col-xs-4">
+					<img src="img/D1.jpg" class="marginCenter" height="35px"/>
+					<div class="f_12 marginB5">骑行时间(min)</div>
+					<div class="f_20 cBlack" id="info1"></div>
+				</div>
+				<div class="mui-col-xs-4">
+					<img src="img/D2.jpg" class="marginCenter" height="35px"/>
+					<div class="f_12 marginB5">节约碳排量(g)</div>
+					<div class="f_20 cBlack" id="info2"></div>
+				</div>
+				<div class="mui-col-xs-4">
+					<img src="img/D3.jpg" class="marginCenter" height="35px"/>
+					<div class="f_12 marginB5">卡路里(kcal)</div>
+					<div class="f_20 cBlack" id="info3"></div>
+				</div>
+			</div>
+			<div class="mui-row infoCol"style="border-top:1px solid #eee;margin-bottom: -15px;">
+				<div class="mui-col-xs-6 paddingT10 paddingB10" style="border-right:1px solid #eee;" onclick="app.downloadApp()">下载APP</div>
+				<div class="mui-col-xs-6 paddingT10 paddingB10 mRed" id="shareCoupon">免费领取用车劵</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="http://webapi.amap.com/maps?v=1.3&key=7c86e74a1b600bfc307e6f3b43a4e1f8&plugin=AMap.Geocoder,AMap.Polyline"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	var order_id = app.getRequest('order_id'),
+  		encryptCode = app.getRequest('encryptCode');
+  
+  	//获取行程详情
+  	app.ajax('route=account/account/getOrderDetailByEncrypt',{
+  		'order_id':order_id,
+		'encrypt_code':encryptCode
+  	},function(){
+		
+		//用户头像/用户名称/骑行距离/单车编号/
+		$('.infoHeader').attr('src',(resData.data.user_info.avatar==''||resData.data.user_info.avatar==null||resData.data.user_info.avatar==undefined)?'img/initHeader.jpg':resData.data.user_info.avatar);
+		$('#nickname').html(resData.data.user_info.nickname);
+		$('#finishLong').html(resData.data.order_info.distance);
+		$('#bikeSn').html(resData.data.order_info.bicycle_sn);
+		
+		//骑行时间/节约碳排量/卡路里
+		$('#info1').html(resData.data.order_info.duration);
+		$('#info2').html(resData.data.order_info.emission);
+		$('#info3').html(resData.data.order_info.calorie);
+		
+		//单车轨迹
+		app.mapFit(resData);
+  	});
+  	
+	//领取优惠券
+	$('#shareCoupon').on('click',function(){
+		window.location='./shareCoupon.html?encryptCode='+encryptCode+'&order_id='+order_id;
+	});
+  	
+</script>
+
+</html>

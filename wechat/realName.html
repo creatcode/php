@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>实名认证</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="deposit">
+		<div class="progress mui-row">
+			<div class="mui-col-xs-12">
+				<div class="dot finish"><img src="img/A1.jpg"/></div>
+				<div class="dot finish"style="left: 31%;"><img src="img/A1.jpg"/></div>
+				<div class="dot now"><div></div></div>
+				<div class="dot"><div></div></div>
+				<div class="progressIng"></div>
+			</div>
+		</div>
+		<div class="mui-row mui-text-center f_12 zi">
+			<div class="mui-col-xs-3">手机验证</div>
+			<div class="mui-col-xs-3">押金充值</div>
+			<div class="mui-col-xs-3">实名认证</div>
+			<div class="mui-col-xs-3">注册完成</div>
+		</div>
+	</div>
+	
+	
+	<div class="padding15">
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >姓 名</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入真实姓名" id="input1">
+			</div>
+		</div>
+		
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >身份证</label>
+				<input type="text" class="mui-input-clear" placeholder="请输入身份证号" id="input2">
+			</div>
+		</div>
+		
+		
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" id="go" disabled>认 证</button>
+	</div>
+
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	//检测微信openid
+	app.wxOpenidCheck(function(){
+		//检测用户ID
+		app.userIdCheck(function(){//无用户ID
+			
+			app.loginCheck();
+		},function(){//有用户ID
+			
+			//button高亮判断
+			$('#input1,#input2').on('input propertychange',function(){//验证码高亮
+				var zhi1=$.trim($('#input1').val());
+				var zhi2=$.trim($('#input2').val());
+				if(zhi1!=''&&zhi2!=''){
+					$('#go').prop('disabled',false);
+				}else{
+					$('#go').prop('disabled',true);
+				}
+			});
+				
+			//提交
+			$('#go').on('tap',function(){
+				var zhe=$(this);
+				zhe.prop('disabled',true).text('正在提交');
+				app.loading('show','正在提交');
+				
+				var real_name=$('#input1').val(),
+					identity=$('#input2').val();
+				
+				app.ajax('route=account/account/identity',{
+					'user_id':user_id,
+					'sign':sign,
+					'real_name':real_name,
+					'identity':identity
+				},function(){
+					mui.toast(resData.msg);
+					
+					setTimeout(function(){
+						window.location='./loginFinish.html';
+					},400);
+				},function(){
+					zhe.prop('disabled',false).text('认 证');
+					app.loading('hide');
+				});
+			});
+			
+		});
+	});
+  	
+</script>
+
+</html>

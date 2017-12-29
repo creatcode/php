@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>未结束计费</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body class="bgWhite">
+	<div class="mui-content-padded">
+		<div class="bgGrayF5 marginB10"><img src="img/violation.png" class="padding10 mui-pull-left inlineBlock margin0" width="40px" height="40px" id="stopCode">&nbsp;&nbsp;
+			<input type="number" id="scanNum" class=" bgTran margin0 violStop" placeholder="扫码或输入车辆编号" />
+		</div>
+	</div>
+	<div class="mui-content-padded padding10">
+		<div class="cBlack f_16 marginB5">关锁很久后，未结束计费？</div>
+		<div class="f_14 cGray6 marginB5">1. 请确认锁还已扣紧，无法反向拉开；</div>
+		<div class="f_14 cGray6 marginB5">2. 完全关掉app,再次启动，如计费自动结束，可继续使用单车；</div>
+		<div class="f_14 cGray6 marginB5">3. 重启后仍未结束计费，请上传带有单车编号已关锁的单车照片，等待人工处理。</div>
+		<div class="f_14 mRed" id="good2">提示：提交后您的账户会被暂时冻结<i class="mui-icon mui-icon-info mui-pull-right" style="margin-top: -3px;"></i></div>
+	</div>
+	<div class="mui-content-padded bgGrayF5">
+		<div class="paddingT10 cBlack f_14">&nbsp;&nbsp;&nbsp;&nbsp;备注说明</div>
+		<textarea rows="3" class="borderNone bgTran f_14 margin0" placeholder="请用简单文字备注说明~"></textarea>
+		<div class="mui-text-right paddingB10  f_12 cGray"><span id="t1">0</span>/<span id="t2">100</span>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+	</div>
+	<div class="padding15" style="padding-top:5px !important;">
+		<div style="width: 80px; position: relative;" class="marginB10">
+			<input type="file" accept="image/*" onchange="app.selectFileImage(this);" class="imgFile"/> 
+			<img src="img/notEndcode.png" id="myImage" width="80px" height="80px"/>
+		</div>
+		<div class="cGray f_12">请将单车编号及已关锁的锁环拍摄在内</div>
+		
+	</div>
+	
+	<div class="padding15">
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" id="go">提 交</button>
+	</div>
+	
+	
+</body>
+
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/exif.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	
+	
+	//调起 微信 jssdk
+	app.wechat_jssdk(function(){
+		app.check(function(){
+			//文本输入框 文字统计 函数
+			app.countText('t2','t1');
+			
+			//扫描二维码
+			app.scan('stopCode','scanNum');
+			
+			//提交
+			$('#go').on('tap',function(){
+				var zhe=$(this);
+				var bicycle_sn=$('input').val();
+				var content=$('textarea').val();
+				var myImage=$('#myImage').data('img');
+				
+				if(bicycle_sn==''){
+					mui.alert('车辆编号不能为空','温馨提示');
+				}else if(myImage==''||myImage==null||myImage==undefined){
+					mui.alert('上传图片不能为空','温馨提示');
+				}else{
+					zhe.prop('disabled',true).text('正在提交');
+					app.loading('show','正在提交');
+					
+					app.wgs84Location(function(){
+						app.ajax('route=fault/fault/addFault',{
+							'user_id':user_id,
+							'sign':sign,
+							'fault_type':12,
+							'bicycle_sn':bicycle_sn,
+							'lat':nowLat,
+							'lng':nowLng,
+							'fault_content':content,
+							'fault_image':myImage
+						},function(){
+							zhe.prop('disabled',false).text('提 交');
+							app.loading('hide');
+							
+							mui.toast(resData.msg);
+						
+							setTimeout(function(){
+								window.history.go(-1);
+							},400);
+						},function(){
+							zhe.prop('disabled',false).text('提 交');
+							app.loading('hide');
+						});
+					});
+				}
+				
+			});
+			
+			//账户被冻结文档
+			app.articleLink($('#good2'),'setting-user-freeze');
+		});
+	});
+  	
+</script>
+
+</html>
+
+
+
+
+
+
+
+
+
+

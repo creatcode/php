@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>修改昵称</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+</head>
+
+<body>
+	<div class="padding10"></div>
+	<div class="mui-clearfix"></div>
+	<ul class="mui-table-view uesrCenter marginT10">
+		<li class="mui-table-view-cell mui-media">
+			<a class="bgWhite" >
+				<div class="mui-input-group">
+					<div class="mui-input-row">
+						<input type="text"  placeholder="请输入昵称" class="mui-input-clear" style="padding-right: 30px;" id="nicknameInput">
+					</div>
+				</div>
+			</a>
+		</li>
+	</ul>
+	<div class="padding15 mui-text-center marginT10">
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10" id="go" disabled>保 存</button>
+	</div>
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	app.check(function(){
+		//按钮高亮判断
+		$('#nicknameInput').on('input propertychange',function(){
+			var zhi=!!($.trim($(this).val()));
+			if(zhi){
+				$('#go').prop('disabled',false);
+			}else{
+				$('#go').prop('disabled',true);
+			}
+		});
+		
+		//提交
+		$('#go').on('tap',function(){
+			var nicknameInput=$.trim($('#nicknameInput').val()),
+				zhe=$(this);
+				
+			zhe.prop('disabled',true);
+  			app.loading('show');
+  			
+  			app.ajax('route=account/account/updateInfo',{
+  				'user_id':user_id,
+				'sign':sign,
+				'nickname':nicknameInput
+  			},function(){
+  				mui.toast('修改成功');
+  				
+				setTimeout(function(){
+					window.history.go(-1);
+				},400);
+  			},function(){
+  				zhe.prop('disabled',false);
+				app.loading('hide');
+  			});
+		});
+	});
+</script>
+</html>

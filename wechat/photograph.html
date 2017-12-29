@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>拍照停车</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="mui-content-padded">
+		<div class="padding10 f_14 mui-text-center">请将周围环境，门牌号路名拍摄在内</div>
+		<div class=" bgWhite" style="border-radius:10px 10px 0 0;overflow: hidden;box-shadow: 0 1px 5px rgba(0,0,0,0.1); position: relative;">
+			<input type="file" accept="image/*" onchange="app.selectFileImage(this);" class="imgFile"/> 
+			<img src="img/demoBike.jpg" class="marginCenter" id="myImage" />
+		</div>
+		<div class="bgWhite" style="border-radius:0 0 10px 10px;overflow: hidden;box-shadow: 0 1px 5px rgba(0,0,0,0.1);">
+			<div class="paddingT10 f_14">&nbsp;&nbsp;&nbsp;&nbsp;备注说明</div>
+			<textarea rows="3" class="borderNone f_14 margin0" placeholder="请用简短的文章说明停车信息，来帮助他人更好的找到这辆车~"></textarea>
+			<div class="mui-text-right paddingB10 f_12 cGray"><span id="t1">0</span>/<span id="t2">60</span>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+		</div>
+		
+	</div>
+	<div class="padding15">
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" id="photoGo">提 交</button>
+	</div>
+	
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/exif.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	var order_id = app.getRequest('order_id'),
+		lng = app.getRequest('lng'),
+		lat = app.getRequest('lat'),
+		bicycle_sn = app.getRequest('bicycle_sn');
+	
+	//文本输入框 文字统计 函数
+	app.countText('t2','t1');
+	
+	
+	app.check(function(){
+		$('#photoGo').on('tap',function(){
+			var zhe=$(this);
+			var content=$('textarea').val();
+			var parking_image=$('#myImage').data('img');
+			
+			if($('#myImage').data('img')){
+				zhe.prop('disabled',true).text('正在提交');
+				app.loading('show','正在提交');
+				app.ajax('route=feedback/feedback/addNormalParking',{
+					'user_id':user_id,
+					'sign':sign,
+					'bicycle_sn':bicycle_sn,
+					'content':content,
+					'lat':lat,
+					'lng':lng,
+					'parking_image':parking_image
+				},function(){
+					zhe.prop('disabled',false).text('提 交');
+					app.loading('hide');
+					
+					mui.toast(resData.msg);
+					
+					setTimeout(function(){
+						window.location='./index.html';
+					},400);
+				},function(){
+					zhe.prop('disabled',false).text('提 交');
+					app.loading('hide');
+				});
+				
+			}else{
+				mui.alert('您未上传照片','温馨提示');
+			}
+		});
+	});
+</script>
+
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>押金充值</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<a class="mui-icon mui-icon-back cGray padding10 mui-pull-left mui-action-back"></a>
+	<div class="mui-clearfix"></div>
+	<div style="padding:10% 0 8% 0" class="mui-text-center cBlack">
+		<div class="f_16"style="padding-bottom: 30px;">押金 （可全额退）</div>
+		<div style="font-size: 60px;">99<span class="f_14">&nbsp;&nbsp;元</span></div>
+	</div>
+	<div class="padding15">
+		<button type="button" class="mui-btn mui-btn-success width100 radius100 padding10" id="go">充 值</button>
+	</div>
+	<div class="padding15" style="padding-top: 0 !important;">
+		<div class="cGray6 f_12 padding15">
+			<div class="marginB5">押金可原路退还</div>
+			<div>车费不在押金内扣除，需另外缴纳</div>
+		</div>
+	</div>
+	
+	
+	
+</body>
+
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	//调起 微信 jssdk
+	app.wechat_jssdk(function(){
+		//检测微信openid
+		app.wxOpenidCheck(function(){
+			//检测用户ID
+			app.userIdCheck(function(){//无用户ID
+				app.loginCheck();
+			},function(){//有用户ID
+				
+				//微信统一下单
+				$('#go').on('tap',function(){
+					var zhe=$(this);
+					var btnArray = ['取消', '确认'];
+					mui.confirm('您确定充值99元到押金？','温馨提示',btnArray,function(e){
+						if (e.index == 1) {
+							//微信支付  1押金充值  / 2余额充值
+							app.pay(zhe,1,{
+								'user_id':user_id,
+								'sign':sign
+							},function(){
+								//支付成功
+								window.location='./index.html';
+							});
+						}
+					});
+					
+				});
+				
+			});
+		});
+	});
+</script>
+
+</html>

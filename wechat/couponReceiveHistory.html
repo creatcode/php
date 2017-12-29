@@ -1,0 +1,116 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>小强单车</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="shareCoupon">
+		<div class="mui-text-center">
+			<img class="marginCenter couponHead radius100 marginB5" id="userImg"/>
+			<div class="f_16 realNameS" style="color:#95959f;"></div>
+			<div class="cWhite paddingT10 f_14" >
+				您的好友 <span class="realNameS"></span> 正在使用 <span class="mRed">小强单车</span><br/>并完成一段骑行，一起加入吧~
+			</div>
+		</div>
+		
+		<img src="img/bgShare.png" class="bgShare"/>
+	</div>	
+	<div class="mui-text-center f_bold f_16 cBlack  paddingT10 paddingB10 mui-content-padded">您已经领取过了优惠券咯~</div>
+	
+	<!--优惠卷列表-->
+	<ul class="mui-content-padded couponList cBlack"></ul>
+	
+	
+	<div class="padding15">
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" onclick="app.downloadApp()">打开APP 查看用车劵</button>
+	</div>
+	
+	
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	
+  	//个人信息编码/优惠卷类型/数字/单位/有效期至/是否使用/是否过期
+  	var encryptCode = app.getRequest('encryptCode'),
+  		coupon_type=app.getRequest('coupon_type'),
+  		number=app.getRequest('number'),
+  		unit=app.getRequest('unit'),
+  		failure_time=app.getRequest('failure_time'),
+  		used=app.getRequest('used'),
+  		expired=app.getRequest('expired');
+  		
+  		
+  	//1.按时间、2.按次数、3.按金额，4.按折扣
+	//1、2用车券
+	//3代金券
+	//4优惠券
+	var juTips='';
+	switch (parseInt(coupon_type)){
+		case 1:
+			juTips='用车券';
+			break;
+		case 2:
+			juTips='用车券';
+			break;
+		case 3:
+			juTips='代金券';
+			break;
+		case 4:
+			juTips='优惠券';
+			break;
+	}
+	
+	//判断 是否使用/是否过期
+	var couponTips='';
+	if(used==true||expired==true){
+		$('ul').addClass('couponHistory');
+		
+		if(used==true&&expired==false){
+			couponTips='<span class="couponTips">已使用</span>';
+		}else if(used==false&&expired==true){
+			couponTips='<span class="couponTips">已过期</span>';
+		}else if(used==true&&expired==true){
+			couponTips='<span class="couponTips">已使用</span>';
+		}
+	}
+	
+  	
+  	var htmlA ='<li>\
+		<div class="couponbox1">\
+			<div class="couponboxTime">\
+				<span class="f_bold f_24 mRed">'+number+'</span>&nbsp;<span class="f_14">'+unit+'</span>\
+			</div>\
+		</div>\
+		<div class="couponbox2">\
+			<div class="f_16 marginB5">'+juTips+couponTips+'</div>\
+			<div class="f_14 cGray ">有效期至'+failure_time+'</div>\
+		</div>\
+	</li>';
+	$('ul').html(htmlA);
+  	
+  	
+  	//获取个人信息
+  	app.ajax('route=account/account/getUserInfoByEncrypt',{
+  		'encrypt_code':encryptCode
+  	},function(){
+    	//头像/真实姓名/邀请码手机号
+		$('#userImg').attr('src',(resData.data.avatar==''||resData.data.avatar==null||resData.data.avatar==undefined)?'img/initHeader.jpg':resData.data.avatar);
+		$('.realNameS').html((resData.data.nickname==''||resData.data.nickname==null||resData.data.nickname==undefined)?resData.data.mobile:resData.data.nickname);
+		$('#loveTel').html(resData.data.mobile);
+  	});
+</script>
+
+</html>

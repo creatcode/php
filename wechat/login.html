@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>手机验证</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="padding15">
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >手机号</label>
+				<input type="number" class="mui-input-clear" placeholder="请输入手机号" id="tel" style="padding-right: 30px;">
+			</div>
+		</div>
+		
+		<div class="mui-input-group radius100 lineNone bgTran marginB10">
+			<div class="mui-input-row">
+				<label class="bgWhite" style="border-radius: 100px 0 0 100px;">验证码</label>
+				<input type="text" class="bgWhite" style="width: 28%;float: left;border-radius: 0 100px 100px 0;" id="code">
+			</div>
+			<button type="button" class="mui-btn mui-btn-success radius100 mui-active" id="getCode" disabled>获取验证码</button>
+		</div>
+		
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" id="go" disabled>开 始</button>
+		
+		<div class="f_12 mui-text-center cGray">点击开始，即表示同意<a id="agreement" class="mRed">《小强单车用户协议》</a></div>
+	</div>
+</body>
+
+
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	//调起 微信 jssdk
+	app.wechat_jssdk(function(){
+		//检测微信openid
+		app.wxOpenidCheck(function(){
+			app.wgs84Location(function(){
+				//button高亮判断
+				$('#tel').on('input propertychange',function(){//验证码高亮
+					var zhi=$.trim($(this).val());
+					if(!$('#getCode').hasClass('notClick')){
+						if(app.telCheck(zhi)){
+							$('#getCode').prop('disabled',false);
+						}else{
+							$('#getCode').prop('disabled',true);
+						}
+					}
+				});
+				
+				//确认框高亮
+				$('#code,#tel').on('input propertychange',function(){
+					var zhi1=$.trim($('#code').val());
+					var zhi2=$.trim($('#tel').val());
+					if(zhi1!=''&& app.telCheck(zhi2)){
+						$('#go').prop('disabled',false);
+					}else{
+						$('#go').prop('disabled',true);
+					}
+				});
+				
+				//获取验证码
+				$('#getCode').on('tap',function(){
+					var time=60;
+					var zhe=$(this);
+					var tel=$('#tel').val();
+					
+					if(nowLng==''||nowLng==null||nowLng==undefined||nowLat==''||nowLat==null||nowLat==undefined){
+						mui.alert('请重启应用，允许获取您的定位','定位失败');
+					}else{
+						//不能点击 背景变灰
+				    	zhe.prop('disabled',true);
+				    	zhe.addClass('notClick');
+						
+						app.ajax('route=account/account/sendRegisterCode',{
+							'mobile':tel
+						},function(){
+							mui.toast('验证码已发送');
+					    	zhe.text("等待 "+time+" s");
+					
+					      	//设置定时器 每1秒钟 执行一次
+					    	var t=setInterval(function () {
+					    		//time自身减1
+					            time--;
+					            zhe.text("等待 "+time+" s");
+					
+					            //如果到0
+					            if (time==0) {
+					            	//清除定时器
+					                clearInterval(t);
+					                // 按钮样式复原
+					                zhe.text("重新发送");
+					                zhe.prop('disabled',false);
+					                zhe.removeClass('notClick');
+					            }
+					        },1000);
+					        
+					        //元素存储信息
+					        $('#go').attr({
+					        	'data-type':resData.data.type,
+					        	'data-state':resData.data.state
+					        });
+					        
+						},function(){
+							zhe.prop('disabled',false);
+					        zhe.removeClass('notClick');
+						});
+					}
+				});
+				
+				$('#go').on('tap',function(){
+					var zhe=$(this);
+					var tel=$('#tel').val();
+					var code=$('#code').val();
+					
+					if(nowLng==''||nowLng==null||nowLng==undefined||nowLat==''||nowLat==null||nowLat==undefined){
+						mui.alert('请重启应用，允许获取您的定位','定位失败');
+					}else{
+						if($('#getCode').text()!='获取验证码'){
+							zhe.prop('disabled',true).text('正在提交');
+							
+							var type=$(this).data('type');
+							console.log('type:',type);
+							
+							var state=$(this).data('state');
+							console.log('state:',state);
+							
+							//type:register 未注册
+							//type:login    已注册
+							if(type=='register'){//未注册，请求注册接口
+								var urlGood='route=account/account/register';
+								var goTips='注册成功';
+							}else if(type=='login'){//已注册，请求登录接口
+								var urlGood='route=account/account/login';
+								var goTips='登录成功';
+							}
+							//提交
+							app.ajax(urlGood,{
+								'mobile':tel,
+								'uuid':wxOpenid,
+								'code':code,
+								'lng':nowLng,
+								'lat':nowLat
+							},function(){
+								console.log('user_id:'+resData.data.user_id);
+								app.setSettings(resData.data.user_id,'user_id');
+								mui.toast(goTips);
+								
+								setTimeout(function(){
+									switch (parseInt(state)){//state:0  未交押金 / 1未实名认证 / 2未充值 / 3正常状态  /  4未交押金(有余额有实名验证)
+								        case 0: window.location='./deposit.html';break;
+								        case 1: window.location='./realName.html';break;
+								        case 2: window.location='./index.html';break;
+								        case 3: window.location='./index.html';break;
+								        case 4: window.location='./recharge2.html';break;
+								    }
+								},400);
+								
+							},function(){
+								zhe.prop('disabled',false).text('开 始');
+							});
+							
+						}else{
+							mui.alert('请重新获取验证码','验证失败');
+						}
+					}
+					
+				});
+				
+				//用户协议
+				app.articleLink($('#agreement'),'setting-user-agreements');
+			});
+		});
+	});
+	
+</script>
+
+</html>

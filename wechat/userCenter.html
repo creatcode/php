@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>个人中心</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="photoClip/css/style.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+</head>
+
+<body>
+	<div class="mui-text-center mui-content-padded" id="listLoad"><span class="mui-spinner"></span></div>
+	
+	<ul class="mui-table-view uesrCenter marginT10"  id="list" style="display: none;">
+		<li class="mui-table-view-cell mui-media" id="logox">
+			<a class="mui-navigate-right bgWhite">
+				<div class="mui-input-group">
+					<div class="mui-input-row" >
+						<label>头 像</label>
+						<img class="uesrHeader"/>
+					</div>
+				</div>
+			</a>
+		</li>
+		<li class="mui-table-view-cell mui-media" id="changeName">
+			<a class="bgWhite mui-navigate-right">
+				<div class="mui-input-group">
+					<div class="mui-input-row">
+						<label>昵 称</label>
+						<input type="text" class="mui-text-right paddingR20 cGray" id="nickname" readonly>
+					</div>
+				</div>
+			</a>
+		</li>
+		
+		<li class="mui-table-view-cell mui-media">
+			<a class="bgWhite" >
+				<div class="mui-input-group">
+					<div class="mui-input-row">
+						<label>姓 名</label>
+						<input type="text" id="real_name" class="mui-text-right cGray" readonly>
+					</div>
+				</div>
+			</a>
+		</li>
+		
+		<li class="mui-table-view-cell mui-media">
+			<a class="bgWhite" >
+				<div class="mui-input-group">
+					<div class="mui-input-row">
+						<label>实名认证</label>
+						<input type="text" value="已认证"  class="mui-text-right cGray mRed" readonly>
+					</div>
+				</div>
+			</a>
+		</li>
+		
+		<li class="mui-table-view-cell mui-media" onclick="window.location='./changeTelTips.html'">
+			<a class="bgWhite mui-navigate-right">
+				<div class="mui-input-group">
+					<div class="mui-input-row">
+						<label>手机号</label>
+						<input type="text" class="mui-text-right paddingR20 cGray" id="userTel" readonly>
+					</div>
+				</div>
+			</a>
+		</li>
+	</ul>
+
+	<!--图片裁切区域-->
+	<article class="htmleaf-container">
+		<a class="mui-icon mui-icon-left-nav cWhite mui-block" id="photoClipBack" style="position:fixed; top:5px;left: 5px; z-index:999999999; display: block !important;height: 40px; width:40px;text-align: center;line-height: 40px;border-radius:100% ;background-color: rgba(0,0,0,0.3);"></a>
+		<div id="clipArea"></div>
+		<div class="foot-use">
+			<div class="uploader1 blue">
+				<input type="button" name="file" class="buttonOpen" value="打开">
+				<input id="file" type="file" accept="image/*"/>
+				<!--<input id="file" type="file" accept="image/*" multiple />-->
+			</div>
+			<button id="clipBtn">截取</button>
+		</div>
+		<div id="view"></div>
+	</article>
+</body>
+
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="photoClip/js/jquery-2.1.4.min.js"></script>
+<script src="photoClip/js/iscroll-zoom.js"></script>
+<script src="photoClip/js/hammer.js"></script>
+<script src="photoClip/js/jquery.photoClip.js"></script>
+<script src="photoClip/js/exif.js"></script>
+<script src="photoClip/js/photoRotate.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	app.check(function(){
+		//获取用户个人信息
+		app.userCenter(function(){
+			$('#list').show();
+			//头像/昵称/手机号/真实姓名
+			$('.uesrHeader').attr('src',(resData.data.avatar==''||resData.data.avatar==null||resData.data.avatar==undefined)?'img/initHeader.jpg':resData.data.avatar);
+			$('#nickname').val(app.telCheck(resData.data.nickname)?resData.data.nickname.replace(/^(\d{3})\d{4}(\d+)/,"$1****$2"):resData.data.nickname);
+			$('#userTel').val(resData.data.mobile.replace(/^(\d{3})\d{4}(\d+)/,"$1****$2"));
+			$('#real_name').val(resData.data.real_name);
+		});
+		
+		//修改用户姓名
+		$('#changeName').on('tap',function(){
+			window.location='./changeName.html';
+			//强制性刷新
+			app.reload();
+			return false;
+		});
+	});
+  	
+  	/*********************************************************************
+  	 *图片裁切函数 
+  	 *********************************************************************/
+  	//浏览器宽
+	var congW1=$(window).width()-1;
+
+	//打开裁切框
+	var obUrl = '';
+	$("#clipArea").photoClip({
+		width: congW1,
+		height: congW1,
+		file: "#file",
+		view: "#view",
+		ok: "#clipBtn",
+		loadStart: function() {
+			console.log("照片读取中");
+		},
+		loadComplete: function() {
+			console.log("照片读取完成");
+		},
+		clipFinish: function(dataURL) {
+			//头像裁切成功，打印 base64格式
+			console.log(dataURL);
+			app.loading('show','正在上传');
+			
+			//头像上传
+			app.ajax('route=account/account/updateAvatar',{
+				'user_id':user_id,
+				'sign':sign,
+				'avatar':dataURL
+			},function(){
+				app.loading('hide');
+				$('#logox').find('img').attr('src',dataURL);
+			},function(){
+				app.loading('hide');
+			});
+			
+		}
+	});
+	
+	//显示裁切完成 图片
+	$(function() {
+		$("#logox").on('tap',function() {
+			$(".htmleaf-container").show();
+			$('#file').trigger('click');
+			$('.photo-clip-rotateLayer').find('img').remove();
+		})
+		$("#clipBtn").on('click',function() {
+			$(".htmleaf-container").hide();
+		})
+	});
+	
+	//返回裁切框
+	$('#photoClipBack').on('tap',function(){
+		$(".htmleaf-container").hide();
+		return false;
+	});
+	
+</script>
+</html>

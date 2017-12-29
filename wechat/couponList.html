@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>历史优惠卷</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="mui-content mui-scroll-wrapper" id="scroll">
+		<div class="mui-scroll">
+			<!--转转-->
+			<div class="mui-text-center mui-content-padded" id="listLoad"><span class="mui-spinner"></span></div>
+			<ul class="mui-content-padded couponList cBlack couponHistory" id="couponListA" style="display: none; margin-bottom: 0 !important;"></ul>
+		</div>
+	</div>
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/mui.pullToRefresh.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	var page=0;
+  	app.check(function(){
+  		//历史优惠劵列表
+  		app.ajax('route=account/coupon/getExpiredList',{
+  			'user_id':user_id,
+			'sign':sign,
+			'page':page+=1
+  		},function(){
+  			$('#couponListA').show();
+			console.log('分页page： '+page);
+			
+			app.pullToRefresh({
+				data:resData.data.items,
+				start:function(){
+					//加载数据
+					loveData(resData.data.items);
+				},
+				end:function(){
+					$('#couponListA').html('<div class="bgTran mui-text-center f_16 padding10">暂无记录</div>');
+				},
+				//如果总页数 > 当前页码 触发上拉加载函数
+				judge:resData.data.total_pages>resData.data.page,
+				wrap:'#scroll .mui-scroll',
+				success:function(zhe){
+					app.ajax('route=account/coupon/getExpiredList',{
+						'user_id':user_id,
+						'sign':sign,
+						'page':page+=1
+					},function(){
+						console.log('分页page： '+page);
+						setTimeout(function(){
+							//加载数据
+							loveData(resData.data.items);
+							
+							//如果总页数==当前页面 停止上拉加载函数 true停止/false继续
+							if(resData.data.total_pages==resData.data.page){
+								zhe.endPullUpToRefresh(true);
+							}else{
+								zhe.endPullUpToRefresh(false);
+							}
+						},200);
+					});
+				}
+			});
+			
+  		});
+  	});
+  	
+  	function loveData(a){
+  		var htmlK='';
+  		mui.each(a,function(i,val){
+			
+			//1.按时间、2.按次数、3.按金额，4.按折扣
+			//1、2用车券
+			//3代金券
+			//4优惠券
+			var juTips='',usedTips='';
+			switch (parseInt(val.coupon_type)){
+				case 1:
+					juTips='用车券';
+					break;
+				case 2:
+					juTips='用车券';
+					break;
+				case 3:
+					juTips='代金券';
+					break;
+				case 4:
+					juTips='优惠券';
+					break;
+			}
+			
+			//used  true已使用  false已过期
+			if(val.used==true){
+				usedTips='已使用';
+			}else{
+				usedTips='已过期';
+			}
+			
+			htmlK+='<li data-code=\"'+val.coupon_code+'\">\
+				<div class="couponbox1">\
+					<div class="couponboxTime">\
+						<span class="f_bold f_24">'+val.number+'</span>&nbsp;<span class="f_14">'+val.unit+'</span>\
+					</div>\
+				</div>\
+				<div class="couponbox2">\
+					<div class="f_16 marginB5">'+juTips+'&nbsp;&nbsp;&nbsp;<span class="couponTips">'+usedTips+'</span></div>\
+					<div class="f_14 cGray ">有效期至'+val.failure_time+'</div>\
+				</div>\
+			</li>';
+		});
+		$('#couponListA').append(htmlK);
+  	}
+  	
+</script>
+
+</html>

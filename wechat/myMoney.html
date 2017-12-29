@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>我的钱包</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+<style>
+	.mui-table-view-cell .newsRadius {
+	    top: 11px;
+	    left: 60px;
+	}
+	.mui-navigate-right:after, .mui-push-right:after{right:10px !important;}
+</style>
+</head>
+
+
+<body>
+	<!--转转-->
+	<div class="mui-text-center mui-content-padded" id="listLoad"><span class="mui-spinner"></span></div>
+	<div id="bigAll" style="display: none;">
+		<div class="bgWhite marginB10">
+			<a class="cGray mui-pull-right f_14" style="padding:10px 15px;" onclick="window.location='./myMoneyList.html'">明细</a>
+			<div class="mui-clearfix"></div>
+			<div class="mui-text-center cBlack paddingB10">
+				<div class="f_16"style="padding-bottom: 30px;">车费余额（元）</div>
+				<div style="font-size: 50px;" id="bigMoney"></div>
+			</div>
+			<div class="padding15">
+				<button type="button" class="mui-btn mui-btn-success width100 radius100 padding10 recharge1">充 值</button>
+			</div>
+			<div class="padding10"></div>
+		</div>
+		
+		
+		<ul class="mui-table-view cBlack f_14 marginB10">
+	        <li class="mui-table-view-cell" onclick="window.location='./couponAll.html'">
+	            <a class="mui-navigate-right" style="padding-right:30px;">
+					优惠卷<i class="newsRadius" id="nTips"></i>
+					<span class="mui-pull-right cGray"><span id="pageLove"></span> 张</span>
+				</a>
+	        </li>
+	        <li class="mui-table-view-cell bgTran">
+	        	押金<span class="mui-pull-right cGray"><span id="moneyLove"></span> 元</span>
+	        </li>
+		</ul>
+		
+		<div class="f_12 mui-text-center cGray padding10" id="in">下载APP 押金退款</div>
+	</div>
+	
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/mui.pullToRefresh.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	var page=0;
+	app.check(function(){
+		//获取钱包信息
+		app.ajax('route=account/account/getWalletInfo',{
+			'user_id':user_id,
+			'sign':sign
+		},function(){
+			$('#bigAll').show();
+			
+			//押金 余额 剩下多少？
+			$('#moneyLove').html(resData.data.deposit);
+		  	//车费余额
+		  	$('#bigMoney').html(resData.data.available_deposit);
+		  	//优惠卷总算
+		  	$('#pageLove').html(resData.data.coupon_total);
+		  	
+		  	//优惠卷 红点提示
+			if(resData.data.has_new_coupon==true){
+				$('#nTips').show();
+			}
+		  	
+		});
+		
+	  	//余额充值
+	  	$('.recharge1').on('tap',function(){
+	  		window.location='./recharge1.html';
+	  		//强制性刷新
+			app.reload();
+	  	});
+	  	
+	  	//退押金
+	  	$('#in').on('tap',function(){
+	  		var btnArray = ['取消', '下载'];
+		    	
+			mui.confirm('押金退款需在APP上完成操作','下载 小强单车',btnArray,function(e){
+				if (e.index == 1) {
+					app.downloadApp();
+				}
+			});
+	  	});
+	  	
+	});
+	
+	
+	
+
+</script>
+
+</html>

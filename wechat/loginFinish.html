@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>注册成功</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<div class="deposit">
+		<div class="progress mui-row">
+			<div class="mui-col-xs-12">
+				<div class="dot finish"><img src="img/A1.jpg"/></div>
+				<div class="dot finish"style="left: 31%;"><img src="img/A1.jpg"/></div>
+				<div class="dot finish"style="right: 31%;"><img src="img/A1.jpg"/></div>
+				<div class="dot now"><div></div></div>
+				<div class="progressIng"></div>
+			</div>
+		</div>
+		<div class="mui-row mui-text-center f_12 zi">
+			<div class="mui-col-xs-3">手机验证</div>
+			<div class="mui-col-xs-3">押金充值</div>
+			<div class="mui-col-xs-3">实名认证</div>
+			<div class="mui-col-xs-3">注册完成</div>
+		</div>
+	</div>
+	
+	
+	<img src="img/A4.jpg" class="marginCenter" height="150px">
+	<div class="mui-text-center ">
+		<h4 class="marginB10">恭喜您注册成功！</h4>
+		<p>填写好友手机邀请码，一起提高信用吧！</p>
+	</div>
+	
+	<div class="padding15">
+		<div class="mui-input-group radius100 lineNone marginB10">
+			<div class="mui-input-row">
+				<label >邀请码</label>
+				<input type="number" class="mui-input-clear" placeholder="请输入好友手机号" id="input1">
+			</div>
+		</div>
+		
+		<button type="button" class="mui-btn mui-btn-success width100 marginT10 radius100 padding10 marginB10" id="go" disabled>领取优惠卷</button>
+		<button type="button" class="mui-btn mui-btn-success mui-btn-outlined width100 radius100 padding10 cBlack bgTran" style="border: none;" onclick="window.location='./index.html'">跳 过</button>
+	</div>
+
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	app.check(function(){
+  		//button高亮判断
+		$('#input1').on('input propertychange',function(){//验证码高亮
+			var zhi1=$.trim($('#input1').val());
+			if(app.telCheck(zhi1)){
+				$('#go').prop('disabled',false);
+			}else{
+				$('#go').prop('disabled',true);
+			}
+		});
+		
+		//注册完成
+		$('#go').on('tap',function(){
+			var mobile=$.trim($('#input1').val());
+			app.ajax('route=account/account/signRecommend',{
+				'user_id':user_id,
+				'sign':sign,
+				'mobile':mobile
+			},function(){
+				var btnArray = ['取消', '去查看'];
+	    	
+				mui.confirm(resData.msg,'领取成功',btnArray,function(e){
+					if (e.index == 0){
+						window.location='./index.html';
+					}else if(e.index == 1){
+						window.location='./myMoney.html';
+					}
+				});
+				
+			});
+		});
+  	});
+  	
+</script>
+
+</html>

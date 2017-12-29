@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>小强单车</title>
+<link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<!--loading-->
+	<div class="loadWait" id="bikeLoadWait">
+		<div class="loadWaiting mui-text-center">
+			<div class="bikeRound">
+				<img src="img/ZZ1.png" class="bikeComplete"/>
+				<img src="img/ZZ2.png" class="wheel wheelBefore"/>
+				<img src="img/ZZ2.png" class="wheel wheelAfter"/>
+				<div class="cGray6 f_16 tipsText ">
+					<div class="loadBarWrap">
+						<div class="loadBar"></div>
+					</div>
+					<span id="goodTips">正在启动地图</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!--主界面-->
+	<div id="offCanvasWrapper" class="mui-off-canvas-wrap mui-slide-in">
+		<!--侧滑菜单部分-->
+		<aside id="offCanvasSide" class="mui-off-canvas-left bgWhite bgFill ">
+			<div class="headTop mui-text-center">
+				<img id="userImg" class="radius100 marginCenter"/>
+				<div class="marginT10 f_14" id="userTel"></div>
+				<button type="button" class="mui-btn mui-btn-success radius100 f_12 marginT10" id="userCredit"></button>
+			</div>
+			<ul class="mui-table-view line15 f_14" id="sidebar">
+				<li class="mui-table-view-cell lineNoneCol">
+					&nbsp;&nbsp;&nbsp;<img src="img/B1.png" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;我的钱包<i class="newsRadius" id="n1Tips"></i>
+				</li>
+				<li class="mui-table-view-cell lineNoneCol">
+					&nbsp;&nbsp;&nbsp;<img src="img/B2.png" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;我的行程
+				</li>
+				<li class="mui-table-view-cell lineNoneCol">
+					&nbsp;&nbsp;&nbsp;<img src="img/B3.png" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;我的消息<i class="newsRadius" id="n2Tips"></i>
+				</li>
+				<li class="mui-table-view-cell shareButton">
+					&nbsp;&nbsp;&nbsp;<img src="img/B4.png" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;邀请好友
+				</li>
+				<li class="mui-table-view-cell lineNoneCol">
+					&nbsp;&nbsp;&nbsp;<img src="img/B5.png" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;用户指南
+				</li>
+				<li class="mui-table-view-cell">
+					&nbsp;&nbsp;&nbsp;<img src="img/B6.png" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;设置
+				</li>
+			</ul>
+		</aside>
+		<!--主界面部分-->
+		<div class="mui-inner-wrap">
+			<!--APP下载提示框-->
+			<div class="mui-bar homeAppDown padding10 f_16 cWhite" id="homeAppDown">
+				<img src="img/Icon.png" height="100%" class="inlineBlock goDownAppLink"/>
+				&nbsp;&nbsp;<span class="textTitle goDownAppLink">APP体验更优秀</span>
+				<button type="button" class="mui-btn mui-btn-success f_12 goDownAppLink">立刻下载</button>
+				<span class="mui-icon mui-icon-close f_24 textClose" id="closeDownAppLink"></span>
+			</div>
+			<div id="markerTabs" class="bgWhite padding10 markerTabs">
+				<div class="paddingB10" style="border-bottom: 1px solid #e2e2e2;">
+					<img src="img/C7.jpg" class="mui-pull-left marginR10" height="20px" style="padding:2px 0;margin-top: -2px;" id="dingSuo"/>
+					<span class="mui-pull-left f_14 cGray6" id="dataNameAdd"></span>
+					<span class="mui-pull-right f_14 mRed" id="dataTypeBike"></span>
+					<div class="mui-clearfix"></div>
+				</div>
+				<ul>
+					<li id="markerTabsLi1">
+						<div class="mui-row paddingT10 marginB5 infoCol mui-text-center f_14 cGray6">
+							<div class="mui-col-xs-4">
+								<div class="marginB5 cBlack">每小时</div>
+								<div class="f_20"><span id="dataFee" class="mRed"></span> <span class="f_12">元</span></div>
+							</div>
+							<div class="mui-col-xs-4">
+								<div class="marginB5 cBlack">距 离</div>
+								<div class="f_20"><span id="walkDistance" class="mRed"></span> <span class="f_12">米</span></div>
+							</div>
+							<div class="mui-col-xs-4">
+								<div class="marginB5 cBlack">步 行</div>
+								<div class="f_20"><span id="walkTime" class="mRed"></span> <span class="f_12">分钟</span></div>
+							</div>
+						</div>
+						<div class="padding10">
+							<button type="button" class="mui-btn mui-btn-success width100 radius100" id="goLook">导 航</button>
+						</div>
+					</li>
+					<li id="markerTabsLi2">
+						<div class="mui-row paddingT10 marginB5 infoCol f_14 cGray6">
+							<div class="mui-col-xs-7" style="border-right:1px solid #e2e2e2; padding-left: 20px !important;">
+								<div class="marginB5 cBlack">单车编号：&nbsp;&nbsp;<span id="data_sn" class="mRed"></span></div>
+								<div class="marginB5 cBlack">保留时间：&nbsp;&nbsp;<span id="keepTimes" class="mRed"></span></div>
+							</div>
+							<div class="mui-col-xs-5 mui-text-center" id="bikeGo2">
+								<img src="img/C8.jpg" class="marginCenter marginB5" style="height:25px !important;"/>
+								<div class="cBlack">寻车铃</div>
+							</div>
+						</div>
+						<div class="padding10 mui-text-center">
+							<button type="button" class="mui-btn cGray6 cBlack radius100" style="width: 43%;background-color: #f1f1f1;border-color:#f1f1f1 ;" id="bikeGo3">取消预约</button>&nbsp;&nbsp;&nbsp;&nbsp;
+							<button type="button" class="mui-btn mui-btn-success radius100" style="width: 43%;" id="bikeGo4">导航</button>
+						</div>
+					</li>
+					<li id="markerTabsLi3">
+						<div class="mui-row infoCol mui-text-center f_14 cGray6" style="padding:12px 0">
+							<div class="mui-col-xs-4">
+								<div class="marginB5 cBlack">骑行时间</div>
+								<div class="f_20">
+									
+									<span id="hourDo" style="display: none;"><span id="ingTime1" class="mRed"></span><span class="f_12 cGray6">&nbsp;时</span>&nbsp;</span>
+									<span id="ingTime2" class="mRed"></span><span class="f_12 cGray6">&nbsp;分</span>
+								</div>
+							</div>
+							<div class="mui-col-xs-4">
+								<div class="marginB5 cBlack">骑行距离</div>
+								<div class="f_20"><span id="ingLong" class="mRed"></span> <span class="f_12 cGray6">千米</span></div>
+							</div>
+							<div class="mui-col-xs-4">
+								<div class="marginB5 cBlack">运动燃烧</div>
+								<div class="f_20"><span id="ingPower" class="mRed"></span> <span class="f_12 cGray6">大卡</span></div>
+							</div>
+						</div>
+						<div class="f_14 cBlack" style="border-top:1px solid #e2e2e2; padding-top: 12px;">
+							<span class="mui-pull-left">编号：<span id="ingSn" class="mRed"></span><span class="f_20">&nbsp;</span></span>
+							<span class="mui-pull-right">当前花费：<span id="ingMoney" class="f_20 mRed"></span>&nbsp;<span class="f_12 cGray6">元</span></span>
+							<div class="mui-clearfix"></div>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<!--地图-->
+			<div class="wrapMap">
+				<div id="container"></div>
+				<div class="LocDing bgFill radius100 absolute LocDingL"></div>
+				<div class="LocDing bgFill radius100 absolute LocDingR"></div>
+				<a class="LocDing bgFill radius100 absolute LocDingSide" href="#offCanvasSide">
+					<i class="newsRadius" id="n9Tips"></i>
+				</a>
+				<div class="LocDingC absolute mui-text-center">
+					<button type="button" class="mui-btn mui-btn-royal radius100 f_18" id="scanQRCode"  style="padding:12px 20px; bottom:-5px;"><img src="img/A9.jpg" class="inlineBlock" height="18px"/>&nbsp;&nbsp;扫描解锁</button>
+					<button type="button" class="mui-btn mui-btn-success radius100 f_18" id="nowData" style="display: none; box-shadow: 0 1px 8px rgba(0,0,0,0.3);padding:12px 20px; bottom:-5px;">&nbsp;&nbsp;刷 新 数 据&nbsp;&nbsp;</button>
+				</div>
+			</div>
+			<!-- 侧滑栏黑背景 -->
+			<div class="mui-off-canvas-backdrop"></div>
+		</div>
+	</div>
+	
+	<!--弹框组件-->
+	<div id="dialogA" class="mui-popover mui-popover-action center_c bgWhite width100 radius0" style="height:265px;">
+		<ul class="mui-table-view f_16 margin0 radius0">
+			<li class="mui-table-view-cell bgWhite cBlack radius0" onclick="window.location='./followMe.html'">关注小强单车</li>
+			<li class="mui-table-view-cell bgWhite cBlack radius0" id="violationStop">举报违停</li>
+			<li class="mui-table-view-cell bgWhite cBlack radius0" id="fault">发现故障</li>
+			<li class="mui-table-view-cell bgWhite cBlack radius0" onclick="window.location='./guide.html'">用户指南</li>
+			<li class="mui-table-view-cell bgWhite cBlack radius0" id="mainTel">客服电话</li>
+		</ul>
+		<ul class="mui-table-view f_16 margin0 lineNone radius0">
+			<li class="mui-table-view-cell bgWhite cGray radius100 radius0" id="cancelA"style="border-top: 10px solid #eee;">
+				取消
+			</li>
+		</ul>
+	</div>
+</body>
+
+<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="http://webapi.amap.com/maps?v=1.3&key=7c86e74a1b600bfc307e6f3b43a4e1f8&plugin=AMap.Geocoder,AMap.Walking"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+	//地图mapA/marker点/点标题（没有单车提示）,保留时间，步行，骑行时间，单车icon,定位icon,离我最近
+	var mapA, marker,info,keepTimes,walking,ingIng,iconImg,nowIcon,infoNear;
+	var markerS = [];
+	
+	//调起 微信 jssdk
+	app.wechat_jssdk(function(){
+		
+		//检查是否微信打开
+		app.wxOpenidCheck(function(){
+			//高德地图实例化，显示当前位置
+			app.gcj02Location(function(){
+				//无需登陆即可请求marker点
+				app.homeCheck(function(){//有/无ID 都必须执行
+					
+					//实例化，高德地图
+				    mapA = new AMap.Map('container', {
+				        resizeEnable: true,//监听地图容器大小变化
+				        zoom:17,//地图放大比例PC：3-18，手机：3-19
+				        center: [nowLng, nowLat]//中心点，经纬度
+				    });
+				    
+				    //我所在的位置 标注点
+				    nowIcon = new AMap.Icon({
+				        image : './img/home_map_position@2x.png',
+				        size : new AMap.Size(35,35)
+					});
+				    marker = new AMap.Marker({
+				    	icon : nowIcon,//24px*24px
+				        position: [nowLng, nowLat],//经纬度
+				        offset:new AMap.Pixel(-18,-30),//X轴Y轴
+				        map:mapA
+				    });
+				    
+					//地理位置信息 标注点
+				    info = new AMap.InfoWindow({
+				        content:"附近暂无车辆",
+				        offset:new AMap.Pixel(3,-33)//X轴Y轴
+				    });
+				    
+			    	walking = new AMap.Walking({
+				        map: mapA
+				    });
+				    
+				    //地图加载完成 触发
+				    mapA.on('complete', function() {
+						$('#bikeLoadWait').hide();
+				    });
+				    
+				    //地图点击事件 清除路线规划
+					mapA.on('click',function(){
+						//判断 预约成功后，不能二次预约操作
+						if($('#scanQRCode').attr('bike_sn')&&$('#markerTabsLi2').css('display')=='none'){//未预约的弹框
+				    		
+							//选项卡切换
+				    		$('#markerTabs').hide();
+				    		$('.wrapMap').removeClass('active');
+				    		$('#scanQRCode,#nowData').removeAttr('bike_sn').removeAttr('order_sn').removeAttr('order_id');
+				    		
+				    		//高德地图步行规划 清空
+				    		walking.clear();
+				    		
+				    		//初始化地图
+				    		mapA.setCenter([nowLng, nowLat]);
+				    		mapA.setZoom(17);
+				    		
+				    		//距离/步行时间分钟
+					    	$('#walkDistance').html('');
+					    	$('#walkTime').html('');
+				    		
+				    	}else{
+					    	console.log('触发地图一下，不做逻辑操作');
+					    }
+					});
+					
+				},function(){//无用户ID执行
+					//分享指定链接 无ID状态下
+					var shareNo={
+						title:shareTips1,
+					    desc:shareTips1,
+					    imgUrl:shareImgUrl,
+					    link: 'http://www.s-bike.cn',
+					    success: function () { 
+					       console.log('分享成功');
+					    },
+					    cancel: function () { 
+					       console.log('分享失败');
+					    }
+					};
+					
+					wx.onMenuShareTimeline(shareNo);
+					wx.onMenuShareAppMessage(shareNo);
+					wx.onMenuShareQQ(shareNo);
+					wx.onMenuShareWeibo(shareNo);
+					wx.onMenuShareQZone(shareNo);
+					wx.error(function(res){
+					    alert(JSON.stringify(res));
+					});
+					
+					//头像/信用积分
+					$('#userImg').attr('src','img/initHeader.jpg');
+					$('#userCredit').html('登录 / 注册');
+					noOrder();
+					
+				},function(){//有用户ID执行
+					
+					//获取encryptCode
+					app.ajax('route=account/account/getEncryptCode',{
+						'user_id':user_id,
+						'sign':sign
+					},function(){
+						var encryptCode=resData.data.encrypt_code;
+						console.log('encryptCode: '+encryptCode);
+						
+						//分享指定链接
+						var shareYes={
+							title:shareTips1,
+						    desc:shareTips1,
+						    imgUrl:shareImgUrl,
+						    link: 'http://bike.e-stronger.com/bike/wechat/shareCoupon.html?encryptCode='+encryptCode,
+						    success: function () { 
+						       console.log('分享成功');
+						    },
+						    cancel: function () { 
+						       console.log('分享失败');
+						    }
+						};
+						wx.onMenuShareTimeline(shareYes);
+						wx.onMenuShareAppMessage(shareYes);
+						wx.onMenuShareQQ(shareYes);
+						wx.onMenuShareWeibo(shareYes);
+						wx.onMenuShareQZone(shareYes);
+						wx.error(function(res){
+						    alert(JSON.stringify(res));
+						});
+					});
+					
+					//昵称电话/信用分/头像/余额
+					$('#userTel').html((resData.data.nickname==''||resData.data.nickname==null||resData.data.nickname==undefined)?resData.data.mobile:resData.data.nickname);
+					$('#userCredit').html('信用积分 '+resData.data.credit_point+' >');
+					$('#userImg').attr('src',(resData.data.avatar==''||resData.data.avatar==null||resData.data.avatar==undefined)?'img/initHeader.jpg':resData.data.avatar);
+					$('#scanQRCode').attr('money',resData.data.available_deposit);
+					
+					//优惠卷 红点提示
+					if(resData.data.new_coupon==1){
+						$('#n1Tips').show();
+					}
+					//消息 红点提示
+					if(resData.data.new_message==1){
+						$('#n2Tips').show();
+					}
+					//侧滑栏 红点提示
+					if(resData.data.new_message==1||resData.data.new_coupon==1){
+						$('#n9Tips').show();
+					}
+					
+					//获取当前订单状况
+					app.nowOrder(function(){//有订单
+						
+						//订单SN/订单ID
+						var order_sn=resData.data.current_order.order_sn;
+						var order_id=resData.data.current_order.order_id;
+						$('#scanQRCode,#nowData').attr({
+							'order_sn':order_sn,
+							'order_id':order_id
+						});
+						
+						//锁类型判断		1纯gps锁/2纯蓝牙锁/3纯机械锁（已夭折）/4二合一锁（准备夭折）
+						var lock_type=parseInt(resData.data.current_order.lock_type);
+						
+						//订单状态: 0预约中，1骑行中
+						var orderState=resData.data.current_order.order_state;
+						if(orderState==0){//0预约中
+							$('#markerTabs,#markerTabsLi2').show();
+							$('.wrapMap').addClass('active');
+							
+			            	//景区名称/自行车编号/景区编号
+			            	var region_name=resData.data.current_order.region_name;
+			            	var bike_sn=resData.data.current_order.bicycle_sn;
+			            	var area_code=resData.data.current_order.area_code;
+			            	//单车经纬度
+			            	var bike_location=app.wgs84togcj02(resData.data.current_order.end_lng,resData.data.current_order.end_lat);
+			            	
+			            	//景区名称
+			            	$('#dataNameAdd').html(region_name);
+			            	
+			            	//单车类型/自行车编号/订单编号
+					    	$('#dataTypeBike').html('预约中');
+					    	$('#data_sn').html(bike_sn);
+					    	$('#bikeGo3').attr('order_sn',order_sn);
+			            	$('#scanQRCode,#nowData').attr('bike_sn',bike_sn);
+			            	
+			            	//倒计时函数
+			            	timeBack(resData.data.current_order.keep_time);
+			            	
+							//响铃/取消预约/导航  3个按钮
+					    	$('#bikeGo2,#bikeGo3,#bikeGo4').attr({
+					    		'bike_all':JSON.stringify({
+					    			'bicycle_sn':bike_sn,
+					    			'area_code':area_code,
+					    			'region_name':region_name
+					    		}),
+					    		'bike_location':bike_location
+					    	});
+					    	
+					    	//地图规划路线
+					    	walking.search([nowLng,nowLat],bike_location);
+					    	
+					    	//marker定位 重置
+							markerPosition(0);
+						
+						}else if(orderState==1){//1骑行中
+							//订单详情
+							app.orderInfo(order_sn,function(){
+								//订单详情: -1已取消，0预约中，1骑行中，2结束
+								var orderState=resData.data.order_state;
+								if(orderState==1){
+									//单车骑行中函数
+									bikeing(lock_type);
+								}
+							});
+						}
+					},function(){//没订单
+						noOrder();
+					});
+					
+				});
+			});
+		});
+		
+		//无订单状态
+		function noOrder(){
+			$('#markerTabsLi1').show();
+			$('.wrapMap').removeClass('active');
+			markerPosition(0);
+		}
+		
+		//显示地图上maker点函数： 0全部/1单人/2双人/3家庭
+		function markerPosition(num){
+			app.wgs84Location(function(){
+				app.ajax('route=location/location/getBicycleLocation',{
+					'lng':nowLng,
+					'lat':nowLat,
+					'zoom':17,
+					//0全部/1单人/2双人/3家庭
+					'type':num
+				},function(){
+					
+					//判断有车辆在附近
+					if(resData.data==''||resData.data==null||resData.data==undefined){
+						//没有车辆提示
+						info.open(mapA,marker.getPosition());
+					}else{
+						mui.each(resData.data,function(i,val){
+							if(val.lng!=''&&val.lng!=null&&val.lng!=undefined&&val.lng!=''&&val.lng!=null&&val.lng!=undefined){
+								var markerA;
+								var bike_location=app.wgs84togcj02(val.lng,val.lat);
+								
+								//自行车类型判断
+								switch (parseInt(val.type)){//1单人自行车 / 2双人自行车 / 3家庭自行车
+							        case 1: iconImg='./img/home_map_ic_green@2x.png';break;
+							        case 2: iconImg='./img/home_map_ic_green@2x.png';break;
+							        case 3: iconImg='./img/home_map_ic_green@2x.png';break;
+							    }
+								
+								//设置 图标
+								var icon = new AMap.Icon({
+			    					image:iconImg,
+			    					size: new AMap.Size(35, 35)
+			    				});
+			    				
+			    				//marker点
+								markerA = new AMap.Marker({
+			    					icon:icon,
+									position:bike_location,
+					            	offset:new AMap.Pixel(-18,-30),//X轴Y轴
+					            	map: mapA
+					            });
+					            
+					            //存入所有信息，对象键值对
+				            	markerA.bike_all=val;
+				            	//定位
+				            	markerA.bike_location=bike_location;
+					            
+					            //地图marker点，没有tap事件
+					            markerA.on('click',markerClick);
+					            
+					            markerS.push(markerA);
+							}
+						});
+						
+						//计算离我最近
+						app.gcj02Location(function(){
+							var arrayMin=[];
+						    infoNear = new AMap.InfoWindow({
+						        content:'离我最近',
+						        offset:new AMap.Pixel(0,-28)
+						    });
+							markerS.forEach(function(val,i){
+								var bike_location=val.bike_location;
+								var lnglat = new AMap.LngLat(nowLng,nowLat);
+							    var distance=lnglat.distance(bike_location);
+							    arrayMin.push(distance);
+							});
+							var distanceXu=arrayMin.indexOf(app.arrayMin(arrayMin));
+							infoNear.open(mapA,markerS[distanceXu].bike_location);
+						});
+					}
+				});
+			});
+		};
+		
+
+		
+		//marker点击事件 函数
+		function markerClick(){
+			var zhe=this;
+			
+			//单车经纬度
+	    	var bike_location=zhe.bike_location;
+			
+			if(!$('#scanQRCode').attr('bike_sn') || $('#scanQRCode').attr('bike_sn')!=zhe.bike_all.bicycle_sn){//第一次点击自己，或点击别人
+	    		
+		    	if($('#markerTabsLi2').css('display')=='none'){//未预约
+		    		app.loading('show','规划路线');
+		    		//高德地图步行规划 清空
+		    		walking.clear();
+		    		
+		    		//选项卡切换
+					$('#markerTabs').show();
+		    		
+		    		//价格/景区地点/单车编号
+			    	$('#dataFee').html(zhe.bike_all.fee);
+			    	$('#dataNameAdd').html(zhe.bike_all.region_name);
+			    	$('#data_sn').html(zhe.bike_all.bicycle_sn);
+		    		
+					//地图大小变化
+					$('.wrapMap').addClass('active');
+			    	$('#scanQRCode,#nowData').attr('bike_sn',zhe.bike_all.bicycle_sn);
+		    		
+			    	//预约/响铃/取消预约/导航  4个按钮
+			    	$('#bikeGo1,#bikeGo2,#bikeGo3,#bikeGo4,#goLook').attr({
+			    		//marker点所信息存入/定位
+			    		'bike_all':JSON.stringify(zhe.bike_all),
+			    		'bike_location':bike_location
+			    	});
+			    	
+			    	app.gcj02Location(function(){
+			    		//地图规划路线
+					    walking.search([nowLng, nowLat],bike_location,function(data,res){
+					    	console.log(res);
+					    	//距离/步行时间分钟
+					    	$('#walkDistance').html(res.routes[0].distance);
+					    	$('#walkTime').html(Math.ceil(res.routes[0].time/60));
+					    	app.loading('hide');
+					    });
+			    	});
+			    	
+		    	}else{//已经预约
+		    		mui.alert('请您取消预约后再更换单车','您已有预约订单');
+		    	}
+		    	
+	    	}else{//点击自己，非第一次点击
+	    		if($('#markerTabsLi2').css('display')=='none'){//未预约
+		    		//选项卡切换
+		    		$('#markerTabs').hide();
+		    		$('.wrapMap').removeClass('active');
+		    		$('#scanQRCode,#nowData').removeAttr('bike_sn').removeAttr('order_sn').removeAttr('order_id');
+		    		
+		    		//高德地图步行规划 清空
+		    		walking.clear();
+		    	}else{//已经预约
+		    		//地图中心点定位
+		    		mapA.setCenter(bike_location);
+		    		mapA.setZoom(17);
+		    	}
+	    	}
+		}
+		
+		
+		//调起扫码
+		$('#scanQRCode').on('tap',function(){
+			
+			app.userIdCheck(function(){//无用户ID
+				
+				app.loginCheck();
+			},function(){//有用户ID
+				//用户余额
+				var money=parseFloat($('#scanQRCode').attr('money'));
+				
+				//请求个人中心，余额为0不给他开锁
+				if(money<=0||money==null||money==''||money==undefined){
+					mui.alert('请您充值后，再解锁单车','余额不足',function(){
+						window.location='./recharge1.html';
+						//强制性刷新
+						app.reload();
+					});
+				}else{
+					
+					app.loading('show','启动相机');
+					setTimeout(function(){
+						app.loading('hide');
+					},2000);
+					
+					app.wgs84Location(function(){
+						//二维码扫扫
+						wx.scanQRCode({
+							needResult:1, // 默认为0，扫描结果由微信处理，1则直接返回扫描结果，
+							scanType:["qrCode", "barCode"], // 可以指定扫二维码还是一维码，默认二者都有
+							success: function(res) {
+								var codeStr = res.resultStr;
+								var device_id=codeStr.substring(codeStr.indexOf('=')+1);
+								
+								//单车loading动画
+								$('#goodTips').html('正在解锁');
+								$('#bikeLoadWait').show();
+								
+								//解锁单车
+								app.ajax('route=operator/operator/openLock',{
+									'user_id':user_id,
+									'sign':sign,
+									'device_id':device_id,
+									'lng':nowLng,
+									'lat':nowLat
+								},function(){//解锁成功
+									
+									//锁类型判断		1纯gps锁/2纯蓝牙锁/3纯机械锁（已夭折）/4二合一锁（准备夭折）
+									var lock_type=parseInt(resData.data.lock_type);
+									if(lock_type==2){
+										$('#bikeLoadWait').hide();
+										app.downloadApp();
+									}else{
+										//获取订单 SN
+										var order_sn=resData.data.order_sn;
+										var bikeInterval=setInterval(function(){
+											
+											//订单详情
+											app.orderInfo(order_sn,function(){
+												
+												//订单详情: -1已取消，0预约中，1骑行中，2结束
+												var orderState=resData.data.order_state;
+												
+												if(orderState==1){
+													mui.toast('解锁成功');
+													
+													//单车骑行中函数
+													bikeing(lock_type);
+													
+													//定位图标换成锁图标
+													$('#dingSuo').attr('src','./img/Y1.jpg');
+													$('#scanQRCode,#nowData').attr('order_sn',order_sn);
+													$('#bikeLoadWait').hide();
+													
+													//离我最近 关闭
+													infoNear.close();
+													
+													//清楚定时器
+													clearInterval(bikeInterval);
+													
+												}
+											});
+											
+										},2000);
+										
+										//十秒钟后再请求一次
+										setTimeout(function(){
+											//订单详情
+											app.orderInfo(order_sn,function(){
+												
+												//订单详情: -1已取消，0预约中，1骑行中，2结束
+												var orderState=resData.data.order_state;
+												
+												//如果为0，单车厂没有推送解锁消息给我们的后台
+												if(orderState!=1&&orderState!=2){
+													mui.toast('解锁失败');
+													$('#bikeLoadWait').hide();
+													//清楚定时器
+													clearInterval(bikeInterval);
+												}
+											});
+										},9500);
+									}
+								},function(){//解锁失败
+									$('#bikeLoadWait').hide();
+									mui.toast('解锁失败');
+								});
+							}
+						});
+					});
+				}
+			});
+		});
+	
+		//预约用车
+//		$('#bikeGo1').on('tap',function(){
+//			var zhe=$(this);
+//			var bike_all=JSON.parse(zhe.attr('bike_all'));
+//			console.log(bike_all);
+//			
+//			app.userIdCheck(function(){//无用户ID
+//				
+//				app.loginCheck();
+//			},function(){//有用户ID
+//				//判断余额有没有钱
+//				var money=parseFloat($('#scanQRCode').attr('money'));
+//				//请求个人中心，余额为0不给他开锁
+//				if(money<=0||money==null||money==''||money==undefined){
+//					mui.alert('请您充值后，再预约用车','余额不足',function(){
+//						window.location='./recharge1.html';
+//						//强制性刷新
+//						app.reload();
+//					});
+//				}else{
+//					zhe.prop('disabled',true);
+//					app.loading('show');
+//					
+//					//预约中
+//					$('#dataTypeBike').html('预约中');
+//					
+//					app.wgs84Location(function(){
+//						app.ajax('route=account/order/book',{
+//							'user_id':user_id,
+//							'sign':sign,
+//							'lng':nowLng,
+//							'lat':nowLat,
+//							'device_id':bike_all.area_code+bike_all.bicycle_sn
+//						},function(){
+//							
+//							//选项卡切换
+//							$('#markerTabsLi1').hide();
+//							$('#markerTabsLi2').show();
+//							
+//							mui.toast(resData.msg);
+//							zhe.prop('disabled',false);
+//				  			app.loading('hide');
+//				  			
+//				  			//订单编号
+//				  			$('#bikeGo3').attr('order_sn',resData.data.order_sn);
+//				  			
+//				  			//请求当前订单获取剩下时间
+//				  			app.nowOrder(function(){
+//				  				//订单状态: 0预约中，1骑行中
+//				  				if(resData.data.current_order.order_state==0){
+//				  					//倒计时函数
+//							    	timeBack(resData.data.current_order.keep_time);
+//								}
+//				  			});
+//				  			
+//						},function(){
+//							zhe.prop('disabled',false);
+//				  			app.loading('hide');
+//						});
+//					});
+//				}
+//			});
+//		});
+
+		//新 导航
+		$('#goLook').on('tap',function(){
+			app.loading('show','启动导航');
+			
+			var zhe=$(this);
+			var bike_all=JSON.parse(zhe.attr('bike_all'));
+			console.log(bike_all);
+			var bike_location=(zhe.attr('bike_location')).split(',');
+			console.log(bike_location);
+			
+			//加载高德插件  AMap 是高德地图内置对象
+			AMap.service('AMap.Geocoder',function(){//回调函数
+			    //实例化Geocoder 地理编码
+			    geocoder = new AMap.Geocoder({
+			        city: "010"//城市，默认：“全国”
+			    });
+			    //TODO: 使用geocoder 对象完成相关功能
+			});
+			
+			//逆地理编码 获取单车位置
+	        var lnglatXY=new AMap.LngLat(bike_location[0],bike_location[1]);
+	        geocoder.getAddress(lnglatXY, function(status, result) {
+	    		if (status === 'complete' && result.info === 'OK') {
+	    			//单车详细地址
+	    			var goodAdd=result.regeocode.formattedAddress;
+	    			
+	    			setTimeout(function(){
+	    				wx.ready(function(){
+							//打开微信内置地图
+							wx.openLocation({
+							    longitude: parseFloat(bike_location[0]), // 经度，浮点数，范围为180 ~ -180。
+							    latitude: parseFloat(bike_location[1]), // 纬度，浮点数，范围为90 ~ -90
+							    name: '请点击右边APP导航', // 位置名
+							    address: '单车位置：'+goodAdd, // 地址详情说明
+							    scale:22, // 地图缩放级别,整形值,范围从1~28。默认为最大
+							    infoUrl: '' // 在查看位置界面底部显示的超链接,可点击跳转
+							});
+							wx.error(function(res){
+							    alert(JSON.stringify(res));
+							});
+						});
+	    			},200);
+	    			
+	    			setTimeout(function(){
+	    				app.loading('hide');
+	    			},1500);
+	    			
+	            }else{
+	                mui.toast('获取地址失败');
+	            }
+	       });
+		});
+		
+		
+		//取消预约
+		$('#bikeGo3').on('tap',function(){
+			var zhe=$(this);
+			var order_sn=zhe.attr('order_sn');
+			var btnArray = ['取消', '确定'];
+			mui.confirm('你确定取消吗？','取消预约',btnArray,function(e){
+				if (e.index == 1) {
+					//高德地图步行规划 清空
+		    		walking.clear();
+		    		
+					zhe.prop('disabled',true);
+					app.loading('show');
+					
+					app.ajax('route=account/order/cancelOrder',{
+						'user_id':user_id,
+						'sign':sign,
+						'order_sn':order_sn
+					},function(){
+						
+			    		clearInterval(keepTimes);
+						mui.toast(resData.msg);
+						zhe.prop('disabled',false);
+			  			app.loading('hide');
+			  			
+			  			//删除dom节点上的数据
+			  			$('#scanQRCode,#nowData').removeAttr('order_sn').removeAttr('order_id').removeAttr('bike_sn');
+			  			$('#bikeGo1,#bikeGo2,#bikeGo3,#bikeGo4,#goLook').removeAttr('bike_all').removeAttr('bike_location').removeAttr('order_sn');
+			  			
+						//选项卡切换
+			    		$('#markerTabs').toggle();
+			    		$('#markerTabsLi1').show();
+			    		$('#markerTabsLi2').hide();
+			    		$('.wrapMap').removeClass('active');
+			    		
+			    		//marker定位 重置
+						markerPosition(0);
+						
+						//地图复位中心
+						initLocation();
+			    		
+					},function(){
+						zhe.prop('disabled',false);
+			  			app.loading('hide');
+					});
+				}
+			});
+		});
+		
+		//寻车响铃
+		$('#bikeGo2').on('tap',function(){
+			var zhe=$(this);
+			var bike_all=JSON.parse(zhe.attr('bike_all'));
+			console.log(bike_all);
+			
+			app.loading('show');
+			app.ajax('route=operator/operator/beepLock',{
+				'user_id':user_id,
+				'sign':sign,
+				'device_id':bike_all.area_code+bike_all.bicycle_sn
+			},function(){
+				mui.toast(resData.msg);
+				app.loading('hide');
+			},function(){
+				app.loading('hide');
+			});
+		});
+		
+		//导航
+		$('#bikeGo4').on('tap',function(){
+			app.loading('show','启动导航');
+			
+			var zhe=$(this);
+			var bike_all=JSON.parse(zhe.attr('bike_all'));
+			console.log(bike_all);
+			var bike_location=(zhe.attr('bike_location')).split(',');
+			console.log(bike_location);
+			
+			//加载高德插件  AMap 是高德地图内置对象
+			AMap.service('AMap.Geocoder',function(){//回调函数
+			    //实例化Geocoder 地理编码
+			    geocoder = new AMap.Geocoder({
+			        city: "010"//城市，默认：“全国”
+			    });
+			    //TODO: 使用geocoder 对象完成相关功能
+			});
+			
+			//逆地理编码 获取单车位置
+	        var lnglatXY=new AMap.LngLat(bike_location[0],bike_location[1]);
+	        geocoder.getAddress(lnglatXY, function(status, result) {
+	    		if (status === 'complete' && result.info === 'OK') {
+	    			//单车详细地址
+	    			var goodAdd=result.regeocode.formattedAddress;
+	    			
+	    			setTimeout(function(){
+	    				wx.ready(function(){
+							//打开微信内置地图
+							wx.openLocation({
+							    longitude: parseFloat(bike_location[0]), // 经度，浮点数，范围为180 ~ -180。
+							    latitude: parseFloat(bike_location[1]), // 纬度，浮点数，范围为90 ~ -90
+							    name: '请点击右边APP导航', // 位置名
+							    address: '单车位置：'+goodAdd, // 地址详情说明
+							    scale:22, // 地图缩放级别,整形值,范围从1~28。默认为最大
+							    infoUrl: '' // 在查看位置界面底部显示的超链接,可点击跳转
+							});
+							wx.error(function(res){
+							    alert(JSON.stringify(res));
+							});
+						});
+	    			},200);
+	    			
+	    			setTimeout(function(){
+	    				app.loading('hide');
+	    			},1500);
+	    			
+	            }else{
+	                mui.toast('获取地址失败');
+	            }
+	       });
+		});
+		
+		
+		//倒计时函数
+		function timeBack(numTime){
+			
+			//还原时间戳
+			var time=app.formatTime({
+				type:5,
+				time:numTime
+			});
+		    $('#keepTimes').html(time);
+		    
+		    keepTimes=setInterval(function(){
+		    	numTime--;
+		    	console.log(numTime);
+		    	
+		    	//还原时间戳
+				var time=app.formatTime({
+					type:5,
+					time:numTime
+				});
+		    	$('#keepTimes').html(time);
+		    	
+		    	if(numTime==0){
+		    		
+		    		//移除所有marker点
+					app.loading('show');
+		    		
+		    		//marker定位 重置
+					markerPosition(0);
+		    		
+		    		clearInterval(keepTimes);
+		    		$('#markerTabsLi1').show();
+		    		$('#markerTabsLi2,#markerTabsLi3,#markerTabs').hide();
+					$('.wrapMap').removeClass('active');
+					$('#scanQRCode,#nowData').removeAttr('bike_sn').removeAttr('order_sn').removeAttr('order_id');
+					
+					//高德地图步行规划 清空
+			    	walking.clear();
+			    	
+					//地图复位中心
+					initLocation();
+					
+		    	}
+		    },1000);
+		}
+		
+		
+		//单车骑行中手动刷新数据
+		$('#nowData').on('tap',function(){
+			var zhe=$(this);
+			var order_sn=zhe.attr('order_sn');
+			//跟踪订单数据
+			trackData(order_sn);
+			
+			//地图复位中心
+			initLocation();
+		});
+		
+		
+		//单车骑行中函数		关锁后未结束计费 判断锁的类型
+		function bikeing(lock_type){
+			//高德地图步行规划 清空
+		    walking.clear();
+		    //移除所有marker点
+			mapA.remove(markerS);
+			
+			//屏蔽侧滑栏 防止更多bug
+			$('.LocDingSide').hide();
+			
+			//关锁后未结束计费 锁的类型
+			$('#dataTypeBike').attr('data-lock_type',lock_type);
+		    
+			$('#markerTabs,#markerTabsLi3').show();
+			$('#markerTabsLi1,#markerTabsLi2').hide();
+			$('.wrapMap').addClass('active');
+			$('#scanQRCode').hide();
+			
+			//定位图标换成锁图标
+			$('#dingSuo').attr('src','./img/Y1.jpg');
+			$('#dataNameAdd').html('手动关锁即可结束计费');
+			$('#dataTypeBike').html('关锁后未结费？');
+			$('#nowData').show();
+			
+			var ingVal=resData.data;
+			var order_sn=resData.data.order_sn;
+			
+			//骑行距离/运动燃烧/单车编号/当前花费
+			$('#ingLong').html(ingVal.distance);
+			$('#ingPower').html(ingVal.calorie);
+			$('#ingSn').html(ingVal.bicycle_sn);
+			$('#ingMoney').html(ingVal.order_amount);
+			
+			//骑行时间
+			if(parseInt(ingVal.time.hours)>0){
+				$('#hourDo').show();
+			}
+			$('#ingTime1').html(ingVal.time.hours);
+			$('#ingTime2').html(ingVal.time.min);
+			
+			$('#scanQRCode,#nowData').attr({
+				'order_sn':resData.data.order_sn,
+				'order_id':resData.data.order_id
+			});
+			
+			//定时执行
+			var ingTime=1;
+			ingIng=setInterval(function(){
+				ingTime++;
+				
+				//地图复位中心
+	    		initLocation();
+				
+				//跟踪订单数据
+				trackData(order_sn);
+			},30000);
+		}
+		
+		//订单详情，实时更新数据
+		function trackData(order_sn){
+			app.orderInfo(order_sn,function(){
+				//订单详情: -1已取消，0预约中，1骑行中，2结束
+				var orderState=resData.data.order_state;
+				console.log('订单详情: -1已取消，0预约中，1骑行中，2结束   + '+orderState);
+				if(orderState==1){
+					var ingVal=resData.data;
+					//骑行距离/运动燃烧/单车编号/当前花费
+					$('#ingLong').html(ingVal.distance);
+					$('#ingPower').html(ingVal.calorie);
+					$('#ingSn').html(ingVal.bicycle_sn);
+					$('#ingMoney').html(ingVal.order_amount);
+					
+					//骑行时间
+					if(parseInt(ingVal.time.hours)>0){
+						$('#hourDo').show();
+						return false;
+					}
+					
+					$('#ingTime1').html(ingVal.time.hours);
+					$('#ingTime2').html(ingVal.time.min);
+					
+				}else{
+					clearInterval(ingIng);
+					var order_id=$('#scanQRCode').attr('order_id');
+					
+					//初始化地图
+					mui.toast('骑行完成');
+					setTimeout(function(){
+						window.location='myTripNow.html?order_id='+order_id;
+					},400);
+					
+					//强制性刷新
+					app.reload();
+				}
+			});
+		}
+		
+		//地图复位中心
+		function initLocation(){
+			app.gcj02Location(function() {
+				mapA.setCenter([nowLng, nowLat]);
+				mapA.setZoom(17);
+				marker.setPosition([nowLng, nowLat]);
+			});
+		}
+		
+		
+		
+		/******************************************************************************************
+		 * 实体UI按键  不涉及逻辑操作
+		 ******************************************************************************************/
+		//底部弹窗
+		$('.LocDingR').on('click',function(){
+	  		mui('#dialogA').popover('show');
+		});
+		
+		//关闭弹框
+		$(document).on('tap','#cancelA',function(){
+			mui('#dialogA').popover('hide');
+		});
+		
+		
+		//举报违停
+		$('#violationStop').on('tap',function(){
+			app.userIdCheck(function(){//无用户ID
+				
+				app.loginCheck();
+			},function(){//有用户ID
+				window.location='./violationStop.html';
+			});
+		});
+		
+		//发现故障
+		$('#fault').on('tap',function(){
+			app.userIdCheck(function(){//无用户ID
+				
+				app.loginCheck();
+			},function(){//有用户ID
+				window.location='./fault.html';
+			});
+		});
+		
+		
+		//登录 / 信用积分
+		$('#userCredit').on('tap',function(){
+			app.userIdCheck(function(){//无用户ID
+				
+				app.loginCheck();
+			},function(){//有用户ID
+				window.location='./credit.html';
+			});
+		});
+		
+		//个人中心
+		$('#userImg').on('tap',function(){
+			app.userIdCheck(function(){//无用户ID
+				
+				app.loginCheck();
+			},function(){//有用户ID
+				window.location='./userCenter.html';
+			});
+		});
+		
+		//侧滑栏
+		$('#sidebar').on('tap','li',function(){
+			var zhe=$(this);
+			var xu=zhe.index();
+			//单车类型判断
+			switch (xu){//0我的钱包 / 1我的行程 / 2我的消息 / 3邀请好友 / 4用户指南 / 5设置
+		        case 0: app.userIdCheck(function(){//无用户ID
+							
+							app.loginCheck();
+						},function(){//有用户ID
+							window.location='./myMoney.html';
+						});
+		        	break;
+		        case 1: app.userIdCheck(function(){//无用户ID
+							
+							app.loginCheck();
+						},function(){//有用户ID
+							window.location='./myTrip.html';
+						});
+		        	break;
+		        case 2: app.userIdCheck(function(){//无用户ID
+							
+							app.loginCheck();
+						},function(){//有用户ID
+							window.location='./myNews.html';
+						});
+		        	break;
+		        case 3: console.log('邀请好友');break;
+		        case 4: window.location='./guide.html';break;
+		        case 5: 
+		        	window.location='./set.html';
+		        	//强制性刷新
+					app.reload();
+		        break;
+		    }
+		});
+		
+		
+		//标注点 复位
+	    $('.LocDingL').on('tap',function(){
+	    	//地图复位中心
+	    	initLocation();
+		});
+		
+		//关锁后未结费
+		$(document).on('tap','#dataTypeBike',function(){
+			var zhe=$(this);
+			var text=zhe.text();
+			var lock_type=parseInt(zhe.data('lock_type'));
+			console.log('lock_type',lock_type);
+			if(text=='关锁后未结费？'){
+				if(lock_type==1){
+					window.location='./notEndMoney.html';
+					//强制性刷新
+					app.reload();
+				}else if(lock_type==2){
+					console.log('蓝牙锁未结束订单');
+					var btnArray = ['取消', '确认'];
+					mui.confirm('我们将为您结束订单，并暂时不会扣除余额。<span class="mRed">实际费用将以实际关锁时间为准扣除，请勿担心。</span>您可在我的行程查看订单状态。','结束订单',btnArray,function(e){
+						if (e.index == 1) {
+							//请求接口
+						}
+					});
+				}
+				
+			}
+			return false;
+		});
+		
+		//APP下载
+		$(document).on('tap','.goDownAppLink',function(){
+			app.downloadApp();
+			return false;
+		});
+		//关闭下载页面
+		$(document).on('tap','#closeDownAppLink',function(){
+			$('#homeAppDown').remove();
+			return false;
+		});
+		
+		//客服电话
+		app.ajax('route=system/common/contact',{},function(){
+			$('#mainTel').attr('data-tel',resData.data.hotline);
+		});
+		
+		$('#mainTel').on('tap',function(){
+			mui('#dialogA').popover('hide');
+			var zhe=$(this);
+			var tel=zhe.attr('data-tel');
+			window.location='tel:'+tel;
+		});
+		
+		/******************************************************************************************
+		 * 实体UI按键  不涉及逻辑操作
+		 ******************************************************************************************/
+	
+	});
+	
+	//连敏聪ID 测试用账号
+	app.setSettings(58,'user_id');
+</script>
+
+</html>

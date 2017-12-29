@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>我的行程</title>
+<link href="css/mui.css" rel="stylesheet"/>
+<link href="css/main.css" rel="stylesheet"/>
+
+</head>
+
+
+<body>
+	<!--<header class="mui-bar mui-bar-nav bgBlack shadowNone">
+	    <a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left cWhite"></a>
+	</header>-->
+	<div class="mui-content mui-scroll-wrapper" id="scroll">
+		<div class="mui-scroll">
+			<div class="mui-content-padded myTrip" id="myTripList" style="margin-bottom: 0px !important;"></div>
+			<!--转转-->
+			<div class="mui-text-center mui-content-padded" id="listLoad"><span class="mui-spinner"></span></div>
+		</div>
+	</div>
+	
+</body>
+
+<script src="js/zepto.min.js"></script>
+<script src="js/md5-min.js"></script>
+<script src="js/mui.min.js"></script>
+<script src="js/mui.pullToRefresh.js"></script>
+<script src="js/app.js"></script>
+<script type="text/javascript" charset="utf-8">
+  	var page=0;
+	
+	app.check(function(){
+		app.ajax('route=account/account/getOrders',{
+			'user_id':user_id,
+			'sign':sign,
+			'page':page+=1
+		},function(){
+			console.log('分页page： '+page);
+			
+			app.pullToRefresh({
+				data:resData.data.items,
+				start:function(){
+					//加载数据
+					loveData(resData.data.items);
+				},
+				end:function(){
+					$('#myTripList').html('<div class="bgTran mui-text-center f_16 padding10">暂无记录</div>');
+				},
+				//如果总页数 > 当前页码 触发上拉加载函数
+				judge:resData.data.total_pages>resData.data.page,
+				wrap:'#scroll .mui-scroll',
+				success:function(zhe){
+					app.ajax('route=account/account/getOrders',{
+						'user_id':user_id,
+						'sign':sign,
+						'page':page+=1
+					},function(){
+						console.log('分页page： '+page);
+						setTimeout(function(){
+							
+							//加载数据
+							loveData(resData.data.items);
+							
+							//如果总页数==当前页面 停止上拉加载函数 true停止/false继续
+							if(resData.data.total_pages==resData.data.page){
+								zhe.endPullUpToRefresh(true);
+							}else{
+								zhe.endPullUpToRefresh(false);
+							}
+							
+						},200);
+					});
+				}
+			});
+		});
+		
+		
+		//加载数据
+		function loveData(a){
+			var htmlK = '';
+			
+			mui.each(a,function(i,val){
+				//判断有无使用优惠卷
+				var coupon_type='';
+				if(!!val.coupon_type){
+					coupon_type='<p class="marginT5 cGray6"><img src="img/C6_1.jpg" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;优惠减免：'+((val.coupon_type).replace(/\(/g,'')).replace(/\)/g,'')+'</p>';
+				}
+				
+				//还原时间戳
+				var time=app.formatTime({
+					type:1,
+					time:val.add_time
+				});
+				
+				//是否待待计费状态
+				var state='';
+				if(val.order_state!=3){
+					state='<p class="marginB5 cGray6"><img src="img/C5.jpg" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;骑行时间：'+val.duration+'分钟</p>\
+							<p class="cGray6"><img src="img/C6.jpg" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;骑行花费：'+val.pay_amount+'元</p>'+coupon_type+'<div class="mark f_12 cGray mui-text-right">单车编号<br/><span class="f_14">'+val.bicycle_sn+'</span></div>';
+				}else{
+					state='<p class="marginB5 cGray6"><img src="img/C5.jpg" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;骑行时间：待获取</p>\
+							<p class="cGray6"><img src="img/C6.jpg" class="inlineBlock"/>&nbsp;&nbsp;&nbsp;骑行花费：<span class="mRed">未结算</span></p><div class="mark f_12 cGray mui-text-right">单车编号<br/><span class="f_14">'+val.bicycle_sn+'</span></div>';
+				}
+				
+				
+				htmlK+='<ul class="mui-table-view lineNone" data-id=\"'+val.order_id+'\"  data-sn=\"'+val.order_sn+'\" data-state=\"'+val.order_state+'\">\
+					<li class="mui-table-view-cell bgTran">\
+						<div class="mui-media-body">\
+							<div class="marginB10 cBlack f_14">'+time+'</div>'+state+'</div>\
+					</li>\
+				</ul>';
+			});
+			$('#myTripList').append(htmlK);
+		}
+	});
+	
+	
+	//行程详情，链接跳转
+	$('#myTripList').on('tap','ul',function(){
+		var order_id=$(this).data('id');
+		var order_state=$(this).data('state');
+		if (order_state!=3){
+			window.location='./myTripInfo.html?order_id='+order_id;
+	  }else{
+	  	mui.alert('该订单关锁时间仍在获取中，无法查看订单详情','关锁状态异常');
+	  }
+		
+	});
+	
+  	
+</script>
+
+</html>

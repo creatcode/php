@@ -1,7 +1,5 @@
 <?php
 /**
- * 东莞市亦强软件有限公司
- * Author: 罗剑波
  * Time: 2017/2/23 20:31
  */
 define('WEIXIN_URL', 'http://bike.e-stronger.com/bike/wechat');

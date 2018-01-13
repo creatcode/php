@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>区域管理</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,13 +14,13 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">区域列表</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t3'];?></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="region">
                         <!-- 新增 -->
                         <div class="form-group">
-                            <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                            <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;<?php echo @$lang['t4'];?></a>
                         </div>
                         <?php if (isset($error['warning'])) { ?>
                         <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;<?php echo $error['warning']; ?>
@@ -39,7 +39,7 @@
                                     <?php foreach ($data_columns as $column) { ?>
                                     <th><?php echo $column['text']; ?></th>
                                     <?php } ?>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t5'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -50,13 +50,13 @@
 
                                     <td>
                                         <div class="btn-group">
-                                            <button data-url="<?php echo $data['edit_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-pencil"></i>编辑</button>
+                                            <button data-url="<?php echo $data['edit_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-pencil"></i><?php echo @$lang['t6'];?></button>
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="<?php echo $data['delete_action']; ?>">删除</a></li>
+                                                <li><a href="<?php echo $data['delete_action']; ?>"><?php echo @$lang['t7'];?></a></li>
                                             </ul>
                                         </div>
                                     </td>

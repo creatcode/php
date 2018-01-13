@@ -21,6 +21,7 @@ class ControllerRegionStrategy extends Controller{
         $total = $this->sys_model_strategy->getTotalStrategies([]);
         $limit = $this->getPagination($total);
         $strategy = $this->sys_model_strategy->getStrategyList([],'',$limit);
+
         $regions = [];
         $cities = [];
         foreach($strategy as $key => &$val ){
@@ -60,7 +61,7 @@ class ControllerRegionStrategy extends Controller{
     public function add(){
         if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateForm()){
             $data = $this->request->post(array(
-                'region_id', 'city_id', 'upper_expend', 'bicycle_type',
+                'region_id', 'city_id', 'user_type', 'bicycle_type',
                 'deposit', 'monthly_card_money', 'yearly_card_money',
                 'cards_first_half','cards_afterwards_half','first_half',
                 'afterwards_half'
@@ -100,7 +101,7 @@ class ControllerRegionStrategy extends Controller{
     public function edit(){
         if($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateForm()){
             $data = $this->request->post(array(
-                'region_id', 'city_id', 'upper_expend', 'bicycle_type',
+                'region_id', 'city_id', 'user_type', 'bicycle_type',
                 'deposit', 'monthly_card_money', 'yearly_card_money',
                 'cards_first_half','cards_afterwards_half','first_half',
                 'afterwards_half','strategy_id'
@@ -153,7 +154,7 @@ class ControllerRegionStrategy extends Controller{
 
     public function validateForm(){
         $input = $this->request->post(array(
-            'region_id', 'city_id', 'upper_expend', 'bicycle_type',
+            'region_id', 'city_id', 'user_type', 'bicycle_type',
             'deposit', 'monthly_card_money', 'yearly_card_money',
             'cards_first_half','cards_afterwards_half','first_half',
             'afterwards_half'

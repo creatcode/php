@@ -33,22 +33,59 @@ class ControllerUserStorage extends Controller
         $page   = isset($this->request->get['page']) ? $this->request->get['page'] : 1 ;
         $offset = $this->page_rows*($page - 1);
         $limit  = $this->page_rows*($page - 1).",".$this->page_rows;
-        $where  = " deposit_recharge.pdr_present_amount > 0 AND pdr_payment_state > 0 ";
+        $where  = " a.regin_amount > 0 ";
         if($fiter['city_id']){
             $where .= " AND user.city_id = ".$fiter['city_id'];
         }
         if($fiter['region_id']){
             $where .= " AND user.region_id = ".$fiter['region_id'];
         }
-        if($fiter['pdr_payment_time']){
-            $time_arr = explode('至', $fiter['pdr_payment_time']);
-            if($time_arr[0] && $time_arr[1]){
-                $where .= " AND deposit_recharge.pdr_payment_time >= ".strtotime($time_arr[0])." AND deposit_recharge.pdr_payment_time <= ". bcadd(86399, strtotime($time_arr[1]));
+        $time_arr = explode(' 至 ', $fiter['pdr_payment_time']);
+        if ($fiter['time_type']==1) {
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0].'-01-01');
+                $lastday  = bcadd(86399,strtotime($time_arr[1].'-12-31'));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-01-01'));
+                $lastday  = bcadd(86399,strtotime(date('Y-12-31')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else if($fiter['time_type']==2){
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0]);
+                $lastday  = bcadd(86399,strtotime($time_arr[1].'+1 month -1 day'));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-m'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-t')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else if($fiter['time_type']==3){
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0]);
+                $lastday  = bcadd(86399,strtotime($time_arr[1]));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-m-d'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-d')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else{
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0]);
+                $lastday  = bcadd(86399,strtotime($time_arr[1]));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
             }
         }
-        $filed = "deposit_recharge.*,user.*,city.*,region.*";
-        $rechargeLists = $this->sys_model_comment->getDepositRecharge($where,$filed,$limit);
-        $total = $this->sys_model_comment->getDepositRechargeToals($where);
+
+        $filed = "a.*,user.*,city.*,region.*";
+        $rechargeLists = $this->sys_model_comment->getRegin($where,$filed,$limit);
+        $total = $this->sys_model_comment->getReginToals($where);
         
         
         $this->load->library('sys_model/region');
@@ -73,7 +110,7 @@ class ControllerUserStorage extends Controller
         $this->assign('results', $results);
         $this->assign('action',$this->url->link('user/storage'));
         $this->assign('data_rows',$rechargeLists);
-        $this->set_column(array('区域','城市','用户ID','手机号码','注册金金额','支付时间','订单编号'));
+        $this->set_column(array('区域','城市','用户名','注册金金额','支付时间','订单编号'));
         $this->assign('data_columns',$this->data_columns);
         $this->assign('filter', $fiter);
         $this->assign('storage_chart_action', $this->url->link('user/storage/chart'));
@@ -91,52 +128,114 @@ class ControllerUserStorage extends Controller
     public function chart(){
 
        $fiter = $this->request->get(array('city_id','pdr_payment_time','region_id','time_type'));
-        $where = " deposit_recharge.pdr_present_amount > 0 AND pdr_payment_state > 0 ";
+        $where = " a.regin_amount > 0 ";
         if($fiter['city_id']){
             $where .= " AND user.city_id = ".$fiter['city_id'];
         }
         if($fiter['region_id']){
             $where .= " AND user.region_id = ".$fiter['region_id'];
         }
-        $firstday = strtotime(date('Y-m-01'));
-        $lastday  = bcadd(86399, strtotime(date('Y-m-d')));
-        if($fiter['pdr_payment_time']){
-            $time_arr = explode('至', $fiter['pdr_payment_time']);
-            if($time_arr[0] && $time_arr[1]){
-                $where .= " AND deposit_recharge.pdr_payment_time >= ".strtotime($time_arr[0])." AND deposit_recharge.pdr_payment_time <= ". bcadd(86399, strtotime($time_arr[1]));
-                $firstday = strtotime($time_arr[0]);
-                $lastday  = bcadd(86399, strtotime($time_arr[1]));
+        $time_arr = explode(' 至 ', $fiter['pdr_payment_time']);
+        if ($fiter['time_type']==1) {
+            if(!empty($fiter['pdr_payment_time'])){
+                    $firstday = strtotime($time_arr[0].'-01-01');
+                    $lastday  = bcadd(86399,strtotime($time_arr[1].'-12-31'));
+                    $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-01-01'));
+                $lastday  = bcadd(86399,strtotime(date('Y-12-31')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else if($fiter['time_type']==2){
+            if(!empty($fiter['pdr_payment_time'])){
+                    $firstday = strtotime($time_arr[0]);
+                    $lastday  = bcadd(86399,strtotime($time_arr[1].'+1 month -1 day'));
+                    $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-m'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-t')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else if($fiter['time_type']==3){
+            if(!empty($fiter['pdr_payment_time'])){
+                    $firstday = strtotime($time_arr[0]);
+                    $lastday  = bcadd(86399,strtotime($time_arr[1]));
+                    $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-m-d'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-d')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
             }
         }else{
-            $where .= " AND deposit_recharge.pdr_payment_time >= ".$firstday." AND deposit_recharge.pdr_payment_time <= ". $lastday;
+            if(!empty($fiter['pdr_payment_time'])){
+                    $firstday = strtotime($time_arr[0]);
+                    $lastday  = bcadd(86399,strtotime($time_arr[1]));
+                    $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-m-01'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-d')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
         }
-        $filed = "deposit_recharge.*,user.mobile,FROM_UNIXTIME(deposit_recharge.pdr_payment_time,'%Y-%m-%d') as date,deposit_recharge.pdr_amount as amount,deposit_recharge.pdr_present_amount as refund";
+
+
         
-        $rechargeLists = $this->sys_model_comment->getDepositRecharge($where,$filed);
+        if($fiter['time_type']==1){
+            $filed = "FROM_UNIXTIME(a.regin_time,'%Y') as date,sum(a.regin_amount) as amount";
+        }else if($fiter['time_type']==2){
+            $filed = "FROM_UNIXTIME(a.regin_time,'%Y-%m') as date,sum(a.regin_amount) as amount";
+        }else{
+            $filed = "FROM_UNIXTIME(a.regin_time,'%Y-%m-%d') as date,sum(a.regin_amount) as amount";
+        }
+        
+        $rechargeLists = $this->sys_model_comment->getRegin2($where,$filed);
         // 初始化订单统计数据
         $chart_arr = array();
-        while ($firstday <= $lastday) {
+        if($fiter['time_type']==1){
+             while ($firstday <= $lastday) {
+            $tempDay = date('Y', $firstday);
+            $chart_arr[$tempDay] = array(
+                'date' => $tempDay,
+                'amount' => 0,
+            );
+            $firstday = strtotime('+1 year', $firstday);
+        }
+        }else if($fiter['time_type']==2){
+            while ($firstday <= $lastday) {
+            $tempDay = date('Y-m', $firstday);
+            $chart_arr[$tempDay] = array(
+                'date' => $tempDay,
+                'amount' => 0,
+            );
+            $firstday = strtotime('+1 month', $firstday);
+        }
+        }else{
+            while ($firstday <= $lastday) {
             $tempDay = date('Y-m-d', $firstday);
             $chart_arr[$tempDay] = array(
                 'date' => $tempDay,
                 'amount' => 0,
-                'refund' => 0,
             );
             $firstday = strtotime('+1 day', $firstday);
+        }
         }
         //整理输出结果；
         foreach($rechargeLists as $v){
             $chart_arr[$v['date']] = array(
                 'date'   => $v['date'],
                 'amount' => $v['amount'],
-                'refund' => $v['refund'],
             );
         }
-        //SUM(deposit_recharge.pdr_amount) as orderAmountTotal, SUM(deposit_recharge.pdr_present_amount) as refundAmountTotal
-        $total = $this->sys_model_comment->getDepositRechargeLong($where);
+        $orderAmountTotal=0;
+        $total = $this->sys_model_comment->getReginLong($where);
         $this->load->library('sys_model/region');
         $this->load->library('sys_model/city');
-        
+        $total['orderAmountTotal']+=$orderAmountTotal;
+        $total['orderAmountTotal'] = sprintf('%0.2f', $total['orderAmountTotal']);
         $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
         foreach ($filter_regions as $key2 => $val2) {
             $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
@@ -151,7 +250,7 @@ class ControllerUserStorage extends Controller
         $this->assign('data', json_encode($show_result));
         $this->assign('filter', $fiter);
         $this->assign('orderAmountTotal', $total['orderAmountTotal']);
-        $this->assign('refundAmountTotal', $total['refundAmountTotal']);
+        
         $this->assign('user_rating_action',$this->url->link('user/storage'));
         $this->response->setOutPut($this->load->view('user/storage_chart',$this->output));
 
@@ -164,25 +263,66 @@ class ControllerUserStorage extends Controller
      */
     public function export() {
 
-        $fiter = $this->request->get(array('cooperator_id','pdr_payment_time'));
+        $fiter = $this->request->get(array('city_id','pdr_payment_time','region_id','time_type'));
         $where = " deposit_recharge.pdr_present_amount > 0 ";
-        if($fiter['cooperator_id']){
-            $where .= " AND user.cooperator_id = ".$fiter['cooperator_id'];
+        if($fiter['city_id']){
+            $where .= " AND user.city_id = ".$fiter['city_id'];
         }
-        if($fiter['pdr_payment_time']){
-            $time_arr = explode('至', $fiter['pdr_payment_time']);
-            if($time_arr[0] && $time_arr[1]){
-                $where .= " AND deposit_recharge.pdr_payment_time >= ".strtotime($time_arr[0])." AND deposit_recharge.pdr_payment_time <= ". bcadd(86399, strtotime($time_arr[1]));
+        if($fiter['region_id']){
+            $where .= " AND user.region_id = ".$fiter['region_id'];
+        }
+        $time_arr = explode(' 至 ', $fiter['pdr_payment_time']);
+        if ($fiter['time_type']==1) {
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0].'-01-01');
+                $lastday  = bcadd(86399,strtotime($time_arr[1].'-12-31'));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-01-01'));
+                $lastday  = bcadd(86399,strtotime(date('Y-12-31')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else if($fiter['time_type']==2){
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0]);
+                $lastday  = bcadd(86399,strtotime($time_arr[1].'+1 month -1 day'));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-m'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-t')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else if($fiter['time_type']==3){
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0]);
+                $lastday  = bcadd(86399,strtotime($time_arr[1]));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
+            }else{
+                $firstday = strtotime(date('Y-m-d'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-d')));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+            }
+        }else{
+            if(!empty($fiter['pdr_payment_time'])){
+                $firstday = strtotime($time_arr[0]);
+                $lastday  = bcadd(86399,strtotime($time_arr[1]));
+                $where .= " AND a.regin_time >= '$firstday' AND a.regin_time <= '$lastday'";
+
             }
         }
 
-        $filed = "deposit_recharge.*,user.mobile";
+        $filed = "deposit_recharge.*,user.*,city.*,region.*";
         $rechargeLists = $this->sys_model_comment->getDepositRecharge($where,$filed);
         $total  = $this->sys_model_comment->getDepositRechargeToals($where);
         $result = array();
         foreach($rechargeLists as $v){
             $result[] = array(
-                'user_id'               => $v['pdr_user_id'],
+                'region_name'           => $v['region_name'],
+                'city_name'             => $v['city_name'],
+                // 'user_id'               => $v['pdr_user_id'],
                 'mobile'                => $v['mobile'],
                 'pdr_amount'            => $v['pdr_amount'],
                 'pdr_present_amount'    => $v['pdr_present_amount'],
@@ -192,10 +332,12 @@ class ControllerUserStorage extends Controller
         }
 
         $data = array(
-            'title'     => '充值优惠列表',
+            'title'     => '充值优惠统计列表',
             'list'      => $result,
             'header'    => array(
-                'user_id'            => '用户ID',
+                'region_name'        => '区域',
+                'city_name'          => '城市',
+                // 'user_id'            => '用户ID',
                 'mobile'             => '手机号码',
                 'pdr_amount'         => '充值金额',
                 'pdr_present_amount' => '赠送金额',

@@ -58,8 +58,8 @@ class ControllerOauthAuthenticate extends Controller
         //        $this->response->showErrorResult('版本过低请升级后使用', 1024);
         //    if (!is_array($data) || empty($data['token']))//参数不符合要求
         //        $this->response->showErrorResult('服务器忙，请稍后重试！', 1026);
-            if (isset($data['token']) && self::MakeToken($data) != $data['token'])//鉴权失败
-                $this->response->showErrorResult('服务器忙，请稍后重试！', 1027);
+            //if (isset($data['token']) && self::MakeToken($data) != $data['token'])//鉴权失败
+            //    $this->response->showErrorResult('服务器忙，请稍后重试！', 1027);
         }
     }
 

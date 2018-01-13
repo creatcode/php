@@ -43,10 +43,10 @@ class ControllerStartupDeposit extends Controller {
             } elseif ($user_info['deposit_state'] == INIT_STATE) {
                 $this->response->showErrorResult('用户尚未交押金，不能开锁骑车，请交押金', 1);
             }
-            if ($user_info['verify_state'] == INIT_STATE) {
+            /*if ($user_info['verify_state'] == INIT_STATE) {
                 $this->response->showErrorResult('用户尚未实名认证，不能开锁骑车，请实名认证后再试', 2);
-            }
-            if ($user_info['available_deposit'] + $user_info['present_amount'] <= 0) {
+            }*/
+            /*if ($user_info['available_deposit'] <= 0) {
                 if ($user_info['card_expired_time'] < time()) {
                     $this->response->showErrorResult('您的余额不足，请充值余额再使用单车', 3);
                 } else {
@@ -54,8 +54,8 @@ class ControllerStartupDeposit extends Controller {
                         $this->response->showErrorResult('使用骑行卡，但骑行有欠费，请联系客服查明原因');
                     }
                 }
-            }
-            
+            }*/
+
             if ($this->request->get_request_header('sing') == 'BBC') {
 
             } elseif ($user_info['available_state'] == INIT_STATE) {

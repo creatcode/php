@@ -17,6 +17,7 @@ class ControllerOperationOperationreport extends Controller
         $this->load->library('sys_model/repair',true);
         $this->load->library('sys_model/admin',true);
         $this->load->library('sys_model/cooperator',true);
+        $this->assign('lang',$this->language->all());
 
     }
 
@@ -115,16 +116,35 @@ class ControllerOperationOperationreport extends Controller
             $clist[$v['cooperator_id']] = $v['cooperator_name'];
         }
         $data_columns = $this->getDataColumns();
-
+        #全部合伙人
+        $this->load->library('sys_model/region');
+        $regionList = $this->sys_model_region->getRegionList();
+        $this->assign('regionList',$regionList);
         $this->assign('cooper_list',$clist);
         $this->assign('data_columns',$data_columns);
         $this->assign('total',$total);
+
+        //捏造表格数据
+        for ($i = 0; $i <= 10; $i++) {
+            $a = array(
+
+                'user_name' => '维修员'.$i,
+                'bike_sn'=>rand(10000,99999),
+                'lock_sn'=>rand(10000,99999),
+                'part'=>'部件',
+                'area'=>'a区',
+                'city'=>'东莞',
+                'create_time' => date("Y-m-d H:i:s"),
+               
+            );
+            $view_result[$i]=$a;
+        }
         $this->assign('list',$view_result);
         $this->assign('cooperator_id',$cooperator_id);
         $this->assign('action',$this->url->link('operation/operationreport'));
         $this->assign('post_data',$post);
         $this->assign('pagination',$pagination);
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('operation/operationreport_list', $this->output));
 
     }
@@ -135,10 +155,13 @@ class ControllerOperationOperationreport extends Controller
      */
     protected function getDataColumns()
     {
-        $this->setDataColumn('昵称');
-        $this->setDataColumn('账号');
-        $this->setDataColumn('电话');
-        $this->setDataColumn('总数');
+        $this->setDataColumn($this->language->get('t2'));
+        $this->setDataColumn($this->language->get('t3'));
+        $this->setDataColumn($this->language->get('t4'));
+        $this->setDataColumn($this->language->get('t5'));
+        $this->setDataColumn($this->language->get('t6'));
+        $this->setDataColumn($this->language->get('t7'));
+        $this->setDataColumn($this->language->get('t8'));
         return $this->data_columns;
     }
 

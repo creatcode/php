@@ -1,4 +1,16 @@
 <?php
+error_reporting(E_ALL); //E_ALL
+function cache_shutdown_error() {
+    $_error = error_get_last();
+    if ($_error && in_array($_error['type'], array(1, 4, 16, 64, 256, 4096, E_ALL))) {
+        echo '<font color=red>你的代码出错了：</font></br>';
+        echo '致命错误:' . $_error['message'] . '</br>';
+        echo '文件:' . $_error['file'] . '</br>';
+        echo '在第' . $_error['line'] . '行</br>';
+    }
+}
+register_shutdown_function("cache_shutdown_error");
+use Tool\ArrayUtil;
 class ControllerArticleArticle extends Controller {
     private $cur_url = null;
     private $error = null;
@@ -17,8 +29,8 @@ class ControllerArticleArticle extends Controller {
      * 文章列表
      */
     public function index() {
-        $filter = $this->request->get(array('filter_type', 'article_title', 'category_id', 'article_sort'));
-
+        $filter = $this->request->get(array('filter_type', 'article_title', 'category_id', 'article_sort',));
+        
         $condition = array();
         if (!empty($filter['article_title'])) {
             $condition['article_title'] = array('like', "%{$filter['article_title']}%");
@@ -102,6 +114,7 @@ class ControllerArticleArticle extends Controller {
 
         $this->assign('pagination', $pagination);
         $this->assign('results', $results);
+        $this->assign('lan_type', get_lan_type());
 
         $this->assign('export_action', $this->url->link('article/article/export'));
         $this->assign('import_action', $this->url->link('article/article/import'));
@@ -117,6 +130,7 @@ class ControllerArticleArticle extends Controller {
         $this->setDataColumn('文章标题');
         $this->setDataColumn('文章分类');
         $this->setDataColumn('文章排序');
+        // $this->setDataColumn('语言');
         return $this->data_columns;
     }
 
@@ -125,13 +139,16 @@ class ControllerArticleArticle extends Controller {
      */
     public function add() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort'));
+            $input = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort','lan_type','article_content1','article_content2'));
             $data = array(
                 'article_title' => $input['article_title'],
                 'category_id' => (int)$input['category_id'],
                 'article_code' => $input['article_code'],
                 'article_content' => $input['article_content'],
+                'article_content1' => $input['article_content1'],
+                'article_content2' => $input['article_content2'],
                 'article_sort' => (int)$input['article_sort'],
+                'lan_type' => (int)$input['lan_type'],
             );
             $rec = $this->sys_model_article->addArticle($data);
             if ($rec) {
@@ -178,14 +195,17 @@ class ControllerArticleArticle extends Controller {
      */
     public function edit() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort'));
+            $input = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort','lan_type','article_content1','article_content2'));
             $article_id = $this->request->get['article_id'];
             $data = array(
                 'article_title' => $input['article_title'],
                 'category_id' => (int)$input['category_id'],
                 'article_code' => $input['article_code'],
                 'article_content' => $input['article_content'],
+                'article_content1' => $input['article_content1'],
+                'article_content2' => $input['article_content2'],
                 'article_sort' => (int)$input['article_sort'],
+                'lan_type' => (int)$input['lan_type'],
             );
             $condition = array(
                 'article_id' => $article_id
@@ -343,7 +363,8 @@ class ControllerArticleArticle extends Controller {
 
     private function getForm() {
         // 编辑时获取已有的数据
-        $info = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort'));
+       
+        $info = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort','lan_type','article_content1','article_content2'));
         $article_id = $this->request->get('article_id');
         if (isset($this->request->get['article_id']) && ($this->request->server['REQUEST_METHOD'] != 'POST')) {
             $condition = array(
@@ -360,8 +381,13 @@ class ControllerArticleArticle extends Controller {
                 $categories[$val['category_id']] = $val['category_name'];
             }
         }
-
+        $lan_type = array(
+            '0' => '中文',
+            '1' => '英文',
+            '2' => '意大利语'
+        );
         $this->assign('data', $info);
+        $this->assign('lan_type', $lan_type);
         $this->assign('categories', $categories);
         $this->assign('action', $this->cur_url . '&article_id=' . $article_id);
         $this->assign('return_action', $this->url->link('article/article'));
@@ -375,7 +401,7 @@ class ControllerArticleArticle extends Controller {
      * @return bool
      */
     private function validateForm() {
-        $input = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort'));
+        $input = $this->request->post(array('article_title', 'category_id', 'article_code', 'article_content', 'article_sort','article_content1','article_content2'));
 
         foreach ($input as $k => $v) {
             if (empty($v)) {

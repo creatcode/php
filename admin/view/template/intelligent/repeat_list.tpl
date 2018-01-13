@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>智能分析</span>
+        <span><?php echo @$lang['t14'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -37,7 +37,7 @@
                                     <?php foreach ($data_columns as $column) { ?>
                                     <th><?php echo $column; ?></th>
                                     <?php } ?>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t15'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -53,18 +53,18 @@
                                     <td><?php echo $detail['type']?></td>
                                     <td><?php echo $detail['lock_type']?></td>
 									<td><?php echo $detail['region_name']?></td>
-									<td><?php echo $detail['cooperator_name']?></td>
+								
 									<td><?php echo $detail['is_using']?></td>
                                     <td>
                                         <div class="btn-group">
-                                            <button data-url="<?php echo $detail['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>查看</button>
+                                            <button data-url="<?php echo $detail['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t16'];?></button>
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="<?php echo $detail['edit_action']; ?>">编辑</a></li>
-                                                <li><a href="<?php echo $detail['delete_action']; ?>">删除</a></li>
+                                                <li><a href="<?php echo $detail['edit_action']; ?>"><?php echo @$lang['t17'];?></a></li>
+                                                <li><a href="<?php echo $detail['delete_action']; ?>"><?php echo @$lang['t18'];?></a></li>
                                             </ul>
                                         </div>
                                     </td>
@@ -80,21 +80,21 @@
                                     <!--<td><input type="checkbox" name="selected[]" value="<?php echo $detail['bicycle_id']?>"></td>-->
                                     <td><?php echo $detail['lock_sn']?></td>
 									<td><?php echo $detail['lock_name']?></td>
-									<td><?php echo $detail['cooperator_name']?></td>
+								
 									<td><?php echo $detail['battery']?></td>
 									<td><?php echo $detail['open_nums']?></td>
 									<td><?php echo $detail['system_time']?></td>
 									<td><?php echo $detail['lock_status']?></td>
                                     <td>
                                         <div class="btn-group">
-                                            <button data-url="<?php echo $detail['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>查看</button>
+                                            <button data-url="<?php echo $detail['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t16'];?></button>
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="<?php echo $detail['edit_action']; ?>">编辑</a></li>
-                                                <li><a href="<?php echo $detail['delete_action']; ?>">删除</a></li>
+                                                <li><a href="<?php echo $detail['edit_action']; ?>"><?php echo @$lang['t17'];?></a></li>
+                                                <li><a href="<?php echo $detail['delete_action']; ?>"><?php echo @$lang['t18'];?></a></li>
                                             </ul>
                                         </div>
                                     </td>

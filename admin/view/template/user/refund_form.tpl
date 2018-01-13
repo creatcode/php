@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>充值管理</span>
+        <span>提现审核</span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -62,12 +62,7 @@
                                         <h5><?php echo $recharge_info['pdr_payment_state'];?></h5>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="col-sm-2 control-label">充值金额：</label>
-                                    <div class="col-sm-5">
-                                        <h5>￥<?php echo $recharge_info['pdr_amount'];?></h5>
-                                    </div>
-                                </div>
+                                
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">充值金额：</label>
                                     <div class="col-sm-5">
@@ -108,8 +103,9 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <div class="col-sm-7">
-                                        <div class="pull-right">
+                                    <div class="col-sm-2"></div>
+                                    <div class="col-sm-5">
+                                        <div class="text-center">
                                             <button type="submit" class="btn btn-sm btn-success margin-r-5">提交</button>
                                             <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default">返回</a>
                                         </div>

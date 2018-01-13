@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>异常消费用户</span>
+        <span><?php echo @$lang['t5'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,7 +14,7 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">异常消费用户</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t5'];?></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
@@ -22,19 +22,27 @@
                             <!-- 搜索 -->
                             <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
                                 <select name="abnormal_state" class="input-sm">
-                                    <option value>异常类型</option>
-                                    <option <?php echo $filter['abnormal_state']=='-3'?'selected':'' ?> value="-3">后台结束订单</option>
-                                    <option <?php echo $filter['abnormal_state']=='1'?'selected':'' ?> value="1">关锁未计费</option>
-                                    <option <?php echo $filter['abnormal_state']=='3'?'selected':'' ?> value="3">蓝牙锁预计费</option>
+                                    <option value><?php echo @$lang['t7'];?></option>
+                                    <option <?php echo $filter['abnormal_state']=='-3'?'selected':'' ?> value="-3"><?php echo @$lang['t6'];?></option>
+                                    <option <?php echo $filter['abnormal_state']=='1'?'selected':'' ?> value="1"><?php echo @$lang['t8'];?></option>
+                                    <option <?php echo $filter['abnormal_state']=='3'?'selected':'' ?> value="3"><?php echo @$lang['t9'];?></option>
                                 </select>
                                 <select class="input-sm" name="abnormal_num">
-                                    <option value>异常次数</option>
+                                    <option value><?php echo @$lang['t4'];?></option>
                                     <option <?php echo $filter['abnormal_num']=='3'?'selected':'' ?> value="3"> > 3</option>
                                     <option <?php echo $filter['abnormal_num']=='5'?'selected':'' ?> value="5"> > 5</option>
                                 </select>
-                                <input type="text" name="add_time" value="<?php echo $filter['add_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="上报时间"/>
+                                 <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
+                                    <option value="0"><?php echo @$lang['t10'];?></option>
+                                    <?php if(!empty($time_type)) {?>
+                                    <?php foreach($time_type as $k=>$v){?>
+                                    <option value="<?php echo $k?>" <?php echo $k == @$filter['time_type'] ? 'selected' : ''; ?>><?php echo $v?></option>
+                                    <?php }?>
+                                    <?php }?>
+                                </select>
+                                <input type="text" name="add_time" value="<?php echo $filter['add_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="<?php echo @$lang['t11'];?>"/>
                                 <div class="pull-right">
-                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;<?php echo @$lang['t12'];?></button>
                                 </div>
                             </div>
                         </form>
@@ -56,7 +64,7 @@
                                     <?php foreach ($data_columns as $column) { ?>
                                     <th><?php echo $column['text']; ?></th>
                                     <?php } ?>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t13'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -67,7 +75,7 @@
                                     <td><?php echo $data['user_name']?></td>
                                     <td><?php echo $data['abnormal_count']?></td>
                                     <td>
-                                        <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>查看</button>
+                                        <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t14'];?></button>
                                     </td>
                                 </tr>
                                 <?php } ?>
@@ -85,11 +93,29 @@
     $("#filter_type").change(function() {
         $("#filter_text").attr("name", $(this).val());
     });
-    $('.date-range').daterangepicker({
-        locale:{
-            format: 'YYYY-MM-DD',
-            isAutoVal:false,
-        }
+    $(function(){
+            addrat();
     });
+        var b = "";
+        function addrat(){
+        var a = $("#time_select").val();
+        if(a==1){
+            b = "YYYY";
+        }else if(a==2){
+            b = "YYYY-MM";
+        }else if(a==3){
+            b = "YYYY-MM-DD";
+        }else if(a==0){
+            b = "YYYY-MM-DD";
+        }
+        $('.date-range').daterangepicker({
+            "showDropdowns": true,
+            locale:{
+                format: b,
+                isAutoVal:false,
+            }
+      });
+        
+    };
 </script>
 <?php echo $footer;?>

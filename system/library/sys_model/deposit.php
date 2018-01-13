@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: wen
@@ -6,7 +7,6 @@
  * Time: 15:24
  */
 namespace Sys_Model;
-
 use payment\alipay\AlipayTradeRefundRequest;
 use payment\alipay\AopClient;
 
@@ -27,8 +27,8 @@ class Deposit {
     }
 
     public function getRechargeList($condition = array(), $field = '*', $order = '', $limit = '') {
-        $on = 'dr.pdr_user_id=u.user_id';
-        return $this->db->table('deposit_recharge as dr,user as u')->where($condition)->field($field)->order($order)->limit($limit)->join('left')->on($on)->select();
+        $on = 'dr.pdr_user_id=u.user_id,c.city_id=u.city_id';
+        return $this->db->table('deposit_recharge as dr,user as u,city as c')->where($condition)->field($field)->order($order)->limit($limit)->join('left')->on($on)->select();
     }
 
     /**
@@ -41,7 +41,7 @@ class Deposit {
      * @Author   vincent
      * @DateTime 2017-08-22T17:39:26+0800
      */
-    public function getRechargeList2($condition = array(), $field = '*', $order = '', $limit = '',$join = array()) {
+    public function getRechargeList2($condition = array(),  $order = '', $limit = '',$field = '*',$join = array()) {
         $table = 'deposit_recharge as deposit_recharge';
         if (is_array($join) && !empty($join)) {
             $addTables = array_keys($join);
@@ -55,7 +55,7 @@ class Deposit {
             $on = implode(',', $join);
             $this->db->join($joinType)->on($on);
         }
-        return $this->db->table($table)->field($field)->where($condition)->order($order)->limit($limit)->select();
+        return $this->db->table($table)->field($field)->join($joinType)->where($condition)->order($order)->limit($limit)->select();
     }
 
     public function addRecharge($data) {
@@ -66,13 +66,40 @@ class Deposit {
         return $this->db->table('deposit_recharge')->where($where)->update($data);
     }
 
-    public function getRechargeInfo($where, $fields = '*') {
-        $on = 'dr.pdr_user_id=u.user_id';
-        return $this->db->table('deposit_recharge as dr,user as u')->field($fields)->join('left')->on($on)->where($where)->limit(1)->find();
+    public function getRechargeInfo($where, $fields = '*',$join='') {
+        $table = 'deposit_recharge as deposit_recharge';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+
+            $this->db->join($joinType)->on($on);
+        }
+         return $this->db->table($table)->field($fields)->where($where)->find();
     }
 
-    public function getOneRecharge($where, $field = '*', $order = '') {
-        return $this->db->table('deposit_recharge')->field($field)->where($where)->order($order)->find();
+    public function getOneRecharge($where, $field = '*', $order = '',$join='') {
+        $table = 'deposit_recharge as deposit_recharge';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+
+            $this->db->join($joinType)->on($on);
+        }
+        return $this->db->table($table)->field($field)->where($where)->order($order)->find();
     }
     
     /**
@@ -463,16 +490,62 @@ class Deposit {
         return $this->db->table('deposit_cash')->insert($data);
     }
 
-    public function getDepositCashInfo($where, $fields = '*') {
-        return $this->db->table('deposit_cash')->field($fields)->where($where)->find();
+    public function getDepositCashInfo($where, $fields = '*',$join='') {
+        $table = 'deposit_cash as deposit_cash';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+
+            $this->db->join($joinType)->on($on);
+        }
+        return $this->db->table($table)->field($fields)->where($where)->find();
     }
 
-    public function getDepositCashList($where = array(), $limit = '', $order = '', $field = '*') {
-        return $this->db->table('deposit_cash')->where($where)->limit($limit)->order($order)->field($field)->select();
+    
+
+    public function getDepositCashList($where = array(), $limit = '', $order = '', $field = '*',$join=array()) {
+        $table = 'deposit_cash as deposit_cash';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+
+            $this->db->join($joinType)->on($on);
+        }
+     
+        return $this->db->table($table)->field($field)->where($where)->order($order)->limit($limit)->select();
+        
     }
 
-    public function getDepositCashTotal($where = array()) {
-        return $this->db->table('deposit_cash')->where($where)->count();
+    public function getDepositCashTotal($where = array(),$join) {
+        $table = 'deposit_cash as deposit_cash';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+
+            $this->db->join($joinType)->on($on);
+        }
+        return $this->db->table($table)->where($where)->count();
     }
 
     public function deleteDepositCash($where) {
@@ -482,6 +555,7 @@ class Deposit {
     public function updateDepositCash($where, $data) {
         return $this->db->table('deposit_cash')->where($where)->update($data);
     }
+    
 
     /**
      * 验证充值金额
@@ -1078,5 +1152,65 @@ class Deposit {
      */
     public function updateDepositApply($where, $data) {
         return $this->db->table('deposit_apply')->where($where)->update($data);
+    }
+
+
+
+
+    /**
+     * 获取注册金提现申请列表]
+     */
+    public function getReginsterApplyList($where = array(), $order = '', $limit = '', $field = 'reginster_apply.*', $join = array()) {
+        $table = 'reginster_apply as reginster_apply';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+            $this->db->join($joinType)->on($on);
+        }
+        return $this->db->table($table)->field($field)->where($where)->order($order)->limit($limit)->select();
+    }
+    /**
+     * 获取注册金退款信息]
+     */
+    public function getReginsterApplyInfo($where) {
+        return $this->db->table('reginster_apply')->where($where)->limit(1)->find();
+    }
+    /**
+     * 统计注册金退款申请信息]
+     */
+    public function getTotalReginsterApply($where, $join = array()) {
+        $table = 'reginster_apply as reginster_apply';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+            $this->db->join($joinType)->on($on);
+        }
+        return $this->db->table($table)->where($where)->limit(1)->count(1);
+    }
+    /**
+     * 添加注册金退款申请
+     */
+    public function addReginsterApply($data) {
+        return $this->db->table('reginster_apply')->insert($data);
+    }
+    /**
+     * 更新注册金退款申请]
+     */
+    public function updateReginsterApply($where, $data) {
+        return $this->db->table('reginster_apply')->where($where)->update($data);
     }
 }

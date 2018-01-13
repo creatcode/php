@@ -11,6 +11,7 @@ class ControllerUserPoints extends Controller {
 
         // 加载points Model
         $this->load->library('sys_model/points', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -41,10 +42,10 @@ class ControllerUserPoints extends Controller {
         }
 
         $filter_types = array(
-            'mobile' => '手机号',
-            'points' => '积分值',
-            'point_desc' => '积分描述',
-            'admin_name' => '管理员名称',
+            'mobile' => $this->language->get('t8'),
+            'points' => $this->language->get('t9'),
+            'point_desc' => $this->language->get('t10'),
+            'admin_name' => $this->language->get('t11'),
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -111,7 +112,7 @@ class ControllerUserPoints extends Controller {
 
         $this->assign('pagination', $pagination);
         $this->assign('results', $results);
-
+        $this->assign('time_type',get_time_type());
         $this->assign('export_action', $this->url->link('user/points/export'));
 
         $this->response->setOutput($this->load->view('user/points_list', $this->output));
@@ -122,11 +123,11 @@ class ControllerUserPoints extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
-        $this->setDataColumn('手机号');
-        $this->setDataColumn('积分值');
-        $this->setDataColumn('积分描述');
-        $this->setDataColumn('管理员名称');
-        $this->setDataColumn('添加时间');
+        $this->setDataColumn($this->language->get('t8'));
+        $this->setDataColumn($this->language->get('t9'));
+        $this->setDataColumn($this->language->get('t10'));
+        $this->setDataColumn($this->language->get('t11'));
+        $this->setDataColumn($this->language->get('t12'));
         return $this->data_columns;
     }
 

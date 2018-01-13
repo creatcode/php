@@ -28,72 +28,73 @@
                             <input type="hidden" name="type" id="type">
                             <div class="row">
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">提现编号：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t52'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_sn'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">用户：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t5'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_user_name'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">提现类型：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t8'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_type'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">提现金额：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t39'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_amount'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">申请时间：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t53'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_add_time'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">支付方式：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t12'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_payment_name'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">支付途径：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t14'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_payment_type'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">退款时间：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t34'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_payment_time'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">提现状态：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t17'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdc_payment_state_text'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">充值编号：</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t6'];?>：</label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['pdr_sn'];?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <div class="col-sm-12">
-                                        <button data-url="<?php echo $return_action; ?>" type="button" class="btn pull-right link" style="margin-right: 21px;">返回</button>
+                                    <div class="col-sm-10 text-center">
                                         <!-- fix vincent:2017-08-09 更改显示同一退款的条件$data['pdc_payment_state'] != 1 => $data['pdc_payment_state'] == 0 -->
                                         <?php if ($data['pdc_payment_state'] == 0) { ?>
-                                        <input type="button" data-type="agree" class="btn btn-success opr pull-right" style="margin-right: 5px;" value="同意提现">
+                                        <input type="button" data-type="agree" class="btn btn-success opr " style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;margin-right: 5px;" value="<?php echo @$lang['t55'];?>">
                                         <?php } ?>
+                                        <button data-url="<?php echo $return_action; ?>" type="button" class="btn  link" style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;margin-right: 21px;"><?php echo @$lang['t54'];?></button>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -109,7 +110,7 @@
         $('.opr').click(function () {
             var payment_code = '<?php echo $data['pdc_payment_code']; ?>';
             var $type = $(this).data('type');
-            var msg = $type == 'disagree' ? '您确定要取消提现么？' : "您确定要同意提现吗？";
+            var msg = $type == 'disagree' ? "<?php echo @$lang['t56'];?>" : "<?php echo @$lang['t57'];?>";
             if (confirm(msg)) {
                 $('#type').val($type);
                 $('#myForm').submit();

@@ -16,6 +16,7 @@
                 <ul class="nav nav-tabs">
                     <li class="active"><a href="javascript:;" data-toggle="tab">余额退款申请列表</a></li>
                     <li><a href="<?php echo $deposit_list; ?>" data-toggle="tab">押金退款申请列表</a></li>
+                    <li><a href="<?php echo $reginster_list; ?>" data-toggle="tab">注册金退款申请列表</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active form-group">
@@ -30,18 +31,22 @@
                                     <?php } ?>
                                 </select>
                                 <input type="text" name="<?php echo $filter_type; ?>" value="<?php echo isset($filter[$filter_type]) ? $filter[$filter_type] : ''; ?>" id="filter_text" class="input-sm" style="border: 1px solid #a9a9a9;"/>
-                               <select name="city_id" class="input-sm">
-                                    <option value="0">--选择城市--</option>
-                                    <?php foreach($cityList as $v){
-                                        if($city_id ==$v['city_id']){
-                                    ?>
-                                    <option selected="selected" value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php
-                                        }else{
-                                    ?>
-                                    <option value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php }
-                                     } ?>
+                                <select name="apply_payment_type" id="apply_payment_type" class="input-sm">
+                                    <?php if (!empty($apply_payment_types) && is_array($apply_payment_types)) { ?>
+                                    <?php foreach($apply_payment_types as $key => $val) { ?>
+                                    <option value="<?php echo $key; ?>" <?php echo $key == $filter['apply_payment_type'] ? 'selected' : ''; ?>><?php echo $val; ?></option>
+                                    <?php } ?>
+                                    <?php } ?>
+                                </select>
+                               <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--全部区域--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--全部城市--</option>
+                                    
                                 </select>
                                 
                                 <select name="apply_state" class="input-sm">
@@ -93,12 +98,14 @@
                                 <tbody>
                                 <?php foreach ($data_rows as $data) { ?>
                                 <tr>
+                                    <td><?php echo $data['region_name']?></td>
                                     <td><?php echo $data['city_name']?></td>
+                                    <td><?php echo $data['apply_payment_type']?></td>
                                     <td><?php echo $data['apply_user_name']?></td>
                                     <td><?php echo $data['pdr_sn']?></td>
                                     <td><?php echo $data['apply_admin_name']?></td>
                                     <td><?php echo $data['apply_state']?></td>
-                                    <td><?php echo $data['apply_cash_reason']?></td>
+                                    <td><?php echo $data['apply_cash_reason'];?></td>
                                     <td><?php echo $data['apply_add_time']?></td>
                                     <td><?php echo $data['apply_audit_admin_name']?></td>
                                     <td><?php echo $data['apply_audit_result']?></td>
@@ -121,7 +128,53 @@
     </div>
 </section>
 <!-- /.content -->
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--全部城市--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
 
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--全部城市--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
+</script>
 <script type="text/javascript">
    $(function(){
             addrat();

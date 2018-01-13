@@ -32,11 +32,11 @@
 								   <option value="" >工单</option>
                                 </select>
                                 <input type="text" name="" value="" id="filter_text" class="input-sm" style="border: 1px solid #a9a9a9;"/>
-                                <select class="input-sm" name="fault_source">
+                                <select class="input-sm" name="type_string">
                                     <option value>类型</option>
-                                   <option value>计费信息</option>
-								   <option value>App用户/卡用户状态处理</option>
-								   <option value>租还车记录修改</option>
+                                    <?php foreach($type_string as $k => $v) { ?>
+                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == @$filter['type_string'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
+                                    <?php } ?>
                                 </select>
                                 
                                 <div class="pull-right">
@@ -46,7 +46,7 @@
                         </form>
                         <!-- 新增 -->
                         <div class="form-group">
-                            <a href="<?php echo $add_url; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                            <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
 
                         </div>
                         <?php if (isset($error['warning'])) { ?>
@@ -73,20 +73,20 @@
                                 <tr>
                                     <td><?php echo $data['user_name']?></td>
 									<td><?php echo $data['service_name']?></td>
-									<td><?php echo $data['order_no']?></td>
+
                                     <td><?php echo $data['content']?></td>
                                     <td><?php echo $data['type_string']?></td>
                                     <td><?php echo $data['create_time']?></td>
                                     <td>
 										<div class="btn-group">
-                                            <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>编辑</button>
+                                            <button data-url="<?php echo $data['edit_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>编辑</button>
              
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="#" onclick="javascript:void(0);">删除</a></li>
+                                                <li><a href="<?php echo $data['delete_action']; ?>" onclick="javascript:void(0);">删除</a></li>
                                             </ul>
                       
                                         </div>

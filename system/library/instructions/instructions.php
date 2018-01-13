@@ -14,8 +14,10 @@ class Instructions {
 
     private $curl;
 
-    const API_URL = 'http://47.90.39.93:8888?version=1';
-    const NEW_API_URL = 'http://gps.dola520.com:8888?version=1';
+    //const API_URL = 'http://47.90.39.93:8888?version=1';
+    const API_URL = 'http://120.76.72.228:808?route=ebike/lock/openlock';
+    //const NEW_API_URL = 'http://gps.dola520.com:8888?version=1';
+    const NEW_API_URL = 'http://120.76.72.228:808?route=ebike/lock/openlock';
 
     const TEST_LOCKS = array(
         '063072913722', 
@@ -70,7 +72,8 @@ class Instructions {
         $base = array(
             'userid' => USER_ID,
             'cmd' => $data['cmd'],
-            'deviceid' => $data['device_id']
+            'deviceid' => $data['device_id'],
+            'lock_id'=>$data['device_id']
         );
         if (in_array($type, array('select', 'open', 'close', 'beep'))) {
             $base['serialnum'] = $this->gap_time ? $this->gap_time : $this->make_sn();
@@ -79,7 +82,11 @@ class Instructions {
         }
 
         $base['sign'] = $this->make_md5($base);
-        $base = json_encode($base);
+
+        //本版本 此处不需要转成json
+        //$base = json_encode($base);
+
+        //看来没什么用了 可以不用管
         if(in_array($data['device_id'], self::TEST_LOCKS )) {
             $client = new \Swoole\Client(SWOOLE_SOCK_TCP);
             if ($client->connect('120.76.98.150', 5200, 3)) { //连接到锁平台服务器，超时3秒
@@ -90,12 +97,19 @@ class Instructions {
                 return $response===false ? ('{"result":"fail","info":"errorCode:' . $client->errCode . '"}') : '';//$response;
             }
         }
+
         $this->curl->setData($base);
         $response = $this->curl->postData();
 //        file_put_contents('/data/wwwroot/default/bike/transfer/controller/transfer/logs/instruction.log', date('Y-m-d H:i:s ') . $response. "\n", FILE_APPEND);
         return $response;
     }
 
+    /**
+     * 老的方法 看起来是多此一举的 或者是用来兼容吧
+     * @param $device_id
+     * @param $cmd
+     * @return mixed
+     */
     public function parseLock($device_id, $cmd) {
         $data['device_id'] = $device_id;
         $data['cmd'] = $cmd;
@@ -106,7 +120,7 @@ class Instructions {
     /**
      * 开锁
      * @param $device_id
-     * @param $time
+     * @param $time int 好像没用了 这个项目
      * @return mixed
      */
     public function openLock($device_id, $time = 0) {
@@ -114,8 +128,9 @@ class Instructions {
             $this->gap_time = $time;
         }
         $response = $this->parseLock($device_id, 'open');
+
         $arr = $this->jsonToArray($response);
-        if (strtolower($arr['result']) == 'ok') {
+        if (strtolower($arr['error']) == '0') {
             return callback(true);
         }
         return callback(false, '发送失败', $arr);

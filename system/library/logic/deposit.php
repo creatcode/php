@@ -21,7 +21,8 @@ class Deposit {
             'pdr_amount' => $data['amount'],
             'pdr_type' => isset($data['type']) ? $data['type'] : 0,
             'pdr_trade_sn' => $recharge_sn,
-            'pdr_add_time' => time()
+            'pdr_add_time' => time(),
+            'pdr_present_amount' => $data['pdr_present_amount']
         );
 
         if (isset($data['is_scenic'])) $insert['is_scenic'] = 1;	
@@ -94,3 +95,4 @@ class Deposit {
         return isset($DEPOSIT_TYPE[$type]) ? $DEPOSIT_TYPE[$type] : 'UnknownType';
     }
 }
+

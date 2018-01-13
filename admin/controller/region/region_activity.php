@@ -1,71 +1,74 @@
 <?php
-class ControllerRegionRegionActivity extends Controller {
-	private $error = null;
-	private $cur_url = null;
-	
-	public function __construct($registry) {
-		parent::__construct($registry);
-		
-		$this->cur_url = isset($this->request->get['route']) ? $this->url->link($this->request->get['route']) : '';
-		
-		$this->load->library('sys_model/region', true);
-        $this->load->library('logic/admin', true);
-	}
-	
-	public function index() {
-		$filter = $this->request->get(array('region_id', 'add_time', 'effect_time'));
-		
-		$condition = array();
-		if (!empty($filter['region_id'])) {
-			$condition['region_id'] = $filter['region_id'];
-		}
-		//添加时间
-		if (!empty($filter['add_time'])) {
-			$add_time = explode(' 至 ', $filter['add_time']);
-			$condition['add_time'] = array(
-				array('gt', strtotime($add_time[0])),
-				array('lt', bcadd(86399, strtotime($add_time[1])))
-			);
-		}
-		
-		
-		
-		if (isset($this->request->get['page'])) {
-			$page = (int) $this->request->get['page'];
-		} else {
-			$page = 1;
-		}
-		
-		$region_list = $this->sys_model_region->getRegionList();
-		$output_region = array();
-		foreach ($region_list as $region) {
-			$output_region[$region['region_id']] = $region['region_name'];
-		}
-		
-		$order = 'add_time DESC';
-		$rows = $this->config->get('config_limit_admin');
-		$offset = ($page - 1) * $rows;
-		$limit = sprintf('%d, %d', $offset, $rows);
 
-		$result = $this->sys_model_region->getRegionActivities($condition, $order, $limit);
-		$total =  $this->sys_model_region->getRegionActivityTotal($condition);
-		
-		if (!empty($result)) {
-			foreach ($result as &$item) {
+class ControllerRegionRegionActivity extends Controller {
+
+    private $error = null;
+    private $cur_url = null;
+
+    public function __construct($registry) {
+        parent::__construct($registry);
+
+        $this->cur_url = isset($this->request->get['route']) ? $this->url->link($this->request->get['route']) : '';
+
+        $this->load->library('sys_model/region', true);
+        $this->load->library('logic/admin', true);
+        $this->assign('lang', $this->language->all());
+    }
+
+    public function index() {
+        $filter = $this->request->get(array('region_id', 'add_time', 'effect_time'));
+
+        $condition = array();
+        if (!empty($filter['region_id'])) {
+            $condition['region_id'] = $filter['region_id'];
+        }
+        //添加时间
+        if (!empty($filter['add_time'])) {
+            $add_time = explode(' 至 ', $filter['add_time']);
+            $condition['add_time'] = array(
+                array('gt', strtotime($add_time[0])),
+                array('lt', bcadd(86399, strtotime($add_time[1])))
+            );
+        }
+
+
+
+        if (isset($this->request->get['page'])) {
+            $page = (int) $this->request->get['page'];
+        } else {
+            $page = 1;
+        }
+
+        $region_list = $this->sys_model_region->getRegionList();
+        $output_region = array();
+        foreach ($region_list as $region) {
+            $output_region[$region['region_id']] = $region['region_name'];
+        }
+
+        $order = 'add_time DESC';
+        $rows = $this->config->get('config_limit_admin');
+        $offset = ($page - 1) * $rows;
+        $limit = sprintf('%d, %d', $offset, $rows);
+
+        $result = $this->sys_model_region->getRegionActivities($condition, $order, $limit);
+        $total = $this->sys_model_region->getRegionActivityTotal($condition);
+
+        if (!empty($result)) {
+            foreach ($result as &$item) {
                 $item['region_name'] = isset($output_region[$item['region_id']]) ? $output_region[$item['region_id']] : '未分配区域';
-				$item['add_time'] = $item['add_time'] ? date('Y-m-d H:i:s', $item['add_time']) : '';
-				$item['start_time'] = $item['start_time'] ? date('Y-m-d H:i:s', $item['start_time']) : '';
-				$item['end_time'] = $item['end_time'] ? date('Y-m-d H:i:s', $item['end_time']) : '';
+                $item['add_time'] = $item['add_time'] ? date('Y-m-d H:i:s', $item['add_time']) : '';
+                $item['start_time'] = $item['start_time'] ? date('Y-m-d H:i:s', $item['start_time']) : '';
+                $item['end_time'] = $item['end_time'] ? date('Y-m-d H:i:s', $item['end_time']) : '';
                 $item['edit_action'] = $this->url->link('region/region_activity/edit', 'activity_id=' . $item['activity_id']);
                 $item['delete_action'] = $this->url->link('region/region_activity/delete', 'activity_id=' . $item['activity_id']);
-			}
-		}
-		
-		$data_columns = $this->getDataColumns();
-		$this->assign('data_columns', $data_columns);
-		$this->assign('data_rows', $result);
-		$this->assign('region_item', $output_region);
-		$this->assign('action', $this->cur_url);
+            }
+        }
+
+        $data_columns = $this->getDataColumns();
+        $this->assign('data_columns', $data_columns);
+        $this->assign('data_rows', $result);
+        $this->assign('region_item', $output_region);
+        $this->assign('action', $this->cur_url);
         $this->assign('add_action', $this->url->link('region/region_activity/add'));
 
         if (isset($this->session->data['success'])) {
@@ -85,21 +88,22 @@ class ControllerRegionRegionActivity extends Controller {
         $this->assign('results', $results);
 
         $this->response->setOutput($this->load->view('region/region_activity_list', $this->output));
-	}
-	
-	private function getDataColumns() {
-		$this->setDataColumn('所在区域');
-		$this->setDataColumn('开始时间');
-		$this->setDataColumn('结束时间');
-		$this->setDataColumn('优惠金额');
-		$this->setDataColumn('添加时间');
-		return $this->data_columns;
-	}
+    }
 
-	private $region = null;
+    private function getDataColumns() {
+        $this->setDataColumn($this->language->get('t9'));
+        $this->setDataColumn($this->language->get('t16'));
+        $this->setDataColumn($this->language->get('t17'));
+        $this->setDataColumn($this->language->get('t18'));
+        $this->setDataColumn($this->language->get('t19'));
+        $this->setDataColumn($this->language->get('t20'));
+        return $this->data_columns;
+    }
 
-	public function add() {
-		if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateForm()) {
+    private $region = null;
+
+    public function add() {
+        if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateForm()) {
             $input = $this->request->post(array('region_id', 'start_time', 'end_time', 'price'));
             $data = array(
                 'region_id' => $input['region_id'],
@@ -120,11 +124,18 @@ class ControllerRegionRegionActivity extends Controller {
         }
 
         $this->assign('title', '添加区域活动');
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
         $this->getForm();
-	}
-	
-	public function edit() {
-		if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateForm()) {
+    }
+
+    public function edit() {
+        if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateForm()) {
             $input = $this->request->post(array('region_id', 'start_time', 'end_time', 'price'));
             $activity_id = $this->request->get['activity_id'];
             $data = array(
@@ -147,10 +158,17 @@ class ControllerRegionRegionActivity extends Controller {
         }
 
         $this->assign('title', '编辑区域活动');
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
         $this->getForm();
-	}
-	
-	private function validateForm() {
+    }
+
+    private function validateForm() {
         if (!empty($this->request->post['effect_time'])) {
             $effect_times = explode(' 至 ', $this->request->post['effect_time']);
             $this->request->post['start_time'] = $effect_times[0];
@@ -179,7 +197,7 @@ class ControllerRegionRegionActivity extends Controller {
             $this->error['effect_time'] = '活动时间范围不能空';
         }
 
-		$region_info = $this->sys_model_region->getRegionInfo(array('region_id' => $this->request->post['region_id']));
+        $region_info = $this->sys_model_region->getRegionInfo(array('region_id' => $this->request->post['region_id']));
         if (!empty($region_info)) {
             $price = $this->request->post['price'];
             if ($price > $region_info['region_charge_fee']) {
@@ -190,31 +208,31 @@ class ControllerRegionRegionActivity extends Controller {
             $this->error['region_id'] = '不存在次地区，请重新选择地区';
         }
 
-		if ($this->error) {
+        if ($this->error) {
             $this->error['warning'] = '警告：存在错误，请检测！';
         }
 
         return !$this->error;
-	}
+    }
 
-	private function validateDelete() {
+    private function validateDelete() {
         return !$this->error;
     }
-	
-	private function getFieldName($key) {
-		$result = array(
-			'start_time' => '开始时间',
-			'end_time' => '结束时间'
-		);
 
-		if (isset($result[$key])) {
-			return $result[$key];
-		} else {
-			return '';
-		}
-	}
+    private function getFieldName($key) {
+        $result = array(
+            'start_time' => '开始时间',
+            'end_time' => '结束时间'
+        );
 
-	public function delete() {
+        if (isset($result[$key])) {
+            return $result[$key];
+        } else {
+            return '';
+        }
+    }
+
+    public function delete() {
         if (isset($this->request->get['activity_id']) && $this->validateDelete()) {
             $condition = array(
                 'activity_id' => $this->request->get['activity_id']
@@ -228,8 +246,8 @@ class ControllerRegionRegionActivity extends Controller {
         $this->load->controller('common/base/redirect', $this->url->link('region/region_activity', $filter, true));
     }
 
-	private function getForm() {
-		$info = $this->request->post(array('region_id', 'effect_time', 'price'));
+    private function getForm() {
+        $info = $this->request->post(array('region_id', 'effect_time', 'price'));
         $gets = $this->request->get(array('activity_id'));
         $select_id = 0;
         if (isset($this->request->get['activity_id']) && ($this->request->server['REQUEST_METHOD'] != 'POST')) {
@@ -243,7 +261,6 @@ class ControllerRegionRegionActivity extends Controller {
         if ($this->request->server['REQUEST_METHOD'] == 'POST') {
             $select_id = $this->request->post['region_id'];
         }
-
         $region_list = $this->sys_model_region->getRegionList();
         $output_region = array();
         foreach ($region_list as $region) {
@@ -259,6 +276,8 @@ class ControllerRegionRegionActivity extends Controller {
         $this->assign('return_action', $this->url->link('region/region_activity'));
 
         $this->response->setOutput($this->load->view('region/region_activity_form', $this->output));
-	}
+    }
+
 }
+
 ?>

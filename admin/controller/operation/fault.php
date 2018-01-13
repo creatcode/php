@@ -1,12 +1,11 @@
 <?php
 
-class ControllerOperationFault extends Controller
-{
+class ControllerOperationFault extends Controller {
+
     private $cur_url = null;
     private $error = null;
 
-    public function __construct($registry)
-    {
+    public function __construct($registry) {
         parent::__construct($registry);
 
         // 当前网址
@@ -14,13 +13,13 @@ class ControllerOperationFault extends Controller
 
         // 加载fault Model
         $this->load->library('sys_model/fault', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
      * 故障记录列表
      */
-    public function index()
-    {
+    public function index() {
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
             //AJAX请求
             if ($this->request->get('method') == 'json') {
@@ -30,7 +29,12 @@ class ControllerOperationFault extends Controller
         }
 
         $filter = $this->request->get(array('filter_type', 'bicycle_sn', 'lock_sn', 'fault_type', 'processed', 'user_name', 'add_time', 'processed', 'cooperator_name'));
-
+        $bike_type = $this->request->get('bike_type');
+        if (isset($bike_type) && $bike_type == 2) {//单车
+            $bike_type = 2;
+        } else {//桩车
+            $bike_type = 1;
+        }
         $condition = array();
         if (!empty($filter['bicycle_sn'])) {
             $condition['fault.bicycle_sn'] = array('like', "%{$filter['bicycle_sn']}%");
@@ -39,13 +43,13 @@ class ControllerOperationFault extends Controller
             $condition['fault.lock_sn'] = array('like', "%{$filter['lock_sn']}%");
         }
         if (is_numeric($filter['fault_type'])) {
-            $condition['_string'] = 'find_in_set(' . (int)$filter['fault_type'] . ', fault.fault_type)';
+            $condition['_string'] = 'find_in_set(' . (int) $filter['fault_type'] . ', fault.fault_type)';
         }
         if (!empty($filter['user_name'])) {
             $condition['fault.user_name'] = array('like', "%{$filter['user_name']}%");
         }
         if (is_numeric($filter['processed'])) {
-            $condition['processed'] = (int)$filter['processed'];
+            $condition['processed'] = (int) $filter['processed'];
         }
         if (!empty($filter['add_time'])) {
             $add_time = explode(' 至 ', $filter['add_time']);
@@ -60,13 +64,21 @@ class ControllerOperationFault extends Controller
         if (isset($filter['processed']) && $filter['processed'] != '' && $filter['processed'] > -1) {
             $condition['fault.processed'] = $filter['processed'];
         }
-
-        $filter_types = array(
-            'bicycle_sn' => '单车编号',
-            'lock_sn' => '车锁编号',
-            'user_name' => '用户名',
-            'cooperator_name' => '所属合伙人',
-        );
+        if ($bike_type == 1) {
+            $filter_types = array(
+                'bicycle_sn' => $this->language->get('t23'),
+                'lock_sn' => $this->language->get('t56'),
+                'user_name' => $this->language->get('t57'),
+                'station_id' => $this->language->get('t58'),
+            );
+        } else {
+            $filter_types = array(
+                'bicycle_sn' =>$this->language->get('t23') ,
+   
+                'user_name' => $this->language->get('t57'),
+        
+            );
+        }
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
             reset($filter_types);
@@ -74,7 +86,7 @@ class ControllerOperationFault extends Controller
         }
 
         if (isset($this->request->get['page'])) {
-            $page = (int)$this->request->get['page'];
+            $page = (int) $this->request->get['page'];
         } else {
             $page = 1;
         }
@@ -95,11 +107,16 @@ class ControllerOperationFault extends Controller
             foreach ($result as &$item) {
                 $fault_type = '';
                 $fault_type_ids = array_unique(explode(',', $item['fault_type']));
-                foreach ($fault_type_ids as $fault_type_id) {
-                    $fault_type .= isset($fault_types[$fault_type_id]) ? ',' . $fault_types[$fault_type_id] : '';
-                }
+
+                /* foreach ($fault_type_ids as $fault_type_id) {
+                  $fault_type .= isset($fault_types[$fault_type_id]) ? ',' . $fault_types[$fault_type_id] : '';
+                  } */
                 $item['fault_type_id'] = $item['fault_type'];
-                $item['fault_type'] = !empty($fault_type) ? substr($fault_type, 1) : '';
+                if ($bike_type == 1) {
+                    $item['fault_type'] = $fault_types[$bike_type][0]['list']['10101'];
+                } else {
+                    $item['fault_type'] = $fault_types[$bike_type][0]['list']['20101'];
+                }
                 $item['add_time_delta'] = !empty($item['add_time']) && !$item['processed'] ? $this->formatDeltaTime(time(), $item['add_time']) : '';
                 $item['handling_time_delta'] = !empty($item['handling_time']) ? $this->formatDeltaTime($item['handling_time'], $item['add_time']) : '';
                 $item['add_time'] = !empty($item['add_time']) ? date('Y-m-d H:i:s', $item['add_time']) : '';
@@ -146,34 +163,50 @@ class ControllerOperationFault extends Controller
         $this->assign('export_action', $this->url->link('operation/fault/export'));
         $this->assign('export_unused_action', $this->url->link('operation/fault/export_unused'));
 
+        $this->assign('bike_type', $bike_type); //类型，1桩车 2单车，默认1桩车
+        $this->assign('bike_type_1_url', $this->url->link('operation/fault')); //桩车链接
+        $this->assign('bike_type_2_url', $this->url->link('operation/fault', array('bike_type' => 2))); //单车链接
+        $this->assign('fault_source', $this->getFaultSource());
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('operation/fault_list', $this->output));
+    }
+
+    /**
+     * 故障来源
+     */
+    public function getFaultSource() {
+        return array(
+            1 => 'App报障',
+            2 => '用户转客服报障',
+            3 => '设备自动报障'
+        );
     }
 
     /**
      * 表格字段
      * @return mixed
      */
-    protected function getDataColumns()
-    {
-        $this->setDataColumn('单车编号');
-        $this->setDataColumn('故障类型');
-        $this->setDataColumn('用户名');
-        $this->setDataColumn('合伙人');
-        $this->setDataColumn('上报时间');
-        $this->setDataColumn('处理状态');
-        $this->setDataColumn('处理时间');
-        $this->setDataColumn('处理人');
-        $this->setDataColumn('合伙人');
+    protected function getDataColumns() {
+        $this->setDataColumn($this->language->get('t23'));
+        $this->setDataColumn($this->language->get('t30'));
+        $this->setDataColumn($this->language->get('t57'));
+        $this->setDataColumn($this->language->get('t59'));
+        $this->setDataColumn($this->language->get('t60'));
+        $this->setDataColumn($this->language->get('t32'));
+        $this->setDataColumn($this->language->get('t61'));
+        $this->setDataColumn($this->language->get('t62'));
+        $this->setDataColumn($this->language->get('t63'));
+        $this->setDataColumn($this->language->get('t58'));
+        $this->setDataColumn($this->language->get('t56'));
         return $this->data_columns;
     }
 
     /**
      * index AJAX请求
      */
-    protected function apiIndex()
-    {
+    protected function apiIndex() {
         if (isset($this->request->post['page'])) {
-            $page = (int)$this->request->post['page'];
+            $page = (int) $this->request->post['page'];
         } else {
             $page = 1;
         }
@@ -220,14 +253,13 @@ class ControllerOperationFault extends Controller
     /**
      * 添加故障记录
      */
-    public function add()
-    {
+    public function add() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
             $input = $this->request->post(array('bicycle_sn', 'type', 'lock_sn'));
             $now = time();
             $data = array(
                 'fault_sn' => $input['fault_sn'],
-                'type' => (int)$input['type'],
+                'type' => (int) $input['type'],
                 'lock_sn' => $input['lock_sn'],
                 'add_time' => $now
             );
@@ -247,14 +279,13 @@ class ControllerOperationFault extends Controller
     /**
      * 编辑故障记录
      */
-    public function edit()
-    {
+    public function edit() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
             $input = $this->request->post(array('fault_sn', 'type', 'lock_sn'));
             $fault_id = $this->request->get['fault_id'];
             $data = array(
                 'fault_sn' => $input['fault_sn'],
-                'type' => (int)$input['type'],
+                'type' => (int) $input['type'],
                 'lock_sn' => $input['lock_sn']
             );
             $condition = array(
@@ -276,8 +307,7 @@ class ControllerOperationFault extends Controller
     /**
      * 删除故障记录
      */
-    public function delete()
-    {
+    public function delete() {
         if (isset($this->request->get['fault_id']) && $this->validateDelete()) {
             $condition = array(
                 'fault_id' => $this->request->get['fault_id']
@@ -293,8 +323,7 @@ class ControllerOperationFault extends Controller
     /**
      * 处理故障
      */
-    public function handling()
-    {
+    public function handling() {
         if ($this->request->server['REQUEST_METHOD'] == 'POST') {
             $input = $this->request->post();
 
@@ -389,8 +418,7 @@ class ControllerOperationFault extends Controller
     /**
      * 批量处理故障
      */
-    public function batchHandling()
-    {
+    public function batchHandling() {
 
         if ($this->request->server['REQUEST_METHOD'] == 'POST') {
             $input = $this->request->post();
@@ -435,7 +463,7 @@ class ControllerOperationFault extends Controller
             }
 
             $condition = array(
-                'fault.fault_id' => array('in', (array)$input['fault_ids']),
+                'fault.fault_id' => array('in', (array) $input['fault_ids']),
                 'fault.processed' => 0
             );
             $faultList = $this->sys_model_fault->getFaultWithRepairList($condition);
@@ -493,8 +521,7 @@ class ControllerOperationFault extends Controller
     /**
      * 故障记录详情
      */
-    public function info()
-    {
+    public function info() {
         // 编辑时获取已有的数据
         $bicycle_id = $this->request->get('bicycle_id');
         $fault_id = $this->request->get('fault_id');
@@ -547,9 +574,9 @@ class ControllerOperationFault extends Controller
             foreach ($faultList as &$item) {
                 $fault_type = '';
                 $fault_type_ids = array_unique(explode(',', $item['fault_type']));
-                foreach ($fault_type_ids as $fault_type_id) {
+                /*foreach ($fault_type_ids as $fault_type_id) {
                     $fault_type .= isset($fault_types[$fault_type_id]) ? ',' . $fault_types[$fault_type_id] : '';
-                }
+                }*/
                 $item['parking_id'] = '';
                 $item['fault_type'] = !empty($fault_type) ? substr($fault_type, 1) : '';
                 $item['add_time_delta'] = !empty($item['add_time']) && !$item['processed'] ? $this->formatDeltaTime(time(), $item['add_time']) : '';
@@ -568,7 +595,7 @@ class ControllerOperationFault extends Controller
         );
         $order = 'repair.add_time DESC';
         if (isset($this->request->get['page'])) {
-            $page = (int)$this->request->get['page'];
+            $page = (int) $this->request->get['page'];
         } else {
             $page = 1;
         }
@@ -583,7 +610,7 @@ class ControllerOperationFault extends Controller
                 $fault_type = '';
                 $fault_type_ids = array_unique(explode(',', $item['fault_type']));
                 foreach ($fault_type_ids as $fault_type_id) {
-                    $fault_type .= isset($fault_types[$fault_type_id]) ? ',' . $fault_types[$fault_type_id] : '';
+                    //$fault_type .= isset($fault_types[$fault_type_id]) ? ',' . $fault_types[$fault_type_id] : '';
                 }
                 $item['fault_type'] = !empty($fault_type) ? substr($fault_type, 1) : '';
                 $item['repair_type'] = !empty($repair_types[$item['repair_type']]) ? $repair_types[$item['repair_type']] : '-';
@@ -626,8 +653,7 @@ class ControllerOperationFault extends Controller
         $this->response->setOutput($this->load->view('operation/fault_info', $this->output));
     }
 
-    public function history()
-    {
+    public function history() {
         $this->load->library('sys_model/bicycle', true);
 
         $bicycle_id = $this->request->get('bicycle_id');
@@ -648,7 +674,7 @@ class ControllerOperationFault extends Controller
         );
         $order = 'repair.add_time DESC';
         if (isset($this->request->get['page'])) {
-            $page = (int)$this->request->get['page'];
+            $page = (int) $this->request->get['page'];
         } else {
             $page = 1;
         }
@@ -666,7 +692,7 @@ class ControllerOperationFault extends Controller
                     $fault_type .= isset($fault_types[$fault_type_id]) ? ',' . $fault_types[$fault_type_id] : '';
                 }
                 $item['fault_type'] = !empty($fault_type) ? substr($fault_type, 1) : '';
-                if (!empty($repair_type_arr = explode(',',$item['repair_type']))) {
+                if (!empty($repair_type_arr = explode(',', $item['repair_type']))) {
                     $repair_type_str = '';
                     foreach ($repair_type_arr as $v) {
                         $ss = !empty($repair_types[$v]) ? $repair_types[$v] : '没有填写';
@@ -708,14 +734,14 @@ class ControllerOperationFault extends Controller
         $this->assign('bicycle', $bicycle);
         $this->assign('faultHistoryList', $faultHistoryList);
         $this->assign('info_action', $this->url->link('operation/fault/info', array('bicycle_id' => $bicycle_id)));
+        $this->assign('return_action', $this->url->link('operation/fault'));
         $this->response->setOutput($this->load->view('operation/fault_history', $this->output));
     }
 
     /**
      * 导出
      */
-    public function export()
-    {
+    public function export() {
         $filter = $this->request->post(array('filter_type', 'bicycle_sn', 'lock_sn', 'fault_type', 'user_name', 'add_time', 'processed'));
 
         $condition = array();
@@ -726,7 +752,7 @@ class ControllerOperationFault extends Controller
             $condition['fault.lock_sn'] = array('like', "%{$filter['lock_sn']}%");
         }
         if (is_numeric($filter['fault_type'])) {
-            $condition['_string'] = 'find_in_set(' . (int)$filter['fault_type'] . ', fault.fault_type)';
+            $condition['_string'] = 'find_in_set(' . (int) $filter['fault_type'] . ', fault.fault_type)';
         }
         if (!empty($filter['user_name'])) {
             $condition['fault.user_name'] = array('like', "%{$filter['user_name']}%");
@@ -783,15 +809,14 @@ class ControllerOperationFault extends Controller
     /**
      * 导出五天未使用的单车
      */
-    public function export_unused()
-    {
+    public function export_unused() {
         $this->load->library('sys_model/bicycle');
         $filter = $this->request->post(array('cooperator_name'));
 
         $now = time();
 
         $condition = array(
-			'bicycle.lock_sn' => array('neq', ''),
+            'bicycle.lock_sn' => array('neq', ''),
             'last_used_time' => array(
                 'elt', ($now - 432000)
             ),
@@ -838,9 +863,7 @@ class ControllerOperationFault extends Controller
         $this->load->controller('common/base/exportExcel', $data);
     }
 
-
-    private function getForm()
-    {
+    private function getForm() {
         // 编辑时获取已有的数据
         $info = $this->request->post(array('fault_sn', 'type', 'lock_sn'));
         $fault_id = $this->request->get('fault_id');
@@ -863,8 +886,7 @@ class ControllerOperationFault extends Controller
      * 验证表单数据
      * @return bool
      */
-    private function validateForm()
-    {
+    private function validateForm() {
         $input = $this->request->post(array('fault_sn', 'type', 'lock_sn'));
 
         foreach ($input as $k => $v) {
@@ -882,8 +904,7 @@ class ControllerOperationFault extends Controller
     /**
      * 验证删除条件
      */
-    private function validateDelete()
-    {
+    private function validateDelete() {
         return !$this->error;
     }
 
@@ -892,8 +913,7 @@ class ControllerOperationFault extends Controller
      * @param int $time1 时间戳 整型
      * @param int $time2 时间戳 整型
      */
-    private function formatDeltaTime($time1, $time2)
-    {
+    private function formatDeltaTime($time1, $time2) {
         $delta = $time1 - $time2;
         $days = floor($delta / 86400);
         $hours = floor($delta % 86400 / 3600);
@@ -901,21 +921,77 @@ class ControllerOperationFault extends Controller
         return ($days > 0 || $hours > 0) ? sprintf('%d天%d小时', $days, $hours) : sprintf('%d分钟', $minutes);
     }
 
-    private function fault_types()
-    {
-        $condition = array(
-            'is_show' => 1
+    private function fault_types() {
+        return array(
+            1 => array(
+                array(
+                    'parent_type' => '站点故障',
+                    'list' => [
+                        10101 => 'CAN',
+                        10102 => '网络',
+                        10103 => '控制板',
+                        10104 => '用户读卡器',
+                        10105 => '键盘'
+                    ]
+                ),
+                array(
+                    'parent_type' => '桩锁故障',
+                    'list' => [
+                        10201 => '通讯',
+                        10202 => '锁止器',
+                        10203 => '显示板',
+                        10204 => '电量板',
+                        10205 => '车辆读卡器'
+                    ]
+                ),
+                array(
+                    'parent_type' => '车辆故障',
+                    'list' => [
+                        10301 => '锁',
+                        10302 => '刹车',
+                        10303 => '龙头',
+                        10304 => '车铃',
+                        10305 => '传动轴',
+                        10306 => '脚踏板',
+                        10307 => '车座',
+                        10308 => '轮胎',
+                        10309 => '其他'
+                    ]
+                )
+            ),
+            2 => array(
+                array(
+                    'parent_type' => '车辆故障',
+                    'list' => [
+                        20101 => '锁',
+                        20102 => '刹车',
+                        20103 => '龙头',
+                        20104 => '车铃',
+                        20105 => '传动轴',
+                        20106 => '脚踏板',
+                        20107 => '车座',
+                        20108 => '轮胎',
+                        20109 => '控制盒故障',
+                        20110 => '读卡器',
+                        20111 => '低电量',
+                        20112 => '其他'
+                    ]
+                )
+            )
         );
-        $order = 'display_order ASC, add_time DESC';
-        $tempFaultTypes = $this->sys_model_fault->getFaultTypeList($condition, $order);
+        /* $condition = array(
+          'is_show' => 1
+          );
+          $order = 'display_order ASC, add_time DESC';
+          $tempFaultTypes = $this->sys_model_fault->getFaultTypeList($condition, $order);
 
-        $fault_types = array();
-        if (!empty($tempFaultTypes)) {
-            foreach ($tempFaultTypes as $v) {
-                $fault_types[$v['fault_type_id']] = $v['fault_type_name'];
-            }
-        }
-        return $fault_types;
+          $fault_types = array();
+          if (!empty($tempFaultTypes)) {
+          foreach ($tempFaultTypes as $v) {
+          $fault_types[$v['fault_type_id']] = $v['fault_type_name'];
+          }
+          }
+          return $fault_types; */
     }
 
     /* 用于根据指定字段排序二维数组，保留原有键值
@@ -925,8 +1001,8 @@ class ControllerOperationFault extends Controller
      * return array
      * author www.phpernote.com
      */
-    function array_multisort_my($array, $sortField, $sortBy = 'ASC')
-    {
+
+    function array_multisort_my($array, $sortField, $sortBy = 'ASC') {
         $result = array();
         foreach ($array as $k => $v) {
             $result[$k] = $v[$sortField];
@@ -938,4 +1014,5 @@ class ControllerOperationFault extends Controller
         }
         return $result;
     }
+
 }

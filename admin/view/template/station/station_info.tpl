@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>单车管理</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,7 +14,7 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">单车详情</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t33'];?></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
@@ -26,79 +26,79 @@
                         <form class="form-horizontal" method="post">
                             <div class="row">
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">站点编码</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t8'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $data['station_sn']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">站点状态</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t6'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $station_states[$data['station_state']]; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">电池状态</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t34'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $station_power_states[$data['power_state']]; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">站点区域</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t35'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $region['region_name']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">站点城市</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t36'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $city['city_name']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">车桩数</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t37'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $data['total']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">空车位</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t38'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $data['total']-$data['used']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">故障车位</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t39'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $data['total']-$data['used']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">有车位</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t40'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $data['total']-$data['used']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">停车数</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t41'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $data['used']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">满车率</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t42'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo $data['used']; ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">添加时间</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t7'];?></label>
                                     <div class="col-sm-8" style="margin-top: 7px;">
                                         <span><?php echo date('Y-m-d H:i:s',$data['add_time']); ?></span>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-12">
-                                    <label for="" class="col-sm-2 control-label">当前位置</label>
+                                    <label for="" class="col-sm-2 control-label"><?php echo @$lang['t43'];?></label>
                                     <div class="col-sm-8">
                                         <div  class="col-sm-12 img-thumbnail" style="height: 500px;">
                                             <div id="container"></div>
@@ -108,8 +108,8 @@
                             </div>
                             <div class="form-group">
                                 <div class="col-sm-12">
-                                    <div class="pull-right">
-                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default">返回</a>
+                                    <div style="text-align:center">
+                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default" style="padding:0 30px;height:40px;font-size:14px;line-height:40px"><?php echo @$lang['t32'];?></a>
                                     </div>
                                 </div>
                             </div>

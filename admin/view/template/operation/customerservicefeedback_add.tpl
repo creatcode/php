@@ -28,32 +28,38 @@
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">用户姓名</label>
                                     <div class="col-sm-5">
-                                        <input  type="text" value="" class="form-control" placeholder="请输入用户">
+                                        <input  type="text" name="user_name" value="" class="form-control" placeholder="请输入用户">
                                         
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">反馈类型</label>
                                     <div class="col-sm-5">
-										<?php foreach($type as $key=>$val){?>
+										<?php foreach($type as $key=>$val){ ?>
                                         <label class="radio-inline">
-                                            <input type="radio" name="coupon_type" value="<?php echo $key;?>" /><?php echo $val;?>
+                                            <input type="radio" name="type_string" value="<?php echo $key;?>" /><?php echo $val;?>
                                         </label>
                                         <?php }?>
                                        
                                     </div>
                                 </div>
-								<div class="form-group">
-                                    <label class="col-sm-2 control-label">工单号</label>
+				<div class="form-group">
+                                    <label class="col-sm-2 control-label">处理人</label>
                                     <div class="col-sm-5">
-										<input  type="text" value="" class="form-control" placeholder="请输入工单">
-                                       
+                                        <select name="operation_id" class="form-control">
+                                            <option value="">请选择...</option>
+                                            <?php foreach($operations as $operation) { ?>
+                                            <option value="<?php echo $operation['admin_id']; ?>" <?php if ((string)$operation['admin_id'] == @$data['admin_id']) { ?>selected<?php } ?>><?php echo $operation['nickname']; ?></option>
+                                            <?php } ?>
+                                        </select>
+                                        <?php if (isset($error['admin_id'])) { ?><div class="text-danger"><?php echo $error['admin_id']; ?></div><?php } ?>
+
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">反馈内容</label>
                                     <div class="col-sm-5">
-                                        <textarea  class="form-control date" rows="5"></textarea>
+                                        <textarea name="content" class="form-control date" rows="5"></textarea>
                                        
                                     </div>
                                 </div>
@@ -61,9 +67,9 @@
 
                             <div class="form-group">
                                 <div class="col-sm-7">
-                                    <div class="pull-right">
-                                        <button type="submit" class="btn btn-sm btn-success margin-r-5" onclick="return false;">提交</button>
-                                        <a href="javaScript:void(0);" class="btn btn-sm btn-default">返回</a>
+                                    <div style="text-align:center">
+                                        <button type="submit" class="btn btn-sm btn-success margin-r-5" style="margin-right: 40px;padding:0 30px;height:40px;font-size:14px;" onclick="return false;">提交</button>
+                                        <a href="javaScript:void(0);" class="btn btn-sm btn-default" style="padding:0 30px;height:40px;font-size:14px;line-height:40px">返回</a>
                                     </div>
                                 </div>
                             </div>

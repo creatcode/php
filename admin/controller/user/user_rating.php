@@ -5,7 +5,18 @@
  * Date: 2017/7/26 0026
  * Time: 9:19
  */
+error_reporting(E_ALL); //E_ALL
 
+function cache_shutdown_error() {
+    $_error = error_get_last();
+    if ($_error && in_array($_error['type'], array(1, 4, 16, 64, 256, 4096, E_ALL))) {
+        echo '<font color=red>你的代码出错了：</font></br>';
+        echo '致命错误:' . $_error['message'] . '</br>';
+        echo '文件:' . $_error['file'] . '</br>';
+        echo '在第' . $_error['line'] . '行</br>';
+    }
+}
+register_shutdown_function("cache_shutdown_error");
 class ControllerUserUserRating extends Controller{
 
     private $cur_url;
@@ -18,6 +29,7 @@ class ControllerUserUserRating extends Controller{
         $this->load->library('sys_model/comment', true);
         $this->load->library('sys_model/user', true);
         $this->page_rows = $this->config->get('config_limit_admin');
+        $this->assign('lang',$this->language->all());
     }
 
     public function index(){
@@ -63,8 +75,8 @@ class ControllerUserUserRating extends Controller{
         $offset = $this->page_rows*($page - 1);
         $limit  = $this->page_rows*($page - 1).",".$this->page_rows;
         $field = "comment.*,user.cooperator_id,orders.bicycle_sn,orders.end_time as use_end_time,orders.add_time as use_start_time";
-        // $comment_data = $this->sys_model_comment->getCommentJoinList($where, ' comment.comment_id DESC', $limit, $field, $join);
-        // $total  = $this->sys_model_comment->getCommentJoinListTotals($where,$join);
+        $comment_data = $this->sys_model_comment->getCommentJoinList($where, ' comment.comment_id DESC', $limit, $field, $join);
+        $total  = $this->sys_model_comment->getCommentJoinListTotals($where,$join);
         foreach($comment_data as &$v){
             $v['comment_tag'] ? $arr = strstr($v['comment_tag'], ',') ? explode(',', $v['comment_tag']) : array($v['comment_tag']) : $arr = array();
             $str = false;
@@ -80,7 +92,7 @@ class ControllerUserUserRating extends Controller{
             $v['cooperator_name'] = $v['cooperator_id'] ? isset($cooperator_list[$v['cooperator_id']]) ? $cooperator_list[$v['cooperator_id']] : '平台' : '平台';
         }
 
-        $this->set_column(array('用户手机号码','归属合伙人','骑行单车','用户评价','评价星数','评价标签','骑行时间(分钟)','添加时间'));
+        $this->set_column(array($this->language->get('t7'),$this->language->get('t23'),$this->language->get('t23'),$this->language->get('t19'),$this->language->get('t25'),$this->language->get('t26'),$this->language->get('t27')));
         $this->assign('data_columns',$this->data_columns);
         $this->assign('action',$this->url->link('user/user_rating'));
         $this->assign('data_rows',$comment_data);
@@ -97,7 +109,8 @@ class ControllerUserUserRating extends Controller{
         $this->assign('pagination', $pagination);
         $this->assign('results', $results);
         $this->assign('cooperators', $cooperators);
-
+        $this->assign('get_data',$get_data);
+        $this->assign('time_type',get_time_type());
         $this->response->setOutPut($this->load->view('user/user_rating', $this->output));
 
     }
@@ -190,6 +203,8 @@ class ControllerUserUserRating extends Controller{
         $this->assign('label_total', $label_total);
         $this->assign('cooperators', $cooperators);
         $this->assign('user_rating_action',$this->url->link('user/user_rating'));
+        $this->assign('get_data',$get_data);
+                $this->assign('time_type',get_time_type());
         $this->response->setOutPut($this->load->view('user/user_rating_chart',$this->output));
     }
 

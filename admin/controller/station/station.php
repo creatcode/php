@@ -6,7 +6,6 @@
  * Date: 2017/12/12
  * Time: 17:03
  */
-
 use Tool\ArrayUtil;
 
 class ControllerStationStation extends Controller {
@@ -14,6 +13,7 @@ class ControllerStationStation extends Controller {
     public function __construct($registry) {
         parent::__construct($registry);
         $this->cur_url = isset($this->request->get['route']) ? $this->url->link($this->request->get['route']) : '';
+        $this->assign('lang',$this->language->all());
     }
 
     public function index() {
@@ -95,6 +95,7 @@ class ControllerStationStation extends Controller {
         $pagination = $pagination->render();
         $this->assign('pagination', $pagination);
         $this->assign('action', $this->url->link('station/station'));
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view("station/station", $this->output));
     }
 

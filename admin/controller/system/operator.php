@@ -11,6 +11,7 @@ class ControllerSystemOperator extends Controller {
 
         // 加载bicycle Model
         $this->load->library('logic/setting', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -22,13 +23,13 @@ class ControllerSystemOperator extends Controller {
             
             $this->logic_setting->editSetting($data);
 
-            $this->session->data['success'] = '设置成功！';
+            $this->session->data['success'] = $this->language->get('t20');
 
             $this->load->controller('common/base/redirect', $this->url->link('system/operator', '', true));
         }
 
-        $this->assign('title_bike', '单车');
-        $this->assign('title_lock', '桩车');
+        $this->assign('title_bike', $this->language->get('t3'));
+        $this->assign('title_lock', $this->language->get('t4'));
          
         $this->assign('lock_action', $this->url->link('system/operator/lockfrom'));
 
@@ -45,13 +46,13 @@ class ControllerSystemOperator extends Controller {
             
             $this->logic_setting->editSetting($data);
 
-            $this->session->data['success'] = '设置成功！';
+            $this->session->data['success'] = $this->language->get('t20');
 
             $this->load->controller('common/base/redirect', $this->url->link('system/operator/lockfrom', '', true));
         }
 
-        $this->assign('title_bike', '单车');
-        $this->assign('title_lock', '桩车');
+        $this->assign('title_bike', $this->language->get('t3'));
+        $this->assign('title_lock', $this->language->get('t4'));
         $this->assign('oper_action', $this->url->link('system/operator'));
 
          
@@ -90,6 +91,8 @@ class ControllerSystemOperator extends Controller {
         $this->assign('data', $data);
         $this->assign('action', $this->cur_url);
         $this->assign('error', $this->error);
+        $this->assign('action',$this->url->link('system/operator'));
+
 
         $this->response->setOutput($this->load->view('system/operator_form_bike', $this->output));
     }
@@ -174,6 +177,8 @@ class ControllerSystemOperator extends Controller {
         $this->assign('data', $data);
         $this->assign('action', $this->cur_url);
         $this->assign('error', $this->error);
+        $this->assign('action',$this->url->link('system/operator/lockfrom'));
+
 
         $this->response->setOutput($this->load->view('system/operator_form_lock', $this->output));
     }
@@ -189,13 +194,13 @@ class ControllerSystemOperator extends Controller {
 
         foreach ($input  as $k => $v) {
             if (empty($v)) {
-                $this->error[$k] = '请输入完整！';
+                $this->error[$k] = $this->language->get('t21');
             }
         }
 
 
         if ($this->error) {
-            $this->error['warning'] = '警告: 存在错误，请检查！';
+            $this->error['warning'] = $this->language->get('t22');
         }
         
         return !$this->error;
@@ -209,13 +214,13 @@ class ControllerSystemOperator extends Controller {
 
         foreach ($input  as $k => $v) {
             if (empty($v)) {
-                $this->error[$k] = '请输入完整！';
+                $this->error[$k] = $this->language->get('t21');
             }
         }
 
 
         if ($this->error) {
-            $this->error['warning'] = '警告: 存在错误，请检查！';
+            $this->error['warning'] = $this->language->get('t22');
         }
        
         return !$this->error;
@@ -228,13 +233,13 @@ class ControllerSystemOperator extends Controller {
 
         foreach ($input  as $k => $v) {
             if (empty($v)) {
-                $this->error[$k] = '请输入完整！';
+                $this->error[$k] = $this->language->get('t21');
             }
         }
 
 
         if ($this->error) {
-            $this->error['warning'] = '警告: 存在错误，请检查！';
+            $this->error['warning'] = $this->language->get('t22');
         }
         
         return !$this->error;
@@ -254,12 +259,12 @@ class ControllerSystemOperator extends Controller {
 
             $this->logic_setting->editSetting($data);
 
-            $this->session->data['success'] = '设置成功！';
+            $this->session->data['success'] = $this->language->get('t20');
 
             $this->load->controller('common/base/redirect', $this->url->link('system/operator/yunyin', '', true));
         }
 
-        $this->assign('title', '运营设置');
+        $this->assign('title', $this->language->get('t2'));
         $this->getForm();
     }
 

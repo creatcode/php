@@ -183,7 +183,7 @@ class ControllerFaultFault extends Controller {
         $data['type'] = $this->request->post['type'];
         $data['add_time'] = time();
         $this->load->library('sys_model/bicycle', true);
-        $bicycle_info = $this->sys_model_bicycle->getBicycleInfo(array('bicycle_sn' => $data['bicycle_sn']));
+        $bicycle_info = $this->sys_model_bicycle->getBicycleInfo(array('bicycle_sn' => $this->request->post['bicycle_sn']));
         if (empty($bicycle_info)) {
             $this->response->showErrorResult($this->language->get('error_bicycle_sn_nonexistence'), 140);
         }
@@ -247,6 +247,7 @@ class ControllerFaultFault extends Controller {
             'description' => $description,
             'order_id' => $order_id
         );
+
         $data['coupon_code'] = $this->buildCouponCode();
         return $this->sys_model_coupon->addCoupon($data);
     }

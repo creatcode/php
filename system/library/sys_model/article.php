@@ -45,8 +45,8 @@ class Article {
      * @param string $limit
      * @return mixed
      */
-    public function getArticleList($where = array(), $order = '', $limit = '') {
-        return $this->db->table('article')->where($where)->order($order)->limit($limit)->select();
+    public function getArticleList($where = array(), $order = '', $limit = '',$field = '*') {
+        return $this->db->table('article')->field($field)->where($where)->order($order)->limit($limit)->select();
     }
 
     /**

@@ -12,6 +12,7 @@ class ControllerRegionRegion extends Controller {
 
         // 加载region Model
         $this->load->library('sys_model/region', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -37,12 +38,14 @@ class ControllerRegionRegion extends Controller {
         if (is_array($result) && !empty($result)) {
             $this->load->library('sys_model/bicycle');
             $this->load->library('sys_model/lock');
+             $this->load->library('sys_model/city', true);
             foreach ($result as &$item) {
                 $item['lock_total']    = 0;//$this->sys_model_lock->getTotalLocks(array('region_id' => $item['region_id']));
                 $item['bike_total']    = $this->sys_model_bicycle->getTotalBicycles(array('region_id' => $item['region_id'],'lock_id' => array( array('neq' , '0') )));
                 $item['edit_action']   = $this->url->link('region/region/edit', 'region_id='.$item['region_id']);
                 $item['delete_action'] = $this->url->link('region/region/delete', 'region_id='.$item['region_id']);
                 $item['info_action']   = $this->url->link('region/region/info', 'region_id='.$item['region_id']);
+                $item['city_num']   = $this->sys_model_city->getTotalCities(['region_id'=>$item['region_id']]);
             }
         }
 
@@ -83,12 +86,12 @@ class ControllerRegionRegion extends Controller {
      */
     protected function getDataColumns() {
        // $this->setDataColumn('排序');
-        $this->setDataColumn('区域');
+        $this->setDataColumn($this->language->get('t28'));
         //$this->setDataColumn('收费(每%分钟/%元)');
-        $this->setDataColumn('城市');
-        $this->setDataColumn('站点数');
-        $this->setDataColumn('总桩车数');
-        $this->setDataColumn('总单车数');
+        $this->setDataColumn($this->language->get('t29'));
+        $this->setDataColumn($this->language->get('t30'));
+        $this->setDataColumn($this->language->get('t31'));
+        $this->setDataColumn($this->language->get('t32'));
         //$this->setDataColumn('总单车锁数');
         return $this->data_columns;
     }
@@ -97,20 +100,27 @@ class ControllerRegionRegion extends Controller {
      * 添加区域
      */
     public function add() {
-        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
+        if (($this->request->server['REQUEST_METHOD'] == 'POST') ) {
             $input = $this->request->post(array('region_name', 'upper_expend', 'region_city_code', 'region_bounds', 'region_bounds_northeast_lng', 'region_bounds_northeast_lat', 'region_bounds_southwest_lng', 'region_bounds_southwest_lat', 'region_charge_time', 'region_charge_fee','deposit', 'monthly_card_money', 'yearly_card_money',
-                'cards_first_half','cards_afterwards_half','first_half',
-                'afterwards_half'));
+                'cards_first_half','cards_afterwards_half','first_half','afterwards_half','consumer_limit','calculate_unit','free_start','free_end'));
             $now = time();
             $condition = array(
                 'region_city_code' => (int)$input['region_city_code']
             );
+            $today= date("Y-m-d",time());//今天的日期
+            $start_time= strtotime($today." ".$input['free_start']);//每日免费开始的时间戳
+            $end_time= strtotime($today." ".$input['free_end']);//每日免费结束的时间戳
+            if($start_time>$end_time){//结束比开始大才正常，否则互换
+                $temp=$input['free_start'];
+                $input['free_start']=$input['free_end'];
+                $input['free_end']=$temp;
+            }
             $field = 'region_city_ranking';
             $region_city_ranking = ((int)$this->sys_model_region->getMaxRegions($condition, $field) + 1);
             $data = array(
                 'region_name' => $input['region_name'],
-                'region_sort' => (int)$input['region_sort'],
-                'region_city_code' => $input['region_city_code'],
+                'region_sort' => empty($input['region_sort'])?0:(int)$input['region_sort'],
+                'region_city_code' => empty($input['region_city_code'])?0:$input['region_city_code'],
                 'region_city_ranking' => (int)$region_city_ranking,
                 'region_bounds' => $input['region_bounds'],
                 'region_bounds_northeast_lng' => $input['region_bounds_northeast_lng'],
@@ -118,8 +128,19 @@ class ControllerRegionRegion extends Controller {
                 'region_bounds_southwest_lng' => $input['region_bounds_southwest_lng'],
                 'region_bounds_southwest_lat' => $input['region_bounds_southwest_lat'],
                 'region_charge_time' => (int)$input['region_charge_time'],
-                'region_charge_fee' => $input['region_charge_fee'],
-                'add_time' => $now
+                'region_charge_fee' => empty($input['region_charge_fee'])?0:$input['region_charge_fee'],
+                'add_time' => $now,
+                'consumer_limit'=>$input['consumer_limit'],
+                'deposit'=>$input['deposit'],
+                'monthly_card_money'=>$input['monthly_card_money'],
+                'yearly_card_money'=>$input['yearly_card_money'],
+                'cards_first_half'=>$input['cards_first_half'],
+                'cards_afterwards_half'=>$input['cards_afterwards_half'],
+                'first_half'=>$input['first_half'],
+                'afterwards_half'=>$input['afterwards_half'],
+                'free_start'=>empty($input['free_start'])?'':$input['free_start'],
+                'free_end'=>empty($input['free_end'])?'':$input['free_end'],
+                'calculate_unit'=>empty($input['calculate_unit'])?30:$input['calculate_unit'],
             );
             $this->sys_model_region->addRegion($data);
 
@@ -140,10 +161,9 @@ class ControllerRegionRegion extends Controller {
      * 编辑区域
      */
     public function edit() {
-        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
+        if (($this->request->server['REQUEST_METHOD'] == 'POST') ) {
             $input = $this->request->post(array('region_name', 'upper_expend', 'region_city_code', 'region_bounds', 'region_bounds_northeast_lng', 'region_bounds_northeast_lat', 'region_bounds_southwest_lng', 'region_bounds_southwest_lat', 'region_charge_time', 'region_charge_fee', 'park','deposit', 'monthly_card_money', 'yearly_card_money',
-                'cards_first_half','cards_afterwards_half','first_half',
-                'afterwards_half'));
+                'cards_first_half','cards_afterwards_half','first_half','afterwards_half','consumer_limit','calculate_unit','free_start','free_end'));
             $region_id = $this->request->get['region_id'];
             $park_str  = '';
             if(!empty($input['park'])){
@@ -151,10 +171,18 @@ class ControllerRegionRegion extends Controller {
                     $park_str .=  $park_str == '' ? $v : ','.$v;
                 }
             }
+            $today= date("Y-m-d",time());//今天的日期
+            $start_time= strtotime($today." ".$input['free_start']);//每日免费开始的时间戳
+            $end_time= strtotime($today." ".$input['free_end']);//每日免费结束的时间戳
+            if($start_time>$end_time){//结束比开始大才正常，否则互换
+                $temp=$input['free_start'];
+                $input['free_start']=$input['free_end'];
+                $input['free_end']=$temp;
+            }
             $data = array(
                 'region_name' => $input['region_name'],
-                'region_sort' => (int)$input['region_sort'],
-                'region_city_code' => $input['region_city_code'],
+                'region_sort' =>  empty($input['region_sort'])?0:(int)$input['region_sort'],
+                'region_city_code' => empty($input['region_city_code'])?0:$input['region_city_code'],
                 'region_bounds' => $input['region_bounds'],
                 'region_bounds_northeast_lng' => $input['region_bounds_northeast_lng'],
                 'region_bounds_northeast_lat' => $input['region_bounds_northeast_lat'],
@@ -162,7 +190,19 @@ class ControllerRegionRegion extends Controller {
                 'region_bounds_southwest_lat' => $input['region_bounds_southwest_lat'],
                 'region_charge_time' => (int)$input['region_charge_time'],
                 'region_charge_fee' => $input['region_charge_fee'],
-                'park_bounds'   => $park_str
+                'park_bounds'   => $park_str,
+                'consumer_limit'=>$input['consumer_limit'],
+                'deposit'=>$input['deposit'],
+                'monthly_card_money'=>$input['monthly_card_money'],
+                'yearly_card_money'=>$input['yearly_card_money'],
+                'cards_first_half'=>$input['cards_first_half'],
+                'cards_afterwards_half'=>$input['cards_afterwards_half'],
+                'first_half'=>$input['first_half'],
+                'afterwards_half'=>$input['afterwards_half'],
+                'free_start'=>empty($input['free_start'])?'':$input['free_start'],
+                'free_end'=>empty($input['free_end'])?'':$input['free_end'],
+                'calculate_unit'=>empty($input['calculate_unit'])?30:$input['calculate_unit'],
+                
             );
             $condition = array(
                 'region_id' => $region_id
@@ -309,14 +349,14 @@ class ControllerRegionRegion extends Controller {
             }
         }
 
-        $region_charge_time = $this->request->post('region_charge_time');
+        /*$region_charge_time = $this->request->post('region_charge_time');
         $region_charge_fee = $this->request->post('region_charge_fee');
         if ($region_charge_time <= 0) {
             $this->error['region_charge_time'] = '收费标准的时间必须大于或者等于1分钟！';
         }
         if ($region_charge_fee <= 0) {
             $this->error['region_charge_fee'] = '收费标准的金额必须大于或者等于1元！';
-        }
+        }*/
 
         if ($this->error) {
             $this->error['warning'] = '警告: 存在错误，请检查！';

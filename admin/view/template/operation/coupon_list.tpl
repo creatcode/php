@@ -21,6 +21,36 @@
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="coupon_list">
+                        <form class="search_form" id="search_form" action="<?php echo $action; ?>" method="get">
+                            <!-- 搜索 -->
+                            <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
+                                <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
+                                    <option value="0">选择时间区</option>
+                                    <?php if(!empty($time_type)) {?>
+                                    <?php foreach($time_type as $k=>$v){?>
+                                    <option value="<?php echo $k?>" <?php echo $k == @$filter['time_type'] ? 'selected' : ''; ?>><?php echo $v?></option>
+                                    <?php }?>
+                                    <?php }?>
+                                </select>
+                                <input type="text" name="date" value="<?php echo @$filter['date']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 180px;" placeholder="使用时间(默认本月)"/>
+                                <select name="region_id" style="height: 30px; margin-left: 8px; width:160px; ">
+                                    <?php foreach($regionList as $v){
+                                        if($region_id ==$v['region_id']){
+                                    ?>
+                                    <option selected="selected" value="<?php echo $v['region_id']; ?>"><?php echo $v['region_name']; ?> </option>
+                                    <?php
+                                        }else{
+                                    ?>
+                                    <option value="<?php echo $v['region_id']; ?>"><?php echo $v['region_name']; ?> </option>
+                                    <?php }
+                                     } ?>
+                                </select>
+                                <div class="pull-right">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
+                                </div>
+                            </div>
+                        </form>
+                        
                         <!-- 新增 -->
                         <div class="form-group">
                             <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
@@ -69,5 +99,31 @@
         </div>
     </div>
 </section>
+<script>
+    $(function(){
+            addrat();
+    });
+        var b = "";
+        function addrat(){
+        var a = $("#time_select").val();
+        if(a==1){
+            b = "YYYY";
+        }else if(a==2){
+            b = "YYYY-MM";
+        }else if(a==3){
+            b = "YYYY-MM-DD";
+        }else if(a==0){
+            b = "YYYY-MM-DD";
+        }
+        $('.date-range').daterangepicker({
+            "showDropdowns": true,
+            locale:{
+                format: b,
+                isAutoVal:false,
+            }
+      });
+        
+    };
+</script>
 <!-- /.content -->
 <?php echo $footer;?>

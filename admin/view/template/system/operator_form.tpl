@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>运营设置</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -45,33 +45,33 @@
                                     </div>
                                 </div> -->
                                 <div class="form-group required">
-                                    <label class="col-sm-2 control-label" for="input-phone">联系电话</label>
+                                    <label class="col-sm-2 control-label" for="input-phone"><?php echo @$lang['t16'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="text" name="config_phone" value="<?php echo $data['config_phone']; ?>" placeholder="联系电话" id="input-phone" class="form-control" />
+                                        <input type="text" name="config_phone" value="<?php echo $data['config_phone']; ?>" placeholder="<?php echo @$lang['t16'];?>" id="input-phone" class="form-control" />
                                         <?php if (isset($error['config_phone'])) { ?><div class="text-danger"><?php echo $error['config_phone']; ?></div><?php } ?>
                                         <small class="help-block"></small>
                                     </div>
                                 </div>
                                 <div class="form-group required">
-                                    <label class="col-sm-2 control-label" for="input-phone">客服电话</label>
+                                    <label class="col-sm-2 control-label" for="input-phone"><?php echo @$lang['t17'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="text" name="config_hotline" value="<?php echo $data['config_hotline']; ?>" placeholder="客服电话" id="input-phone" class="form-control" />
+                                        <input type="text" name="config_hotline" value="<?php echo $data['config_hotline']; ?>" placeholder="<?php echo @$lang['t17'];?>" id="input-phone" class="form-control" />
                                         <?php if (isset($error['config_hotline'])) { ?><div class="text-danger"><?php echo $error['config_hotline']; ?></div><?php } ?>
                                         <small class="help-block"></small>
                                     </div>
                                 </div>
                                 <div class="form-group required">
-                                    <label class="col-sm-2 control-label" for="input-email">e-mail</label>
+                                    <label class="col-sm-2 control-label" for="input-email"><?php echo @$lang['t18'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="text" name="config_email" value="<?php echo $data['config_email']; ?>" placeholder="电子邮箱" id="input-email" class="form-control" />
+                                        <input type="text" name="config_email" value="<?php echo $data['config_email']; ?>" placeholder="<?php echo @$lang['t18'];?>" id="input-email" class="form-control" />
                                         <?php if (isset($error['config_email'])) { ?><div class="text-danger"><?php echo $error['config_email']; ?></div><?php } ?>
                                         <small class="help-block"></small>
                                     </div>
                                 </div>
                                 <div class="form-group required">
-                                    <label class="col-sm-2 control-label" for="input-web">官网</label>
+                                    <label class="col-sm-2 control-label" for="input-web"><?php echo @$lang['t19'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="text" name="config_web" value="<?php echo $data['config_web']; ?>" placeholder="官网" id="input-web" class="form-control" />
+                                        <input type="text" name="config_web" value="<?php echo $data['config_web']; ?>" placeholder="<?php echo @$lang['t19'];?>" id="input-web" class="form-control" />
                                         <?php if (isset($error['config_web'])) { ?><div class="text-danger"><?php echo $error['config_web']; ?></div><?php } ?>
                                         <small class="help-block"></small>
                                     </div>
@@ -86,11 +86,9 @@
                                 </div> -->
                                 
                             </div>
-
                             <div class="form-group">
-                                <div class="col-sm-7">
-                                    <button type="submit" class="btn btn-large btn-success pull-right">提交</button>
-                                </div>
+                                <div class="col-sm-7 text-center" >
+                                    <button type="submit" class="btn btn-large btn-success " style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;"><?php echo @$lang['t8'];?></button>
                             </div>
                         </form>
                     </div>

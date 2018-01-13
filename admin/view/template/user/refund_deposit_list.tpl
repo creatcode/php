@@ -16,6 +16,7 @@
                 <ul class="nav nav-tabs">
                     <li><a href="<?php echo $index_action; ?>" data-toggle="tab">余额退款申请列表</a></li>
                     <li class="active"><a href="javascript:;" data-toggle="tab">押金退款申请列表</a></li>
+                    <li><a href="<?php echo $reginster_list; ?>" data-toggle="tab">注册金退款申请列表</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active form-group">
@@ -29,18 +30,15 @@
                                     <?php } ?>
                                     <?php } ?>
                                 </select>
-                                <select name="city_id" class="input-sm">
-                                    <option value="0">--选择城市--</option>
-                                    <?php foreach($cityList as $v){
-                                        if($city_id ==$v['city_id']){
-                                    ?>
-                                    <option selected="selected" value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php
-                                        }else{
-                                    ?>
-                                    <option value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php }
-                                     } ?>
+                                <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--全部区域--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--全部城市--</option>
+                                    
                                 </select>
                                 <select name="filter_type" id="filter_type" class="input-sm">
                                     <?php if (!empty($filter_types) && is_array($filter_types)) { ?>
@@ -74,7 +72,7 @@
                         </form>
                         <div class="form-group">
                             <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增退款申请</a>
-                            <!-- <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;导出</button> -->
+                            <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;导出</button>
                         </div>
                         <?php if (isset($error['warning'])) { ?>
                         <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;<?php echo $error['warning']; ?>
@@ -99,10 +97,11 @@
                                 <tbody>
                                 <?php foreach ($data_rows as $data) { ?>
                                 <tr>
+                                    <td><?php echo $data['region_name']?></td>
                                     <td><?php echo $data['city_name']?></td>
                                     <td><?php echo $data['apply_payment_type']?></td>
                                     <td><?php echo $data['apply_user_name']?></td>
-                                    <td><?php echo $data['pdr_type']?></td>
+                                    <!-- <td><?php echo $data['pdr_type']?></td> -->
                                     <td><?php echo $data['apply_cash_amount']?></td>
                                     <td><?php echo $data['apply_admin_name']?></td>
                                     <td><?php echo $data['apply_state']?></td>
@@ -132,7 +131,53 @@
     </div>
 </section>
 <!-- /.content -->
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--全部城市--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
 
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--全部城市--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
+</script>
 <script type="text/javascript">
     $(function(){
             addrat();

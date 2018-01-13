@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>锁详情</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -11,100 +11,132 @@
 <section class="content">
     <div class="row">
         <div class="col-xs-12">
-            <div class="box box-primary">
-                <div class="box-header with-border"></div>
-                <div class="box-body">
-                    <form class="form-horizontal" method="post" action="http://admin.estaxi.app.estronger.cn/orders/Index/carpool_order_save">
-
-                        <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">锁编号</label>
-                            <div class="col-sm-8">
-                                <span><?php echo $data['lock_sn']; ?></span>
-                            </div>
+            <div class="nav-tabs-custom">
+                <!-- tab 标签 -->
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t31'];?></a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="bicycle">
+                        <?php if (isset($error['warning'])) { ?>
+                        <div class="alert alert-danger" style="opacity: 0.8;"><i class="fa fa-exclamation-circle"></i>&nbsp;<span><?php echo $error['warning']; ?></span>
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
                         </div>
-                        <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">锁名称</label>
-                            <div class="col-sm-8">
-                                <span><?php echo $data['lock_name']; ?></span>
-                            </div>
-                        </div>
-                        <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">电池电压(伏特)</label>
-                            <div class="col-sm-8">
+                        <?php } ?>
+                        <form class="form-horizontal" method="post">
+                            <div class="row">
+                                <div class="form-group col-sm-6">
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t24'];?></label>
+                                    <div class="col-sm-8" style="margin-top: 7px;">
+                                        <span><?php echo @$data['lock_sn']; ?></span>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-6">
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t32'];?></label>
+                                    <div class="col-sm-8" style="margin-top: 7px;">
+                                        <span>-</span>
+                                    </div>
+                                </div>
+                                <div class="form-group col-sm-6">
+                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t33'];?></label>
+                            <div class="col-sm-8" style="margin-top: 7px;">
                                 <span><?php echo $data['gx']; ?></span>
                             </div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">充电电压(伏特)</label>
-                            <div class="col-sm-8">
+                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t34'];?></label>
+                            <div class="col-sm-8" style="margin-top: 7px;">
                                 <span><?php echo $data['gy']; ?></span>
                             </div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">当前电量（百分比）</label>
-                            <div class="col-sm-8">
+                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t35'];?></label>
+                            <div class="col-sm-8" style="margin-top: 7px;">
                                 <span><?php echo $data['battery']; ?></span>
                             </div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">信号强度(dB)</label>
-                            <div class="col-sm-8">
+                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t36'];?></label>
+                            <div class="col-sm-8" style="margin-top: 7px;">
                                 <span><?php echo $data['gz']; ?></span>
                             </div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">开锁次数</label>
-                            <div class="col-sm-8">
+                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t37'];?></label>
+                            <div class="col-sm-8" style="margin-top: 7px;">
                                 <span><?php echo $data['open_nums']; ?></span>
                             </div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">更新时间</label>
-                            <div class="col-sm-8">
+                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t38'];?></label>
+                            <div class="col-sm-8" style="margin-top: 7px;">
                                 <span><?php echo $data['system_time']; ?></span>
                             </div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label for="" class="col-sm-4 control-label">状态</label>
-                            <div class="col-sm-8">
+                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t39'];?></label>
+                            <div class="col-sm-8" style="margin-top: 7px;">
                                 <span><?php echo $data['lock_status']; ?></span>
                             </div>
                         </div>
-                        <div class="form-group col-sm-12 padding">
-                            <div class="col-sm-12" style="height: 400px;box-sizing: content-box;">
-                                <div id="container"></div>
+                                <div class="form-group col-sm-12">
+                                    <label for="" class="col-sm-2 control-label"><?php echo @$lang['t40'];?></label>
+                                    <div class="col-sm-8" style="margin-top: 7px;">
+                                        <div  class="col-sm-12 img-thumbnail" style="height: 500px;">
+                                            <div id="container"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <div style="text-align:center">
+                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default"  style="padding:0 30px;height:40px;font-size:14px;line-height:40px"><?php echo @$lang['t41'];?></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+<-- script -->
+    jQuery.getScript('<?php echo HTTP_IMAGE;?>js/coordinate.js');
+<--/ script -->
 <link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css"/>
-<script type="text/javascript"  src="http://webapi.amap.com/maps?v=1.3&key=38c88d25e4aa2652bc7806db2d1f6a0d&plugin=AMap.Geocoder&callback=initMap"></script>
-<script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
-<script src="<?php echo HTTP_CATALOG;?>js/coordinate.js"></script>
+<script src="<?php echo HTTP_IMAGE;?>js/coordinate.js"></script>
+    <script type="text/javascript"  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDykSoVc_Z96D_rLGPhQOf9XHYluROzceI"></script>
 <script type="text/javascript">
+    
     <?php if (isset($data['lng']) && isset($data['lat'])) { ?>
-        var lnglat = wgs84togcj02(parseFloat(<?php echo $data['lng']; ?>), parseFloat(<?php echo $data['lat']; ?>));
+      
+
+     var myCenter=new google.maps.LatLng('<?php echo $data['lat']; ?>','<?php echo $data['lng']; ?>');
+
+    function initialize()
+{
+var mapProp = {
+  center:myCenter,
+  zoom:13,
+  mapTypeId:google.maps.MapTypeId.ROADMAP
+  };
+
+var map=new google.maps.Map(document.getElementById("container"),mapProp);
+
+var marker=new google.maps.Marker({
+  position:myCenter,
+  });
+
+marker.setMap(map);
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
     <?php } ?>
 
-    var initMap = function(){
-        if(typeof AMap != 'undefined') {
-            var marker, map = new AMap.Map("container", {
-                resizeEnable: true,
-                zoom: 13
-            });
-            marker = new AMap.Marker({
-                map: map
-            });
 
-            if (typeof lnglat != 'undefined') {
-                marker.setPosition(lnglat);
-                map.setCenter(lnglat);
-            }
-        }
-    };
 </script>
+
+
 <?php echo $footer;?>

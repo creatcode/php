@@ -37,9 +37,9 @@
 
                             <div class="form-group">
                                 <div class="col-sm-7">
-                                    <div class="pull-right">
-                                        <button type="submit" class="btn btn-sm btn-success margin-r-5" onclick="return false;">提交</button>
-                                        <a href="javaScript:void(0);" class="btn btn-sm btn-default">返回</a>
+                                    <div style="text-align:center">
+                                        <button type="submit" class="btn btn-sm btn-success margin-r-5" onclick="return false;" style="margin-right: 40px;padding:0 30px;height:40px;font-size:14px;">提交</button>
+                                        <a href="javaScript:void(0);" class="btn btn-sm btn-default" style="padding:0 30px;height:40px;font-size:14px;line-height:40px">返回</a>
                                     </div>
                                 </div>
                             </div>

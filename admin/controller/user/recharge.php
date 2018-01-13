@@ -10,6 +10,7 @@ function cache_shutdown_error() {
     }
 }
 register_shutdown_function("cache_shutdown_error");
+use Tool\ArrayUtil;
 class ControllerUserRecharge extends Controller
 {
     private $cur_url = null;
@@ -25,6 +26,7 @@ class ControllerUserRecharge extends Controller
         // 加载bicycle Model
         $this->load->library('sys_model/deposit', true);
         $this->load->library('sys_model/trans',true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -32,7 +34,7 @@ class ControllerUserRecharge extends Controller
      */
     public function index()
     {
-        $filter = $this->request->get(array('filter_type', 'pdr_sn', 'mobile', 'pdr_amount', 'pdr_type', 'pdr_payment_state', 'pdr_admin', 'pdr_payment_time','time_type'));
+        $filter = $this->request->get(array('filter_type', 'pdr_sn', 'mobile','email', 'pdr_amount', 'pdr_type', 'pdr_payment_state', 'pdr_admin','pdr_payment_name', 'pdr_payment_time','time_type','city_id','region_id'));
 
         $condition = array();
         if (!empty($filter['pdr_sn'])) {
@@ -41,11 +43,20 @@ class ControllerUserRecharge extends Controller
         if (!empty($filter['mobile'])) {
             $condition['mobile'] = array('like', "%{$filter['mobile']}%");
         }
+        if (!empty($filter['email'])) {
+            $condition['email'] = array('like', "%{$filter['email']}%");
+        }
         if (!empty($filter['pdr_payment_name'])) {
             $condition['pdr_payment_name'] = array('like', "%{$filter['pdr_payment_name']}%");
         }
         if (is_numeric($filter['pdr_amount'])) {
             $condition['pdr_amount'] = (float)$filter['pdr_amount'];
+        }
+        if (is_numeric($filter['region_id'])) {
+            $condition['region.region_id'] = (int)$filter['region_id'];
+        }
+        if (is_numeric($filter['city_id'])) {
+            $condition['city.city_id'] = (int)$filter['city_id'];
         }
         if (is_numeric($filter['pdr_type'])) {
             $condition['pdr_type'] = (int)$filter['pdr_type'];
@@ -56,20 +67,69 @@ class ControllerUserRecharge extends Controller
         if (!empty($filter['pdr_admin'])) {
             $condition['pdr_admin_name'] = array('like', "%{$filter['pdr_admin']}%");
         }
-        if (!empty($filter['pdr_payment_time'])) {
-            $pdr_payment_time = explode(' 至 ', $filter['pdr_payment_time']);
-            $condition['pdr_payment_time'] = array(
-                array('egt', strtotime($pdr_payment_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_payment_time[1])))
-            );
+
+        $pdr_payment_time = explode(' 至 ', $filter['pdr_payment_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['pdr_payment_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_payment_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['pdr_payment_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_payment_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['pdr_payment_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_payment_time[1])))
+                );
+            }else{
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['pdr_payment_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_payment_time[1])))
+                );
+            }
+        }
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
         }
 
         $filter_types = array(
-            'pdr_sn' => '订单号',
-            'mobile' => '手机号',
-            'pdr_payment_name' => '充值方式',
-            'pdr_amount' => '充值金额',
-            'pdr_admin' => '管理员名称',
+            'pdr_sn' => $this->language->get('t4'),
+            'mobile' => $this->language->get('t5'),
+            'email' => $this->language->get('t6'),
+            'facebook' => $this->language->get('t7'),
+            'pdr_payment_name' => $this->language->get('t8'),
+            'pdr_amount' => $this->language->get('t9'),
+            // 'pdr_admin' => '管理员名称',
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -87,14 +147,37 @@ class ControllerUserRecharge extends Controller
         $rows = $this->config->get('config_limit_admin');
         $offset = ($page - 1) * $rows;
         $limit = sprintf('%d, %d', $offset, $rows);
+        $join = array (
+            'user' => 'user.user_id=deposit_recharge.pdr_user_id',
+            'city' => 'city.city_id=user.city_id',
+            'region' => 'user.region_id=region.region_id'
+        );
 
-        $result = $this->sys_model_deposit->getRechargeList($condition, '*', $order, $limit);
-        $total = $this->sys_model_deposit->getRechargeCount($condition);
-
-        $recharge_type = get_recharge_type();
-        $payment_state = get_payment_state();
-        $time_type = get_time_type();
-
+        $result = $this->sys_model_deposit->getRechargeList2($condition, $order, $limit,'',$join);
+        $total = $this->sys_model_deposit->getRechargeCount2($condition, $join);
+        // $recharge_type = get_recharge_type();
+        // $payment_state = get_payment_state();
+        // $time_type = get_time_type();
+        $recharge_type = array(
+            '0' => $this->language->get('t11'),
+            '1' => $this->language->get('t12'),
+            '2' => $this->language->get('t13'),
+            '3' => $this->language->get('t14')
+        );
+        $payment_state = array(
+            '0' => $this->language->get('t16'),
+            '1' => $this->language->get('t17'),
+            '-1' => $this->language->get('t18'),
+            '-2' => $this->language->get('t19'),
+        );
+        $time_type = array(
+            '1' => $this->language->get('t23'),
+            '2' => $this->language->get('t24'),
+            '3' => $this->language->get('t25')
+        );
+        $pdr_payment_name = array(
+            '0' => $this->language->get('t49')
+        );
         if (is_array($result) && !empty($result)) {
             foreach ($result as &$item) {
                 // 余额提现url
@@ -103,6 +186,7 @@ class ControllerUserRecharge extends Controller
                 }
 
                 $item['pdr_type'] = isset($recharge_type[$item['pdr_type']]) ? $recharge_type[$item['pdr_type']] : '';
+                $item['pdr_payment_name'] = isset($pdr_payment_name[$item['pdr_payment_code']]) ? $pdr_payment_name[$item['pdr_payment_code']] : '';
                 $item['pdr_payment_state'] = isset($payment_state[$item['pdr_payment_state']]) ? $payment_state[$item['pdr_payment_state']] : '';
 
                 $item['pdr_payment_time'] = !empty($item['pdr_payment_time']) ? date('Y-m-d H:i:s', $item['pdr_payment_time']) : '';
@@ -114,8 +198,13 @@ class ControllerUserRecharge extends Controller
             }
         }
 
+        
+
+
         $data_columns = $this->getDataColumns();
-        $this->assign('time_type',get_time_type());
+        $this->assign('filter_regions', $filter_regions);
+        // $this->assign('time_type',get_time_type());
+        $this->assign('time_type',$time_type);
         $this->assign('data_columns', $data_columns);
         $this->assign('data_rows', $result);
         $this->assign('filter', $filter);
@@ -146,7 +235,7 @@ class ControllerUserRecharge extends Controller
         $this->assign('results', $results);
 
         $this->assign('export_action', $this->url->link('user/recharge/export'));
-        $this->assign('cooperation_chart_url', $this->url->link('user/recharge/cooperation'));
+        
 
         $this->response->setOutput($this->load->view('user/recharge_list', $this->output));
     }
@@ -156,15 +245,17 @@ class ControllerUserRecharge extends Controller
      * @return mixed
      */
     protected function getDataColumns()
-    {
-        $this->setDataColumn('订单号');
-        $this->setDataColumn('手机号');
-        $this->setDataColumn('充值方式');
-        $this->setDataColumn('充值金额');
-        $this->setDataColumn('充值类型');
-        $this->setDataColumn('支付状态');
-        $this->setDataColumn('管理员名称');
-        $this->setDataColumn('支付时间');
+    {   
+        $this->setDataColumn($this->language->get('t29'));
+        $this->setDataColumn($this->language->get('t30'));
+        $this->setDataColumn($this->language->get('t4'));
+        $this->setDataColumn($this->language->get('t31'));
+        $this->setDataColumn($this->language->get('t8'));
+        $this->setDataColumn($this->language->get('t9'));
+        $this->setDataColumn($this->language->get('t10'));
+        $this->setDataColumn($this->language->get('t15'));
+        // $this->setDataColumn('管理员名称');
+        $this->setDataColumn($this->language->get('t32'));
         return $this->data_columns;
     }
 
@@ -178,16 +269,41 @@ class ControllerUserRecharge extends Controller
         $condition = array(
             'pdr_id' => $pdr_id
         );
-        $payment_states = get_recharge_type();
-        $info = $this->sys_model_deposit->getRechargeInfo($condition, '*');
+        // $payment_states = get_payment_state();
+        $payment_states = array(
+            '0' => $this->language->get('t16'),
+            '1' => $this->language->get('t17'),
+            '-1' => $this->language->get('t18'),
+            '-2' => $this->language->get('t19'),
+        );
+        $recharge_type = array(
+            '0' => $this->language->get('t11'),
+            '1' => $this->language->get('t12'),
+            '2' => $this->language->get('t13'),
+            '3' => $this->language->get('t14')
+        );
+        $join = array(
+            'user' => 'user_id=pdr_user_id'
+        );
+        $info = $this->sys_model_deposit->getRechargeInfo($condition, '*',$join);
+        $payment_type = array(
+            '0' => $this->language->get('t60'),
+            '1' => $this->language->get('t61'),
+            // 'mini_app' => '小程序',
+        );
+        $pdr_payment_name = array(
+            '0' => $this->language->get('t49')
+        );
         if (!empty($info)) {
             $model = array(
-                'pdr_type' => get_recharge_type(),
+                'pdr_type' => $recharge_type,
             );
             foreach ($model as $k => $v) {
                 $info[$k] = isset($v[$info[$k]]) ? $v[$info[$k]] : '';
             }
             $info['pdr_payment_state_name'] = isset($payment_states[$info['pdr_payment_state']]) ? $payment_states[$info['pdr_payment_state']] : '';
+            $info['pdr_payment_name'] = isset($pdr_payment_name[$info['pdr_payment_code']]) ? $pdr_payment_name[$info['pdr_payment_code']] : '';
+            $info['pdr_payment_type'] = isset($payment_type[$info['pdr_payment_type']]) ? $payment_type[$info['pdr_payment_type']] : '';
             $info['pdr_payment_time'] = (isset($info['pdr_payment_time']) && !empty($info['pdr_payment_time'])) ? date('Y-m-d H:i:s', $info['pdr_payment_time']) : '';
             $info['pdr_add_time'] = (isset($info['pdr_add_time']) && !empty($info['pdr_add_time'])) ? date('Y-m-d H:i:s', $info['pdr_add_time']) : '';
             $info['pdr_admin_name'] = (isset($info['pdr_admin_name']) && !empty($info['pdr_admin_name'])) ? $info['pdr_admin_name'] : '-';
@@ -202,59 +318,103 @@ class ControllerUserRecharge extends Controller
     /**
      * 统计图表
      */
-    public function chart()
-    {
+    public function chart(){
         $this->load->library('sys_model/data_sum', true);
-        $filter = $this->request->get(array('add_time','city_id','time_type'));
+        $filter = $this->request->get(array('add_time','city_id','time_type','region_id'));
         $where = 'find_in_set(`pdr_payment_state`, \'1,-1,-2\')';
-        if (!empty($filter['add_time'])) {
-            if ($filter['time_type']==1) {      //年
-                $pdr_payment_time = explode(' 至 ', $filter['add_time']);
-                $firstday = strtotime(date($pdr_payment_time[0].'-01-01'));
-                $lastday = bcadd(86399, strtotime($pdr_payment_time[1].'-12-31'));
-                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'"; 
-            }else if($filter['time_type']==2){   //月
-                $pdr_payment_time = explode(' 至 ', $filter['add_time']);
-                $firstday = strtotime(date($pdr_payment_time[0].'-01'));
+        $pdr_payment_time = explode(' 至 ', $filter['add_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['add_time'])) {
+                $firstday = strtotime($pdr_payment_time[0].'-01-01');
+                $lastday = bcadd(86399,strtotime($pdr_payment_time[1].'-12-31'));
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
+            } else {
+                $firstday = strtotime(date('Y-01-01'));
+                $lastday = bcadd(86399,strtotime(date('Y-12-31')));
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['add_time'])) {
+                $firstday = strtotime($pdr_payment_time[0]);
                 $lastday = bcadd(86399, strtotime($pdr_payment_time[1].'+1 month -1 day'));
-                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'"; 
-            }else{                                 //天
-                $pdr_payment_time = explode(' 至 ', $filter['add_time']);
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
+            } else {
+                $firstday = strtotime(date('Y-m'));
+                $lastday = bcadd(86399, strtotime(date('Y-m-t')));
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['add_time'])) {
                 $firstday = strtotime($pdr_payment_time[0]);
                 $lastday = bcadd(86399, strtotime($pdr_payment_time[1]));
-                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'"; 
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
+            }else{
+                $firstday = strtotime(date('Y-m-d'));
+                $lastday = bcadd(86399, strtotime(date('Y-m-d')));
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
             }
-            
-        } else {
-            $firstday = strtotime(date('Y-m-01'));
-            $lastday = bcadd(86399, strtotime(date('Y-m-d')));
-            $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
-        }
-
-        //获取城市列表
-        $this->load->library('sys_model/city');
-        $cityList = $this->sys_model_city->getCityList('');
-        if(empty($cityList)){
-            $this->load->controller('common/base/redirect', $this->url->link('operation/coupon', $filter, true));
+        }else{
+            if (!empty($filter['add_time'])) {
+                $firstday = strtotime($pdr_payment_time[0]);
+                $lastday = bcadd(86399, strtotime($pdr_payment_time[1]));
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
+            }else{
+                $firstday = strtotime(date('Y-m-01'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-d')));
+                $where .= " AND pdr_payment_time >= '$firstday' AND pdr_payment_time <= '$lastday'";
+            }
         }
         
-        if(is_numeric($filter['city_id'])){
-            $w['city_id'] = $filter['city_id'];
-        }else{
-            $w['city_id'] = 0;
+        if (is_numeric($filter['region_id'])) {
+            $where .= " AND u.region_id = ".$filter['region_id'];
+        }
+        if (is_numeric($filter['city_id'])) {
+            $where .= " AND u.city_id = ".$filter['city_id'];
+        }
+        
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
         }
 
-
+        if($filter['time_type']==1){
+            $field = "sum(r.pdr_amount) as total, FROM_UNIXTIME(pdr_payment_time, '%Y') as payment_date,pdr_type";
+        }else if($filter['time_type']==2){
+            $field = "sum(r.pdr_amount) as total, FROM_UNIXTIME(pdr_payment_time, '%Y-%m') as payment_date,pdr_type";
+        }else{
+            $field = "sum(r.pdr_amount) as total, FROM_UNIXTIME(pdr_payment_time, '%Y-%m-%d') as payment_date,pdr_type";
+        
+        }
+        
         // 初始化订单统计数据
-        $balanceDailyAmount = $depositDailyAmount = array();
-        while ($firstday <= $lastday) {
-            $tempDay = date('Y-m-d', $firstday);
-            $balanceDailyAmount[$tempDay] = $depositDailyAmount[$tempDay] = 0;
+        $balanceDailyAmount = $depositDailyAmount = $reginsterDailyAmount = array();
+        if ($filter['time_type']==1) {
+            while ($firstday <= $lastday) {
+            $tempDay = date('Y', $firstday);
+            $balanceDailyAmount[$tempDay] = $depositDailyAmount[$tempDay] = $reginsterDailyAmount[$tempDay] = 0;
             $firstday = strtotime('+1 day', $firstday);
         }
+        }else if($filter['time_type']==2){
+            while ($firstday <= $lastday) {
+            $tempDay = date('Y-m', $firstday);
+            $balanceDailyAmount[$tempDay] = $depositDailyAmount[$tempDay] = $reginsterDailyAmount[$tempDay] = 0;
+            $firstday = strtotime('+1 day', $firstday);
+        }
+        }else{
+         while ($firstday <= $lastday) {
+            $tempDay = date('Y-m-d', $firstday);
+            $balanceDailyAmount[$tempDay] = $depositDailyAmount[$tempDay] = $reginsterDailyAmount[$tempDay] = 0;
+            $firstday = strtotime('+1 day', $firstday);
+        }
+        }
+        
+        
         // 插入数据
-        $result = $this->sys_model_data_sum->getDepositSumForDaysCity($where,$w['city_id']);
-
+        $result = $this->sys_model_data_sum->getDepositSumForDaysCity($where,$field);
+        // $result = $this->sys_model_data_sum->getDepositSumForYearsCity($where,$w['city_id']);
         if (is_array($result) && !empty($result)) {
             foreach ($result as $item) {
                 if ($item['pdr_type'] == 0) {
@@ -263,13 +423,16 @@ class ControllerUserRecharge extends Controller
                 } else if ($item['pdr_type'] == 1) {
                     // 押金充值
                     $depositDailyAmount[$item['payment_date']] += $item['total'];
+                } else if ($item['pdr_type'] ==3) {
+                    //注册金充值
+                    $reginsterDailyAmount[$item['payment_date']] += $item['total'];
                 }
             }
         }
 
-       // print_r($result);
-        $balanceOrderData = $depositOrderData = array();
-        $balanceOrderTotal = $depositOrderTotal = 0;
+       
+        $balanceOrderData = $depositOrderData = $reginsterOrderData = array();
+        $balanceOrderTotal = $depositOrderTotal = $reginsterOrderTotal = 0;
         // 余额充值统计
         if (is_array($balanceDailyAmount) && !empty($balanceDailyAmount)) {
             foreach ($balanceDailyAmount as $key => $val) {
@@ -296,14 +459,36 @@ class ControllerUserRecharge extends Controller
         }
         $depositOrderData = json_encode($depositOrderData);
         $depositOrderTotal = sprintf('%0.2f', $depositOrderTotal);
-        $this->assign('time_type',get_time_type());
+
+
+        // 注册金充值统计
+        if (is_array($reginsterDailyAmount) && !empty($reginsterDailyAmount)) {
+            foreach ($reginsterDailyAmount as $key => $val) {
+                $reginsterOrderData[] = array(
+                    'date' => $key,
+                    'amount' => $val
+                );
+                $reginsterOrderTotal += $val;
+            }
+        }
+        $reginsterOrderData = json_encode($reginsterOrderData);
+        $reginsterOrderTotal = sprintf('%0.2f', $reginsterOrderTotal);
+
+        $time_type = array(
+            '1' => $this->language->get('t23'),
+            '2' => $this->language->get('t24'),
+            '3' => $this->language->get('t25')
+        );
+
+        $this->assign('time_type',$time_type);
         $this->assign('filter', $filter);
-        $this->assign('cityList', $cityList);
-        $this->assign('city_id',$w['city_id']);
+        $this->assign('filter_regions', $filter_regions);
         $this->assign('balanceOrderData', $balanceOrderData);
         $this->assign('balanceOrderTotal', $balanceOrderTotal);
         $this->assign('depositOrderData', $depositOrderData);
         $this->assign('depositOrderTotal', $depositOrderTotal);
+        $this->assign('reginsterOrderData', $reginsterOrderData);
+        $this->assign('reginsterOrderTotal', $reginsterOrderTotal);
         $this->assign('action', $this->cur_url);
         $this->assign('index_action', $this->url->link('user/recharge'));
         $this->assign('cooperation_char_url', $this->url->link('user/recharge/cooperation'));
@@ -412,7 +597,7 @@ class ControllerUserRecharge extends Controller
      */
     public function export()
     {
-        $filter = $this->request->post(array('filter_type', 'pdr_sn', 'mobile', 'pdr_amount', 'pdr_type', 'pdr_payment_state', 'pdr_admin', 'pdr_payment_time'));
+        $filter = $this->request->post(array('filter_type', 'pdr_sn', 'mobile', 'pdr_amount', 'pdr_type', 'pdr_payment_state', 'pdr_admin', 'pdr_payment_time','city_id','region_id'));
 
         $condition = array();
         if (!empty($filter['pdr_sn'])) {
@@ -427,6 +612,12 @@ class ControllerUserRecharge extends Controller
         if (is_numeric($filter['pdr_amount'])) {
             $condition['pdr_amount'] = (float)$filter['pdr_amount'];
         }
+        if (is_numeric($filter['region_id'])) {
+            $condition['region.region_id'] = (int)$filter['region_id'];
+        }
+        if (is_numeric($filter['city_id'])) {
+            $condition['city.city_id'] = (int)$filter['city_id'];
+        }
         if (is_numeric($filter['pdr_type'])) {
             $condition['pdr_type'] = (int)$filter['pdr_type'];
         }
@@ -436,46 +627,107 @@ class ControllerUserRecharge extends Controller
         if (!empty($filter['pdr_admin'])) {
             $condition['pdr_admin_name'] = array('like', "%{$filter['pdr_admin']}%");
         }
-        if (!empty($filter['pdr_payment_time'])) {
-            $pdr_payment_time = explode(' 至 ', $filter['pdr_payment_time']);
-            $condition['pdr_payment_time'] = array(
-                array('egt', strtotime($pdr_payment_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_payment_time[1])))
-            );
+        $pdr_payment_time = explode(' 至 ', $filter['pdr_payment_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['add_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_payment_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['add_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_payment_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['add_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_payment_time[1])))
+                );
+            }else{
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['add_time'])) {
+                $condition['pdr_payment_time'] = array(
+                    array('egt', strtotime($pdr_payment_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_payment_time[1])))
+                );
+            }
         }
         $order = 'pdr_payment_time DESC';
         $limit = '';
-
-        $result = $this->sys_model_deposit->getRechargeList($condition, '*', $order, $limit);
+        $join = array (
+            'user' => 'user.user_id=deposit_recharge.pdr_user_id',
+            'city' => 'city.city_id=user.city_id',
+            'region' => 'user.region_id=region.region_id'
+        );
+        $pdr_payment_name = array(
+            '0' => $this->language->get('t49')
+        );
+        $recharge_type = array(
+            '0' => $this->language->get('t11'),
+            '1' => $this->language->get('t12'),
+            '2' => $this->language->get('t13'),
+            '3' => $this->language->get('t14')
+        );
+        $payment_state = array(
+            '0' => $this->language->get('t16'),
+            '1' => $this->language->get('t17'),
+            '-1' => $this->language->get('t18'),
+            '-2' => $this->language->get('t19'),
+        );
+        $result = $this->sys_model_deposit->getRechargeList2($condition, $order, $limit,'' ,$join);
         $list = array();
         if (is_array($result) && !empty($result)) {
-            $recharge_type = get_recharge_type();
-            $payment_state = get_payment_state();
+            // $recharge_type = get_recharge_type();
+            // $payment_state = get_payment_state();
             foreach ($result as $v) {
                 $list[] = array(
+                    'region_name' => $v['region_name'],
+                    'city_name' => $v['city_name'],
                     'pdr_sn' => $v['pdr_sn'],
                     'pdr_user_name' => $v['pdr_user_name'],
-                    'pdr_payment_name' => $v['pdr_payment_name'],
+                    'pdr_payment_name' => $pdr_payment_name[$v['pdr_payment_code']],
                     'pdr_amount' => $v['pdr_amount'],
                     'pdr_type' => $recharge_type[$v['pdr_type']],
                     'pdr_payment_state' => $payment_state[$v['pdr_payment_state']],
-                    'pdr_admin_name' => $v['pdr_admin_name'],
+                    // 'pdr_admin_name' => $v['pdr_admin_name'],
                     'pdr_payment_time' => !empty($v['pdr_payment_time']) ? date('Y-m-d H:i:s', $v['pdr_payment_time']) : '',
                 );
             }
         }
 
         $data = array(
-            'title' => '充值记录列表',
+            'title' => $this->language->get('t3'),
             'header' => array(
-                'pdr_sn' => '订单号',
-                'pdr_user_name' => '手机号',
-                'pdr_payment_name' => '充值方式',
-                'pdr_amount' => '充值金额',
-                'pdr_type' => '充值类型',
-                'pdr_payment_state' => '支付状态',
-                'pdr_admin_name' => '管理员名称',
-                'pdr_payment_time' => '支付时间',
+                'region_name' => $this->language->get('t29'),
+                'city_name' => $this->language->get('t30'),
+                'pdr_sn' => $this->language->get('t4'),
+                'pdr_user_name' => $this->language->get('t5'),
+                'pdr_payment_name' => $this->language->get('t8'),
+                'pdr_amount' => $this->language->get('t9'),
+                'pdr_type' => $this->language->get('t10'),
+                'pdr_payment_state' => $this->language->get('t15'),
+                // 'pdr_admin_name' => '管理员名称',
+                'pdr_payment_time' => $this->language->get('t32'),
             ),
             'list' => $list
         );
@@ -509,11 +761,11 @@ class ControllerUserRecharge extends Controller
             );
             $this->sys_model_deposit->addCashApply($data);
 
-            $this->session->data['success'] = '添加提现申请成功！';
+            $this->session->data['success'] = $this->language->get('t50');
             $filter = $this->request->get(array());
             $this->load->controller('common/base/redirect', $this->url->link('user/recharge', $filter, true));
         }
-        $this->assign('title', '提现审核');
+        $this->assign('title', $this->language->get('t51'));
         $this->getForm();
     }
 
@@ -525,7 +777,7 @@ class ControllerUserRecharge extends Controller
         $input = $this->request->post(array('cash_amount', 'cash_amount'));
         foreach ($input as $k => $v) {
             if (empty($v)) {
-                $this->error[$k] = '请完善此项';
+                $this->error[$k] = $this->language->get('t52');
             }
         }
         // 充值记录信息
@@ -538,11 +790,11 @@ class ControllerUserRecharge extends Controller
         $this->load->library('sys_model/orders');
         $order_info = $this->sys_model_orders->getOrdersInfo(array('user_id' => $recharge_info['pdr_user_id'], 'order_state' => array('in', array('1', '3'))));
         if(!empty($order_info)) {
-            $this->error['warning'] = '用户有待计费/进行中的订单，不能申请退余额';
+            $this->error['warning'] = $this->language->get('t53');
         }
 
         if ($this->error) {
-            $this->error['warning'] = '警告：存在错误，请检查！';
+            $this->error['warning'] = $this->language->get('t54');
         }
         return !$this->error;
     }
@@ -560,12 +812,12 @@ class ControllerUserRecharge extends Controller
         $recharge_info = $this->getRechargeCashData($pdr_id);
         // 是否有充值记录
         if (empty($recharge_info)) {
-            $this->error['warning'] = '充值订单不存在';
+            $this->error['warning'] = $this->language->get('t55');
             return false;
         }
         // 提现金额不能超过用户当前余额
         if ($data['cash_amount'] > $recharge_info['allow_cash_amount']) {
-            $this->error['warning'] = '提现金额不能超过' . $recharge_info['allow_cash_amount'] . '元';
+            $this->error['warning'] = $this->language->get('t56') . $recharge_info['allow_cash_amount'] . $this->language->get('t44');
             return false;
         }
         $recharge_info['cash_amount'] = $data['cash_amount'];
@@ -652,10 +904,21 @@ class ControllerUserRecharge extends Controller
         }
 
         // 支付途径
-        $payment_types = get_payment_type();
-        $recharge_info['pdr_payment_type'] = $payment_types[$recharge_info['pdr_payment_type']];
+        // $payment_types = get_payment_type();
+        $payment_types = array(
+            'app' => $this->language->get('t60'),
+            'web' => $this->language->get('t61'),
+            // 'mini_app' => '小程序',
+        );
+        @$recharge_info['pdr_payment_type'] = $payment_types[$recharge_info['pdr_payment_type']];
         // 充值订单状态
-        $payment_states = get_payment_state();
+        // $payment_states = get_payment_state();
+        $payment_states = array(
+            '0' => $this->language->get('t16'),
+            '1' => $this->language->get('t17'),
+            '-1' => $this->language->get('t18'),
+            '-2' => $this->language->get('t19'),
+        );
         $recharge_info['pdr_payment_state'] = $payment_states[$recharge_info['pdr_payment_state']];
         // 充值时间
         $recharge_info['pdr_payment_time'] = !empty($recharge_info['pdr_payment_time']) ? date('Y-m-d H:i:s', $recharge_info['pdr_payment_time']) : '';
@@ -666,10 +929,22 @@ class ControllerUserRecharge extends Controller
         if ($order_info && isset($order_info['order_state']) && !empty($order_info)) {
             $has_waiting_checkout_order = '1';
         }
-        $boolean_state = get_common_boolean();
+        // $boolean_state = get_common_boolean();
+        $boolean_state = array(
+            '1' => $this->language->get('t62'),
+            '0' => $this->language->get('t63')
+        );
         $has_waiting_checkout_order = $boolean_state[$has_waiting_checkout_order];
-
+        $payment_name = array(
+            '0' => $this->language->get('t49')
+        );
+        $payment_type = array(
+            '0' => $this->language->get('t60'),
+            '1' => $this->language->get('t61')
+        );
         $this->assign('data', $data);
+        $this->assign('payment_name', $payment_name);
+        $this->assign('payment_type', $payment_type);
         $this->assign('has_waiting_checkout_order', $has_waiting_checkout_order);
         $this->assign('recharge_info', $recharge_info);
         $this->assign('return_action', $this->url->link('user/recharge'));
@@ -692,8 +967,11 @@ class ControllerUserRecharge extends Controller
             'pdr_payment_state' => array('in', array(1, -2)),
         );
         // 充值记录
-        $fields = 'dr.*,u.mobile,u.available_deposit';
-        $recharge_info = $this->sys_model_deposit->getRechargeInfo($condition, $fields);
+        $fields = 'deposit_recharge.*,user.mobile,user.available_deposit';
+        $join = array(
+            'user' => 'user.user_id=deposit_recharge.pdr_user_id'
+        );
+        $recharge_info = $this->sys_model_deposit->getRechargeInfo($condition, $fields,$join);
         if (empty($recharge_info)) {
             return false;
         }
@@ -993,14 +1271,13 @@ class ControllerUserRecharge extends Controller
      * @DateTime 2017-07-25T18:11:31+0800
      */
     public function depositapply(){
-
         // 充值订单id
         $pdc_id = $this->request->get('pdc_id');
-
         $where  = array(
             'pdc_id'            => $pdc_id,
         );
         $cash_info = $this->sys_model_deposit->getDepositCashInfo($where);
+        // var_dump($cash_info);
         if (empty($cash_info)) {//订单不存在
             $this->load->controller('error/not_found', $data);
             return;
@@ -1061,6 +1338,78 @@ class ControllerUserRecharge extends Controller
 
         $this->assign('title', '押金退款申请');
         $this->getDepositForm();
+    }
+
+
+
+    public function reginsterapply(){
+        // 充值订单id
+        $pdc_id = $this->request->get('pdc_id');
+        $where  = array(
+            'pdc_id'            => $pdc_id,
+        );
+        $cash_info = $this->sys_model_deposit->getDepositCashInfo($where);
+        // var_dump($cash_info);
+        if (empty($cash_info)) {//订单不存在
+            $this->load->controller('error/not_found', $data);
+            return;
+        }
+        $pdr_sn     = $cash_info['pdr_sn'];
+        $pdc_sn     = $cash_info['pdc_sn'];
+
+        //判断是否存在审核中或者审核通过的订单
+        $map['pdc_sn']          = $pdc_sn;
+        $map['apply_state']     = array('in','0,1');
+        $applyInfo  = $this->sys_model_deposit->getReginsterApplyInfo($map);
+        if(!empty($applyInfo)){
+            die("<script>alert('该订单已在申请列表！');history.back(-1);</script>");
+        }
+
+        if ($this->request->server['REQUEST_METHOD'] == 'POST' && $this->validateDepositForm()) {
+            $input = $this->request->post(array('apply_payment_type', 'apply_account','apply_account_name','apply_bank_name','apply_sub_bank_name','cash_reason'));
+
+            // 充值记录信息
+            $condition = array(
+                'pdr_sn' => $pdr_sn
+            );
+
+            $recharge_info = $this->sys_model_deposit->getOneRecharge($condition);
+            // 添加退款申请
+            $now = time();
+            $data = array(
+                'pdc_sn'                => $pdc_sn,
+                'pdr_sn'                => $recharge_info['pdr_sn'],
+                'apply_user_id'         => $recharge_info['pdr_user_id'],
+                'apply_user_name'       => $recharge_info['pdr_user_name'],
+                'apply_admin_id'        => $this->logic_admin->getId(),
+                'apply_admin_name'      => $this->logic_admin->getadmin_name(),
+                'apply_cash_amount'     => $recharge_info['pdr_amount'],
+                'apply_cash_reason'     => $input['cash_reason'],
+                'apply_add_time'        => $now,
+                'apply_payment_type'    => $input['apply_payment_type'],
+                'apply_account'         => $input['apply_account'],
+                'apply_account_name'    => $input['apply_payment_type']==3?$input['apply_account_name'] : '',
+                'apply_bank_name'       => $input['apply_payment_type']==3?$input['apply_bank_name'] : '',
+                'apply_sub_bank_name'   => $input['apply_payment_type']==3?$input['apply_sub_bank_name'] : '',
+            );
+            $this->db->begin();
+            $res1    = $this->sys_model_deposit->addReginsterApply($data);
+            //提现支付状态改为3
+            $res2    = $this->sys_model_deposit->updateDepositCash(array('pdc_sn'=>$pdc_sn), array('pdc_payment_state'=>3));
+            if($res1 && $res2){
+                $this->db->commit();
+                $this->session->data['success'] = '添加退款申请成功！';
+                $filter = array();
+                $this->load->controller('common/base/redirect', $this->url->link('user/refund_apply/deposit_list', $filter, true));
+            }else{
+                $this->db->rollback();
+                $this->error['warning']='申请失败！增加申请记录：'.$res1.';更新提现支付状态：'.$res2;
+            }
+
+        }
+
+        $this->assign('title', '注册金退款申请');
+        $this->getReginForm();
     }
 
     /**
@@ -1149,6 +1498,150 @@ class ControllerUserRecharge extends Controller
         return !$this->error;
     }
 
+    private function validateReginForm() {
+        $input = $this->request->post(array('apply_payment_type', 'apply_account','apply_account_name','apply_bank_name','apply_sub_bank_name'));
+        $apply_payment_type = $input['apply_payment_type'];
+        if(empty($apply_payment_type)){
+            $this->error['apply_payment_type'] = '请完善此项';
+        }
+        if(empty($input['apply_account'])){
+            $this->error['apply_account'] = '请完善此项';
+        }
+        if(!preg_match("/^([a-z0-9_@\.])+$/i",$input['apply_account'])){
+            $this->error['apply_account'] = '输入有误';
+        }
+        if($apply_payment_type == 3){//银行卡支付
+            if(!preg_match("/^([0-9])+$/i",$input['apply_account'])){
+                $this->error['apply_account'] = '输入有误';
+            }
+            if(!preg_match("/^[\x{4e00}-\x{9fa5}]{2,8}$/u",$input['apply_account_name'])){//2-8个汉字
+                $this->error['apply_account_name'] = '输入有误';
+            }
+            if(!preg_match("/^[\x{4e00}-\x{9fa5}]{1,20}$/u",$input['apply_bank_name'])){//1-20个汉字
+                $this->error['apply_bank_name'] = '输入有误';
+            }
+            if(!preg_match("/^[\x{4e00}-\x{9fa5}]{1,20}$/u",$input['apply_sub_bank_name'])){//1-20个汉字
+                $this->error['apply_sub_bank_name'] = '输入有误';
+            }
+        }
+
+        if ($this->error) {
+            $this->error['warning'] = '警告：存在错误，请检查！';
+            return !$this->error;
+        }
+
+        // 充值订单id
+        $pdc_id = $this->request->get('pdc_id');
+
+        $where  = array(
+            'pdc_id'            => $pdc_id,
+        );
+        $cash_info = $this->sys_model_deposit->getDepositCashInfo($where);
+        if (empty($cash_info)) {//订单不存在
+            $this->load->controller('error/not_found', $data);
+            return;
+        }
+        $pdr_sn     = $cash_info['pdr_sn'];
+
+        // 充值记录信息
+        $condition = array(
+            'pdr_sn' => $pdr_sn
+        );
+
+        $recharge_info = $this->sys_model_deposit->getOneRecharge($condition);
+
+        //判断是否有进行中/待计费的订单
+        $this->load->library('sys_model/orders');
+        $order_info = $this->sys_model_orders->getOrdersInfo(array('user_id' => $recharge_info['pdr_user_id'], 'order_state' => array('in', array('1', '3'))));
+        if(!empty($order_info)) {
+            $this->error['warning'] = '用户有待计费/进行中的订单，不能申请退注册金';
+            return !$this->error;
+        }
+
+        //判断用户金额余额是否小于0
+        $this->load->library('sys_model/user');
+        $user_info = $this->sys_model_user->getUserInfo(array('user_id' => $recharge_info['pdr_user_id']));
+        if($user_info['available_deposit']<0){
+            $this->error['warning'] = '用户可用金额为：'.$user_info['available_deposit'].'，不能申请退注册金!';
+            return !$this->error;
+        }
+        //判断申请金额是否超出用户冻结的押金金额
+        if(empty($user_info)) {
+            $this->error['warning'] = '用户未找到，不能申请退注册金';
+            return !$this->error;
+        }
+        if($recharge_info['pdr_amount']>$user_info['freeze_deposit']){
+             $this->error['warning'] = '申请失败，申请金额超出用户冻结押金金额！';
+             return !$this->error;
+        }
+
+        return !$this->error;
+    }
+
+
+    private function getReginForm(){
+        // 申请提现金额
+        $data = $this->request->post(array('apply_payment_type', 'apply_account','apply_account_name','apply_bank_name','apply_sub_bank_name','cash_reason'));
+        // 充值订单id
+        $pdc_id = $this->request->get('pdc_id');
+
+        $where  = array(
+            'pdc_id'            => $pdc_id,
+        );
+        $cash_info = $this->sys_model_deposit->getDepositCashInfo($where);
+        if (empty($cash_info)) {//订单不存在
+            $this->load->controller('error/not_found', $data);
+            return;
+        }
+
+        $pdr_sn     = $cash_info['pdr_sn'];
+        $pdc_sn     = $cash_info['pdc_sn'];
+
+        if (isset($this->request->get['page'])) {
+            $page = (int) $this->request->get['page'];
+        } else {
+            $page = 1;
+        }
+
+        // 充值订单提现数据
+        $recharge_info = $this->getRechargeDepositData($pdr_sn);
+        if (empty($recharge_info)) {
+            $this->load->controller('error/not_found', $data);
+            return;
+        }
+
+        $apply_payment_types = get_apply_payment_type();
+        // 支付途径
+        $payment_types = get_payment_type();
+        $recharge_info['pdr_payment_type'] = $payment_types[$recharge_info['pdr_payment_type']];
+        // 充值订单状态
+        $payment_states = get_payment_state();
+        $recharge_info['pdr_payment_state'] = $payment_states[$recharge_info['pdr_payment_state']];
+        // 充值时间
+        $recharge_info['pdr_payment_time'] = !empty($recharge_info['pdr_payment_time']) ? date('Y-m-d H:i:s', $recharge_info['pdr_payment_time']) : '';
+        //判断是否有进行中/待计费的订单
+        $this->load->library('sys_model/orders');
+        $order_info = $this->sys_model_orders->getOrdersInfo(array('user_id' => $recharge_info['pdr_user_id'], 'order_state' => array('in', array('1', '3'))));
+        $has_waiting_checkout_order = '0';
+        if ($order_info && isset($order_info['order_state']) && !empty($order_info)) {
+            $has_waiting_checkout_order = '1';
+        }
+        $boolean_state = get_common_boolean();
+        $has_waiting_checkout_order = $boolean_state[$has_waiting_checkout_order];
+
+        $filter = $this->request->get(array('pdc_sn', 'pdc_user_name', 'pdc_type', 'pdr_sn', 'pdc_amount', 'pdc_payment_code', 'pdc_payment_type', 'pdc_payment_time', 'pdc_payment_state','page'));
+
+        $this->assign('data', $data);
+        $this->assign('apply_payment_types', $apply_payment_types);
+        $this->assign('has_waiting_checkout_order', $has_waiting_checkout_order);
+        $this->assign('recharge_info', $recharge_info);
+        $this->assign('return_action', $this->url->link('user/cashapply').'&'.http_build_query($filter));
+        $this->assign('action', $this->cur_url . '&pdc_id=' . $pdc_id . '&'.http_build_query($filter));
+        $this->assign('error', $this->error);
+
+        $this->response->setOutput($this->load->view('user/recharge_depositapply', $this->output));
+    }
+
     /**
      * [getDepositForm 显示押金退款表单]
      * @return   [type]                   [description]
@@ -1169,6 +1662,7 @@ class ControllerUserRecharge extends Controller
             $this->load->controller('error/not_found', $data);
             return;
         }
+
         $pdr_sn     = $cash_info['pdr_sn'];
         $pdc_sn     = $cash_info['pdc_sn'];
 
@@ -1224,8 +1718,11 @@ class ControllerUserRecharge extends Controller
             'pdr_payment_state' => array('in', array(1, -2)),
         );
         // 充值记录
-        $fields = 'dr.*,u.mobile,u.available_deposit';
-        $recharge_info = $this->sys_model_deposit->getRechargeInfo($condition, $fields);
+        $fields = 'deposit_recharge.*,user.mobile,user.available_deposit';
+        $join = array(
+            'user' => 'user.user_id=deposit_recharge.pdr_user_id'
+        );
+        $recharge_info = $this->sys_model_deposit->getRechargeInfo($condition, $fields,$join);
         if (empty($recharge_info)) {
             return false;
         }
@@ -1348,8 +1845,11 @@ class ControllerUserRecharge extends Controller
             'pdr_payment_state' => array('in', array(1, -2)),
         );
         // 充值记录
-        $fields = 'dr.*,u.mobile,u.available_deposit';
-        $recharge_info = $this->sys_model_deposit->getRechargeInfo($condition, $fields);
+        $fields = 'deposit_recharge.*,user.mobile,user.available_deposit';
+        $join = array(
+            'user' => 'user.user_id=deposit_recharge.pdr_user_id'
+        );
+        $recharge_info = $this->sys_model_deposit->getRechargeInfo($condition, $fields,$join);
         if (empty($recharge_info)) {
             $this->load->controller('error/not_found', $data);
             return;

@@ -47,7 +47,7 @@ class Message
      * @param string $limit
      * @return mixed
      */
-    public function getMessageList($where = array(), $fields = 'm.*', $order = 'msg_time DESC', $limit = '10', $join = array()) {
+    public function getMessageList($where = array(), $fields = 'm.*,user.user_type', $order = 'msg_time DESC', $limit = '10', $join = array()) {
         $table = 'message as m';
         if (is_array($join) && !empty($join)) {
             $addTables = array_keys($join);

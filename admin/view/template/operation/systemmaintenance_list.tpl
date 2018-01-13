@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>系统维护</span>
+        <span><?php echo @$lang['t5'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,14 +14,14 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">系统维护</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t5'];?></a></li>
                    
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="coupon_list">
                         <!-- 新增 -->
                         <div class="form-group">
-                            <a href="<?php echo $add_url; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                            <a href="<?php echo $add_url; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;<?php echo @$lang['t6'];?></a>
 
                         </div>
                         <?php if (isset($error['warning'])) { ?>
@@ -52,14 +52,14 @@
                                     <td><?php echo $data['create_time']?></td>
                                     <td>
 										<div class="btn-group">
-                                            <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>编辑</button>
+                                            <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t7'];?></button>
              
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="#" onclick="javascript:void(0);">删除</a></li>
+                                                <li><a href="#" onclick="javascript:void(0);"><?php echo @$lang['t8'];?></a></li>
                                             </ul>
                       
                                         </div>

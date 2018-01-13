@@ -1,12 +1,11 @@
 <?php
 
-class ControllerRegionRegionAdvertisement extends Controller
-{
+class ControllerRegionRegionAdvertisement extends Controller {
+
     private $cur_url = null;
     private $error = null;
 
-    public function __construct($registry)
-    {
+    public function __construct($registry) {
         parent::__construct($registry);
 
         // 当前网址
@@ -15,24 +14,25 @@ class ControllerRegionRegionAdvertisement extends Controller
         // 加载region Model
         $this->load->library('sys_model/region', true);
         $this->load->library('sys_model/advertisement', true);
+        $this->load->library('sys_model/city', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
      * 区域广告列表
      */
-    public function index()
-    {
+    public function index() {
         $filter = array();
 
         $condition = array();
         if (isset($this->request->get['page'])) {
-            $page = (int)$this->request->get['page'];
+            $page = (int) $this->request->get['page'];
         } else {
             $page = 1;
         }
 
         if (isset($this->request->get['adv_region_id'])) {
-            $adv_region_id = (int)$this->request->get['adv_region_id'];
+            $adv_region_id = (int) $this->request->get['adv_region_id'];
             $condition['adv_region_id'] = $adv_region_id;
         } else {
             $adv_region_id = '';
@@ -66,7 +66,7 @@ class ControllerRegionRegionAdvertisement extends Controller
                 $item['adv_add_time'] = $item['adv_add_time'] ? date('Y-m-d H:i:s', $item['adv_add_time']) : '';
                 $item['adv_approve_time'] = $item['adv_approve_time'] ? date('Y-m-d H:i:s', $item['adv_approve_time']) : '';
                 $item['adv_approved'] = $item['adv_approved'] == 1 ? '通过' : '未通过';
-
+                $item['adv_city_id'] = empty($item['adv_city_id']) ? '未知城市' : $this->sys_model_city->getCityInfo(['city_id'=>$item['adv_city_id']])['city_name'];
             }
         }
 
@@ -104,8 +104,7 @@ class ControllerRegionRegionAdvertisement extends Controller
         $this->response->setOutput($this->load->view('region/advertisement_list', $this->output));
     }
 
-    public function reviewed()
-    {
+    public function reviewed() {
         $post = $this->request->post(array('adv_id', 'adv_approve_memo', 'adv_approved'));
         foreach ($post as $k => $v) {
             if (!$v) {
@@ -125,9 +124,7 @@ class ControllerRegionRegionAdvertisement extends Controller
         $this->response->setOutput($this->load->view('region/advertisement_list', $this->output));
     }
 
-
-    public function get_advertisement_info()
-    {
+    public function get_advertisement_info() {
 
         $post = $this->request->post(array('adv_id'));
         if (empty($post)) {
@@ -145,26 +142,26 @@ class ControllerRegionRegionAdvertisement extends Controller
      * 表格字段
      * @return mixed
      */
-    protected function getDataColumns()
-    {
-        $this->setDataColumn('排序');
-        $this->setDataColumn('区域');
-        $this->setDataColumn('开始时间');
-        $this->setDataColumn('结束时间');
+    protected function getDataColumns() {
+        $this->setDataColumn($this->language->get('t51'));
+        $this->setDataColumn($this->language->get('t52'));
+        $this->setDataColumn($this->language->get('t36'));
+        $this->setDataColumn($this->language->get('t53'));
+        $this->setDataColumn($this->language->get('t54'));
 //        $this->setDataColumn('生效时间');
 //        $this->setDataColumn('失效时间');
-        $this->setDataColumn('图片');
+        $this->setDataColumn($this->language->get('t13'));
 //        $this->setDataColumn('小图-iOS');
 //        $this->setDataColumn('中图-iOS');
 //        $this->setDataColumn('大图-iOS');
 //        $this->setDataColumn('广告链接');
 //        $this->setDataColumn('添加者名称');
-        $this->setDataColumn('添加备注');
-        $this->setDataColumn('添加时间');
+        $this->setDataColumn($this->language->get('t55'));
+        $this->setDataColumn($this->language->get('t56'));
 //        $this->setDataColumn('审批者名称');
 //        $this->setDataColumn('审批备注');
 //        $this->setDataColumn('审批时间');
-        $this->setDataColumn('是否审批');
+        $this->setDataColumn($this->language->get('t57'));
 //        $this->setDataColumn('广告排序');
         return $this->data_columns;
     }
@@ -172,20 +169,19 @@ class ControllerRegionRegionAdvertisement extends Controller
     /**
      * 添加区域广告
      */
-    public function add()
-    {
+    public function add() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('adv_region_id', 'adv_type', 'adv_start_time', 'adv_end_time', 'adv_effect_time', 'adv_expire_time', 'adv_image', 'adv_image_1x', 'adv_image_2x', 'adv_image_3x', 'adv_image_4x', 'adv_image_5x', 'adv_link', 'ios_link', 'adv_add_memo', 'adv_sort', 'adv_id', 'adv_max_version_android', 'adv_max_version_ios'));
+            $input = $this->request->post(array('adv_region_id', 'adv_type', 'adv_start_time', 'adv_end_time', 'adv_effect_time', 'adv_expire_time', 'adv_image', 'adv_image_1x', 'adv_image_2x', 'adv_image_3x', 'adv_image_4x', 'adv_image_5x', 'adv_link', 'ios_link', 'adv_add_memo', 'adv_sort', 'adv_id', 'adv_max_version_android', 'adv_max_version_ios', 'adv_city_id'));
             $effect_time_arr = explode('至', $input['adv_effect_time']);
             $start_time_arr = explode('至', $input['adv_start_time']);
             $data = array(
                 'adv_region_id' => $input['adv_region_id'],
-                'adv_type' => (int)$input['adv_type'],
+                'adv_type' => (int) $input['adv_type'],
                 'adv_start_time' => $start_time_arr[0] ? strtotime($start_time_arr[0]) : '',
                 'adv_end_time' => $start_time_arr[1] ? strtotime($start_time_arr[1]) + 86399 : '',
                 'adv_effect_time' => $effect_time_arr[0] ? strtotime($effect_time_arr[0]) : '',
                 'adv_expire_time' => $effect_time_arr[1] ? strtotime($effect_time_arr[1]) + 86399 : '',
-                'adv_image' => ((int)$input['adv_type'] == 0) ? $input['adv_image_3x'] : $input['adv_image_5x'],
+                'adv_image' => ((int) $input['adv_type'] == 0) ? $input['adv_image_3x'] : $input['adv_image_5x'],
                 'adv_image_1x' => $input['adv_image_1x'],
                 'adv_image_2x' => $input['adv_image_2x'],
                 'adv_image_3x' => $input['adv_image_3x'],
@@ -199,7 +195,8 @@ class ControllerRegionRegionAdvertisement extends Controller
                 'adv_max_version_ios' => $input['adv_max_version_ios'],
                 'adv_add_by_id' => $this->logic_admin->getId(),
                 'adv_add_by' => $this->logic_admin->getadmin_name(),
-                'adv_add_time' => time()
+                'adv_add_time' => time(),
+                'adv_city_id' => empty($input['adv_city_id']) ? 0 : $input['adv_city_id']
             );
             //添加消息发送
             $message_input = $this->request->post(['msg_title', 'msg_image', 'msg_abstract']);
@@ -221,19 +218,26 @@ class ControllerRegionRegionAdvertisement extends Controller
             $filter = array();
             $this->load->controller('common/base/redirect', $this->url->link('region/region_advertisement', $filter, true));
         }
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
 
         $this->assign('title', '区域广告添加');
         $this->getForm();
     }
 
-    public function sendMsg()
-    {
+    public function sendMsg() {
         if (!isset($this->request->post['adv_id']) || empty($this->request->post['adv_id'])) {
             $this->response->showErrorResult('参数错误');
         }
         $this->load->library('sys_model/user');
         $this->load->library('sys_model/advertisement');
         $this->load->library('sys_model/message');
+
         $advertisement_info = $this->sys_model_advertisement->getAdvertisementInfo(array('adv_id' => $this->request->post['adv_id']));
         if (empty($advertisement_info)) {
             $this->response->showErrorResult('参数错误');
@@ -261,10 +265,9 @@ class ControllerRegionRegionAdvertisement extends Controller
     /**
      * 编辑区域
      */
-    public function edit()
-    {
+    public function edit() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('adv_region_id', 'adv_type', 'adv_start_time', 'adv_end_time', 'adv_effect_time', 'adv_expire_time', 'adv_image', 'adv_image_1x', 'adv_image_2x', 'adv_image_3x', 'adv_image_4x', 'adv_image_5x', 'adv_link', 'ios_link', 'adv_add_memo', 'adv_sort', 'adv_id', 'adv_max_version_android', 'adv_max_version_ios'));
+            $input = $this->request->post(array('adv_region_id', 'adv_type', 'adv_start_time', 'adv_end_time', 'adv_effect_time', 'adv_expire_time', 'adv_image', 'adv_image_1x', 'adv_image_2x', 'adv_image_3x', 'adv_image_4x', 'adv_image_5x', 'adv_link', 'ios_link', 'adv_add_memo', 'adv_sort', 'adv_id', 'adv_max_version_android', 'adv_max_version_ios', 'adv_city_id'));
 
             $effect_time_arr = explode('至', $input['adv_effect_time']);
             $start_time_arr = explode('至', $input['adv_start_time']);
@@ -274,7 +277,7 @@ class ControllerRegionRegionAdvertisement extends Controller
                 'adv_end_time' => $start_time_arr[1] ? strtotime($start_time_arr[1]) : '',
                 'adv_effect_time' => $effect_time_arr[0] ? strtotime($effect_time_arr[0]) : '',
                 'adv_expire_time' => $effect_time_arr[1] ? strtotime($effect_time_arr[1]) : '',
-                'adv_image' => ((int)$input['adv_type'] == 0) ? $input['adv_image_3x'] : $input['adv_image_5x'],
+                'adv_image' => ((int) $input['adv_type'] == 0) ? $input['adv_image_3x'] : $input['adv_image_5x'],
                 'adv_image_1x' => $input['adv_image_1x'],
                 'adv_image_2x' => $input['adv_image_2x'],
                 'adv_image_3x' => $input['adv_image_3x'],
@@ -286,6 +289,7 @@ class ControllerRegionRegionAdvertisement extends Controller
                 'adv_sort' => $input['adv_sort'],
                 'adv_max_version_android' => $input['adv_max_version_android'],
                 'adv_max_version_ios' => $input['adv_max_version_ios'],
+                'adv_city_id' => empty($input['adv_city_id']) ? 0 : $input['adv_city_id']
             );
             //消息
             $message_input = $this->request->post(['msg_title', 'msg_image', 'msg_abstract']);
@@ -309,7 +313,13 @@ class ControllerRegionRegionAdvertisement extends Controller
             $filter = array();
             $this->load->controller('common/base/redirect', $this->url->link('region/region_advertisement', $filter, true));
         }
-
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
         $this->assign('title', '编辑区域广告');
         $this->getForm();
     }
@@ -317,8 +327,7 @@ class ControllerRegionRegionAdvertisement extends Controller
     /**
      * 删除区域
      */
-    public function delete()
-    {
+    public function delete() {
         if (isset($this->request->get['adv_id']) && $this->validateDelete()) {
             $condition = array(
                 'adv_id' => $this->request->get['adv_id']
@@ -334,8 +343,7 @@ class ControllerRegionRegionAdvertisement extends Controller
         $this->load->controller('common/base/redirect', $this->url->link('region/region_advertisement', $filter, true));
     }
 
-    private function getForm()
-    {
+    private function getForm() {
         // 编辑时获取已有的数据
         $info = $this->request->get(array(
             'adv_region_id',
@@ -386,6 +394,7 @@ class ControllerRegionRegionAdvertisement extends Controller
             $info['all_adv_image_5x'] = HTTP_IMAGE . 'images/default.jpg';
             $info['msg_image_url'] = getDefaultImage();
         }
+     
         $adv_types = get_adv_type();
         $region_list = $this->sys_model_region->getRegionList();
         $this->assign('region_list', $region_list);
@@ -403,8 +412,7 @@ class ControllerRegionRegionAdvertisement extends Controller
      * 验证表单数据
      * @return bool
      */
-    private function validateForm()
-    {
+    private function validateForm() {
         $adv_type = $this->request->post('adv_type');
         if ($adv_type == 1) {           // 启动页广告
             $input = $this->request->post(array('adv_start_time', 'adv_effect_time', 'adv_image_1x', 'adv_image_2x', 'adv_image_3x', 'adv_image_4x', 'adv_image_5x', 'adv_add_memo'));
@@ -426,8 +434,8 @@ class ControllerRegionRegionAdvertisement extends Controller
     /**
      * 验证删除条件
      */
-    private function validateDelete()
-    {
+    private function validateDelete() {
         return !$this->error;
     }
+
 }

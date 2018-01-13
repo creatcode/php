@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>维修情况统计</span>
+        <span><?php echo @$lang['t9'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,20 +14,23 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">维修情况列表</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t10'];?></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
                         <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
-                                <input type="text" name="date" value="<?php echo $filter['date']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 180px;" placeholder="使用时间(默认本月)"/>
-								<select name="region_id" style="height: 30px; margin-left: 8px; width:160px; " onchange="alert('假设改变会改城市选项')">
-                                    
-                                    <option selected="selected" >区域</option>
-									<option selected="selected" >a区域</option>
-									<option selected="selected" >b区域</option>
-                                    
+                            <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
+                                    <option value="0"><?php echo @$lang['t11'];?></option>
+                                    <?php if(!empty($time_type)) {?>
+                                    <?php foreach($time_type as $k=>$v){?>
+                                    <option value="<?php echo $k?>" <?php echo $k == @$filter['time_type'] ? 'selected' : ''; ?>><?php echo $v?></option>
+                                    <?php }?>
+                                    <?php }?>
                                 </select>
+                                <input type="text" name="date" value="<?php echo @$filter['date']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 180px;" placeholder="<?php echo @$lang['t14'];?>"/>
+							
                                 <select name="region_id" style="height: 30px; margin-left: 8px; width:160px; ">
+                                    <option value="">--<?php echo @$lang['t12'];?>--</option>
                                     <?php foreach($regionList as $v){
                                         if($region_id ==$v['region_id']){
                                     ?>
@@ -39,9 +42,16 @@
                                     <?php }
                                      } ?>
                                 </select>
-								<button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;导出</button>
+                                <select name="city_id" style="height: 30px; margin-left: 8px; width:160px; " >
+                                    
+                                    <option selected="selected" >--<?php echo @$lang['t13'];?>--</option>
+									
+                                    
+                                </select>
+                                
+								<button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;<?php echo @$lang['t15'];?></button>
                                 <div class="pull-right">
-                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;<?php echo @$lang['t16'];?></button>
                                 </div>
                             </div>
                         <!-- 新增 -->
@@ -73,6 +83,7 @@
                                     <td><?php echo $vdata['bike_sn']?></td>
                                     <td><?php echo $vdata['lock_sn']?></td>
                                     <td><?php echo $vdata['part']?></td>
+                                    <td>区域</td>
 									<td><?php echo $vdata['city']?></td>
 									<td><?php echo $vdata['create_time']?></td>
                                 </tr>
@@ -91,25 +102,30 @@
 
 
 <script type="text/javascript">
-    $('.date-range').daterangepicker({
-        locale:{
-            format: 'YYYY-MM-DD',
-            isAutoVal:false,
-            customRangeLabel:'自定义'
-        },
-        ranges : {
-			
-            
-            '今日': [moment(), moment()],
-            '本周': [moment().startOf('week'), moment()],
-			'本月': [moment().startOf('month'), moment()],
-            '本季': [moment().startOf('quarter'), moment()],
-            '今年': [moment().startOf('year'), moment()],
-            /*'最近7日': [moment().subtract('days', 6), moment()],
-            '最近30日': [moment().subtract('days', 29), moment()],
-            '全部': ['2016-01-01', moment()] //起始日期别设置太小*/
-        }
+    $(function(){
+            addrat();
     });
+        var b = "";
+        function addrat(){
+        var a = $("#time_select").val();
+        if(a==1){
+            b = "YYYY";
+        }else if(a==2){
+            b = "YYYY-MM";
+        }else if(a==3){
+            b = "YYYY-MM-DD";
+        }else if(a==0){
+            b = "YYYY-MM-DD";
+        }
+        $('.date-range').daterangepicker({
+            "showDropdowns": true,
+            locale:{
+                format: b,
+                isAutoVal:false,
+            }
+      });
+        
+    };
  
 
 </script>

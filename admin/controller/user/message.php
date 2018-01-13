@@ -12,6 +12,7 @@ class ControllerUserMessage extends Controller {
         // 加载coupon Model
         $this->load->library('sys_model/message', true);
         $this->load->library('sys_model/user', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -32,24 +33,48 @@ class ControllerUserMessage extends Controller {
         $rows = $this->config->get('config_limit_admin');
         $offset = ($page - 1) * $rows;
         $limit = sprintf('%d, %d', $offset, $rows);
-
+        $join = array(
+            'user' => 'user.user_id=m.user_id'
+        );
         $result = $this->sys_model_message->getMessageList($condition, $fields, $order, $limit);
-        $total = $this->sys_model_message->getTotalMessages($condition);
 
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList('');
+        $filter_citys = $this->sys_model_city->getCityList('');
+        $users = $this->sys_model_user->getUserList();
+
+
+        $total = $this->sys_model_message->getTotalMessages($condition);
         if (is_array($result) && !empty($result)) {
             foreach ($result as &$item) {
-                if ($item['user_id'] == '0') {
-                    $item['user_name'] = '所有用户';
-                } else {
-                    $item['user_name'] = '自定义用户';
+                if ($item['user_type'] == '0') {
+                    $item['user_name'] = '全部用户';
+                } else if($item['user_type'] == '1'){
+                    $item['user_name'] = '自定义';
+                }else if($item['user_type'] == '2'){
+                    if($item['city_id'] == '0'){
+                        $item['user_name'] = '区域';
+                    }else{
+                        $item['user_name'] = '城市';
+                    }
                 }
+
                 $item['msg_time'] = isset($item['msg_time']) && $item['msg_time'] > 0 ? date('Y-m-d H:i:s', $item['msg_time']) : '';
                 $item['delete_action'] = $this->url->link('user/message/delete', 'msg_id='.$item['msg_id']);
                 $item['info_action'] = $this->url->link('user/message/info', 'msg_id='.$item['msg_id']);
             }
         }
 
+        
+        // foreach ($filter_regions as $key2 => $val2) {
+        //     $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        // }
+
         $data_columns = $this->getDataColumns();
+        $this->assign('filter_regions', $filter_regions);
+        $this->assign('filter_citys', $filter_citys);
+        $this->assign('users', $users);
         $this->assign('data_columns', $data_columns);
         $this->assign('data_rows', $result);
         $this->assign('action', $this->cur_url);
@@ -79,25 +104,54 @@ class ControllerUserMessage extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
-        $this->setDataColumn('用户类型');
-        $this->setDataColumn('用户');
-        $this->setDataColumn('消息标题');
-        $this->setDataColumn('消息时间');
+        $this->setDataColumn($this->language->get('t44'));
+        $this->setDataColumn($this->language->get('t11'));
+        $this->setDataColumn($this->language->get('t45'));
+        $this->setDataColumn($this->language->get('t46'));
         return $this->data_columns;
     }
+
+    /**
+     * @license  系统消息删除
+     * @return   [type]     [description]
+     */
+    public function delete(){
+        if (isset($this->request->get['msg_id'])&& $this->validateDelete() ) {
+            $condition = array(
+                'msg_id' => $this->request->get['msg_id']
+            );
+            $this->sys_model_message->deleteMessage($condition);
+
+            $this->session->data['success'] = '删除系统消息成功！';
+
+            // 添加管理员日志
+            $this->load->controller('common/base/adminLog', '删除系统消息：' . $this->request->get['msg_id']);
+        }
+        $filter = array();
+        $this->load->controller('common/base/redirect', $this->url->link('user/message', '', true));
+    }
+
+
+     /**
+     * 验证删除条件
+     */
+    private function validateDelete() {
+        return !$this->error;
+    }
+
 
     /**
      * 添加系统消息
      */
     public function add() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('msg_title', 'msg_image', 'user_type', 'mobiles', 'msg_abstract', 'msg_link', 'msg_content'));
+            $input = $this->request->post(array('msg_title', 'msg_image', 'user_type', 'mobiles', 'msg_abstract', 'msg_link', 'msg_content','city_id','region_id'));
             $now = time();
-
             // 全部用户
             $msg_id = '';
             if ($input['user_type'] == 0) {
                 $data = array(
+                    'user_type' =>$input['user_type'],
                     'user_id' => 0,
                     'msg_time' => $now,
                     'msg_image' => $input['msg_image'],
@@ -121,6 +175,7 @@ class ControllerUserMessage extends Controller {
                 if (is_array($user_ids) && !empty($user_ids)) {
                     $user_id = implode(',', $user_ids);
                     $data = array(
+                        'user_type' =>$input['user_type'],
                         'user_id' => $user_id,
                         'msg_time' => $now,
                         'msg_image' => $input['msg_image'],
@@ -131,6 +186,21 @@ class ControllerUserMessage extends Controller {
                     );
                     $msg_id = $this->sys_model_message->addMessage($data);
                 }
+            }else if($input['user_type'] == 2){
+                //区域或城市
+                 $data = array(
+                    'user_type' =>$input['user_type'],
+                    'region_id' =>$input['region_id'],
+                    'city_id' =>$input['city_id'],
+                    'user_id' => 0,
+                    'msg_time' => $now,
+                    'msg_image' => $input['msg_image'],
+                    'msg_title' => $input['msg_title'],
+                    'msg_abstract' => $input['msg_abstract'],
+                    'msg_content' => $input['msg_content'],
+                    'msg_link' => $input['msg_link'],
+                );
+                $msg_id = $this->sys_model_message->addMessage($data);
             }
 
             $this->session->data['success'] = '添加系统消息成功！';
@@ -169,7 +239,7 @@ class ControllerUserMessage extends Controller {
 
         $info['user_name'] = '';
         if ($info['user_id'] == 0) {
-            $info['user_name'] = '所有的用户';
+            $info['user_name'] = '全部用户';
         } else {
             $user_names = array();
             $condition =array(
@@ -193,11 +263,27 @@ class ControllerUserMessage extends Controller {
 
     private function getForm() {
         // 编辑时获取已有的数据
-        $info = $this->request->post(array('msg_title', 'msg_image', 'user_type', 'mobiles', 'msg_abstract', 'msg_link', 'msg_content'));
+        $info = $this->request->post(array('msg_title', 'msg_image', 'user_type', 'mobiles', 'msg_abstract', 'msg_link', 'msg_content','region_id','city_id','region_id'));
 
         $info['msg_image_url'] = !empty($info['msg_image']) ? HTTP_IMAGE . $info['msg_image'] : getDefaultImage();
 
+
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        $filter_citys = $this->sys_model_city->getCityList([], '', '', 'city_id,city_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+
+
+
+
+
         $this->assign('data', $info);
+        $this->assign('filter_regions', $filter_regions);
+        $this->assign('filter_citys', $filter_citys);
         $this->assign('action', $this->cur_url);
         $this->assign('return_action', $this->url->link('user/message'));
         $this->assign('upload_action', $this->url->link('common/upload'));
@@ -211,8 +297,8 @@ class ControllerUserMessage extends Controller {
      * @return bool
      */
     private function validateForm() {
-        $input = $this->request->post(array('msg_title', 'msg_image', 'msg_abstract', 'msg_link', 'msg_content'));
-
+        $input = $this->request->post(array('msg_title',  'msg_abstract', 'msg_link', 'msg_content','msg_image'));
+// 'msg_image',
         foreach ($input as $k => $v) {
             if (empty($v)) {
                 $this->error[$k] = '请输入完整！';

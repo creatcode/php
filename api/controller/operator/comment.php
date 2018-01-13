@@ -54,8 +54,9 @@ class ControllerOperatorComment extends Controller
         $data['comment'] = isset($this->request->post['comment']) ? $this->request->post['comment'] : '';
         $data['order_sn'] = $this->request->post['order_sn'];
         $data['star_num'] = $this->request->post['star_num'];
-        $data['comment_tag'] = isset($this->request->post['comment_tag']) ? $this->request->post['comment_tag'] : '';;
+        $data['comment_tag'] = isset($this->request->post['comment_tag']) ? $this->request->post['comment_tag'] : '';
         $data['add_time'] = time();
+        $data['comment_img'] = isset($this->request->post['comment_img']) ? $this->request->post['comment_img'] : '';
 
         $comment_id = $this->sys_model_comment->addComment($data);
 

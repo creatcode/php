@@ -13,7 +13,8 @@ $_['db_port'] = DB_PORT;
 
 $_['action_pre_action'] = array (
     //'startup/router',
-    'startup/startup'
+    'startup/startup',
+    'startup/event'
 );
 
 //$_['action_default'] = 'transfer/home';

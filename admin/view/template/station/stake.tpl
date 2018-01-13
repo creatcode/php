@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>锁桩管理</span>
+        <span><?php echo @$lang['t44'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,7 +14,7 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">锁桩列表</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t45'];?></a></li>
 
                 </ul>
                 <div class="tab-content">
@@ -52,7 +52,7 @@
                         <!-- 新增 -->
                         <div class="form-group">
                             <div class="btn-group">
-                                <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                                <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;<?php echo @$lang['t10'];?></a>
                                 <button type="button" class="btn btn-primary dropdown-toggle btn-sm" data-toggle="dropdown">
                                     <span class="caret"></span>
                                     <span class="sr-only">Toggle Dropdown</span>
@@ -63,9 +63,9 @@
                             </div>
 
                             <!--<button class="btn btn-default btn-sm button-upload" data-action="<?php echo $import_action; ?>"><i class="fa fa-upload"></i>&nbsp;导入</button>-->
-                            <a href="<?php echo $import_bicycle_action; ?>" class="btn btn-default btn-sm"><i class="fa fa-upload"></i>&nbsp;导入</a>
+                            <a href="<?php echo $import_bicycle_action; ?>" class="btn btn-default btn-sm"><i class="fa fa-upload"></i>&nbsp;<?php echo @$lang['t11'];?></a>
                             <!--<button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;导出</button>-->
-                            <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#myModal"><i class="fa fa-download"></i>&nbsp;导出</button>
+                            <button class="btn btn-default btn-sm" data-toggle="modal" data-target="#myModal"><i class="fa fa-download"></i>&nbsp;<?php echo @$lang['t12'];?></button>
                         </div>
                         <?php if (isset($error['warning'])) { ?>
                         <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;<?php echo $error['warning']; ?>
@@ -85,7 +85,7 @@
                                     <?php foreach ($data_columns as $column) { ?>
                                     <th><?php echo $column['text']; ?></th>
                                     <?php } ?>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t13'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -93,16 +93,17 @@
                                 <tr>
                                     <!--<td><input type="checkbox" name="selected[]" value="<?php echo $data['bicycle_id']?>"></td>-->
                                     <td><?php echo $data['stake_id'];?></td>
+                                    <td><?php echo $data['stake_sn'];?></td>
                                     <td><?php echo $stake_states[$data['stake_state']];?></td>
                                     <td>
                                         <div class="btn-group">
-                                            <button data-url="<?php echo $data['edit_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw"></i>编辑</button>
+                                            <button data-url="<?php echo $data['edit_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw"></i><?php echo @$lang['t17'];?></button>
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="<?php echo $data['delete_action']; ?>">删除</a></li>
+                                                <li><a href="<?php echo $data['delete_action']; ?>"><?php echo @$lang['t18'];?></a></li>
                                             </ul>
                                         </div>
                                     </td>
@@ -115,7 +116,7 @@
                         <div class="form-group">
                             <div class="col-sm-12">
                                 <div class="pull-right">
-                                    <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default">返回</a>
+                                    <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default"><?php echo @$lang['t32'];?></a>
                                 </div>
                             </div>
                         </div>
@@ -133,14 +134,14 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">×</span></button>
-                <h4 class="modal-title">提示</h4>
+                <h4 class="modal-title"><?php echo @$lang['t20'];?></h4>
             </div>
             <div class="modal-body  text-center">
-                <p>确认导出？</p>
+                <p><?php echo @$lang['t21'];?></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">取消</button>
-                <button id="export" class="btn btn-primary" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>">导出</button>
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><?php echo @$lang['t22'];?></button>
+                <button id="export" class="btn btn-primary" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><?php echo @$lang['t12'];?></button>
             </div>
         </div>
         <!-- /.modal-content -->
@@ -148,12 +149,7 @@
     <!-- /.modal-dialog -->
 </div>
 <script type="text/javascript">
-    $('.date-range').daterangepicker({
-        locale:{
-            format: 'YYYY-MM-DD',
-            isAutoVal:false,
-        }
-    });
+
 
     $("#filter_type").change(function() {
         $("#filter_text").attr("name", $(this).val());

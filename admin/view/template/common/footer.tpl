@@ -226,5 +226,45 @@
 <script>
     View.init();
 </script>
+<script>
+$(function(){
+ 
+$('.treeview-menu li a').click(function(){
+    $('.treeview-menu li').removeClass('active');
+    $(this).parent().addClass('active');
+  })
+ 
+})
+function go_lang(t){
+	console.log('go_lang');
+        var l=$(t).val();
+	var a=location.href.indexOf('&lang=');
+	var b=location.href;
+	if(a !=-1){
+	 b=location.href.substr(0,a);
+	}
+        //console.log(l);
+	window.location.href=b+'&lang='+l;
+}
+function getCookie(c_name)
+{
+if (document.cookie.length>0)
+  {
+  c_start=document.cookie.indexOf(c_name + "=");
+  if (c_start!=-1)
+    { 
+    c_start=c_start + c_name.length+1 ;
+    c_end=document.cookie.indexOf(";",c_start);
+    if (c_end==-1) c_end=document.cookie.length;
+    return unescape(document.cookie.substring(c_start,c_end));
+    } 
+  }
+return "";
+}
+var now_lang=getCookie('lang');
+if(now_lang){
+    $('#choose_system_lang').val(now_lang);
+}
+</script>
 </body>
 </html>

@@ -15,6 +15,7 @@ function cache_shutdown_error() {
     }
 }
 register_shutdown_function("cache_shutdown_error");
+use Tool\ArrayUtil;
 class ControllerUserTransApply  extends Controller {
 	private $cur_url = null;
 	private $error = null;
@@ -37,7 +38,7 @@ class ControllerUserTransApply  extends Controller {
 	 */
 	public function index() {
 		
-		$filter = $this->request->get(array('apply_user_name', 'pdr_sn', 'apply_admin_name', 'apply_audit_admin_name', 'apply_state', 'apply_add_time', 'apply_audit_time','city_id','time_type'));
+		$filter = $this->request->get(array('apply_user_name', 'pdr_sn', 'apply_admin_name', 'apply_audit_admin_name', 'apply_state', 'apply_add_time', 'apply_audit_time','city_id','time_type','region_id'));
 
 		$condition = array();
 		if (!empty($filter['apply_user_name'])) {
@@ -56,23 +57,102 @@ class ControllerUserTransApply  extends Controller {
 			$condition['apply_state'] = (int)$filter['apply_state'];
 		}
 		if (is_numeric($filter['city_id'])) {
-			$condition['city_id'] = (int)$filter['city_id'];
+			$condition['user.city_id'] = (int)$filter['city_id'];
 		}
-		if (!empty($filter['apply_add_time'])) {
-			$apply_add_time = explode(' 至 ', $filter['apply_add_time']);
-			$condition['apply_add_time'] = array(
-				array('egt', strtotime($apply_add_time[0])),
-				array('elt', bcadd(86399, strtotime($apply_add_time[1])))
-			);
+		if (is_numeric($filter['region_id'])) {
+			$condition['user.region_id'] = (int)$filter['region_id'];
 		}
+		$apply_add_time = explode(' 至 ', $filter['apply_add_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($apply_add_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_add_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_add_time[1])))
+                );
+            }else{
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_add_time[1])))
+                );
+            }
+        }
 
-		if (!empty($filter['apply_audit_time'])) {
-			$apply_audit_time = explode(' 至 ', $filter['apply_audit_time']);
-			$condition['apply_audit_time'] = array(
-				array('egt', strtotime($apply_audit_time[0])),
-				array('elt', bcadd(86399, strtotime($apply_audit_time[1])))
-			);
-		}
+		$apply_audit_time = explode(' 至 ', $filter['apply_audit_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($apply_audit_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_audit_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_audit_time[1])))
+                );
+            }else{
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_audit_time[1])))
+                );
+            }
+        }
 
 		if (isset($this->request->get['page'])) {
 			$page = (int)$this->request->get['page'];
@@ -80,17 +160,11 @@ class ControllerUserTransApply  extends Controller {
 			$page = 1;
 		}
 
-		 //获取城市列表
+		$this->load->library('sys_model/region');
         $this->load->library('sys_model/city');
-        $cityList = $this->sys_model_city->getCityList('');
-        if(empty($cityList)){
-            $this->load->controller('common/base/redirect', $this->url->link('operation/coupon', $filter, true));
-        }
-        
-        if(is_numeric($filter['city_id'])){
-            $w['city_id'] = $filter['city_id'];
-        }else{
-            $w['city_id'] = 0;
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
         }
 
 		$order 	= 'apply_add_time DESC';
@@ -99,12 +173,13 @@ class ControllerUserTransApply  extends Controller {
 		$limit 	= sprintf('%d, %d', $offset, $rows);
 		$join = array(
 			'user' => 'user.user_id=trans_apply.apply_user_id',
-			'city' => 'city.city_id=user.city_id'
+			'city' => 'city.city_id=user.city_id',
+			'region'=>'region.region_id=user.region_id'
 		);
 		
 		$result = $this->sys_model_trans->getTransApplyList($condition, $order, $limit,'',$join);
 
-		$total 	= $this->sys_model_trans->getTotalTransApply($condition);
+		$total 	= $this->sys_model_trans->getTotalTransApply($condition,$join);
 
 		$apply_states 			= get_apply_states_deposit();
 		$apply_states_colors 	= array(0=>'text-blue', 1=>'text-blue', 2=>'text-green',-1=>'text-red');
@@ -114,6 +189,7 @@ class ControllerUserTransApply  extends Controller {
 		if (is_array($result) && !empty($result)) {
 			foreach ($result as &$item) {
 				$item = array(
+					'region_name'				=> $item['region_name'],
 					'city_name'					=> $item['city_name'],
 					'apply_user_name' 			=> $item['apply_user_name'],
 					'pdr_sn' 					=> $item['pdr_sn'],
@@ -133,7 +209,7 @@ class ControllerUserTransApply  extends Controller {
 
 		$filter_types = array(
 			'apply_user_name' 			=> '用户名称',
-			'pdr_sn' 					=> '充值单号',
+			'pdr_sn' 					=> '订单编号',
 			'apply_admin_name' 			=> '申请管理员',
 			'apply_audit_admin_name' 	=> '审核管理员',
 		);
@@ -170,8 +246,7 @@ class ControllerUserTransApply  extends Controller {
 
 		$this->assign('pagination', $pagination);
 		$this->assign('results', $results);
-		$this->assign('cityList', $cityList);
-        $this->assign('city_id',$w['city_id']);
+		$this->assign('filter_regions', $filter_regions);
 		
 		$this->assign('export_action', $this->url->link('user/trans_apply/export'));
 		$this->assign('index_action', $this->url->link('user/trans_apply'));
@@ -188,7 +263,7 @@ class ControllerUserTransApply  extends Controller {
 	 * @DateTime 2017-08-11T09:06:27+0800
 	 */
 	public function export() {
-		$filter = $this->request->post(array('apply_user_name', 'pdr_sn', 'apply_admin_name', 'apply_audit_admin_name', 'apply_state', 'apply_add_time', 'apply_audit_time'));
+		$filter = $this->request->get(array('apply_user_name', 'pdr_sn', 'apply_admin_name', 'apply_audit_admin_name', 'apply_state', 'apply_add_time', 'apply_audit_time','city_id','time_type','region_id'));
 
 		$condition = array();
 		if (!empty($filter['apply_user_name'])) {
@@ -206,35 +281,126 @@ class ControllerUserTransApply  extends Controller {
 		if (is_numeric($filter['apply_state'])) {
 			$condition['apply_state'] = (int)$filter['apply_state'];
 		}
-		if (!empty($filter['apply_add_time'])) {
-			$apply_add_time = explode(' 至 ', $filter['apply_add_time']);
-			$condition['apply_add_time'] = array(
-				array('egt', strtotime($apply_add_time[0])),
-				array('elt', bcadd(86399, strtotime($apply_add_time[1])))
-			);
+		if (is_numeric($filter['city_id'])) {
+			$condition['user.city_id'] = (int)$filter['city_id'];
 		}
-		if (!empty($filter['apply_audit_time'])) {
-			$apply_audit_time = explode(' 至 ', $filter['apply_audit_time']);
-			$condition['apply_audit_time'] = array(
-				array('egt', strtotime($apply_audit_time[0])),
-				array('elt', bcadd(86399, strtotime($apply_audit_time[1])))
-			);
+		if (is_numeric($filter['region_id'])) {
+			$condition['user.region_id'] = (int)$filter['region_id'];
 		}
+		$apply_add_time = explode(' 至 ', $filter['apply_add_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($apply_add_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_add_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_add_time[1])))
+                );
+            }else{
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['apply_add_time'])) {
+                $condition['apply_add_time'] = array(
+                    array('egt', strtotime($apply_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_add_time[1])))
+                );
+            }
+        }
+
+        $apply_audit_time = explode(' 至 ', $filter['apply_audit_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($apply_audit_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_audit_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_audit_time[1])))
+                );
+            }else{
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['apply_audit_time'])) {
+                $condition['apply_audit_time'] = array(
+                    array('egt', strtotime($apply_audit_time[0])),
+                    array('elt', bcadd(86399, strtotime($apply_audit_time[1])))
+                );
+            }
+        }
 
 		$order = 'apply_id DESC';
-		$result = $this->sys_model_trans->getTransApplyList($condition, $order);
+		$limit='';
+		$join = array(
+			'user' => 'user.user_id=trans_apply.apply_user_id',
+			'city' => 'city.city_id=user.city_id',
+			'region'=>'region.region_id=user.region_id'
+		);
+		$result = $this->sys_model_trans->getTransApplyList($condition, $order,$limit,'',$join);
 
 		$apply_states = get_apply_states();
 		$list = array();
 		if (is_array($result) && !empty($result)) {
 			foreach ($result as $v) {
 				$list[] = array(
+					'region_name'		=> $v['region_name'],
+					'city_name'			=> $v['city_name'],
 					'apply_user_name' 	=> $v['apply_user_name'],
 					'pdr_sn' 			=> $v['pdr_sn'],
 					'apply_admin_name' 	=> $v['apply_admin_name'],
 					'apply_amount' 		=> $v['apply_amount'],
 					'apply_state' 		=> $apply_states[$v['apply_state']],
-					'apply_reason' 		=> $v['apply_cash_reason'],
+					'apply_reason' 		=> $v['apply_reason'],
 					'apply_add_time' 	=> !empty($v['apply_add_time']) ? date('Y-m-d H:i:s', $v['apply_add_time']) : '',
 					'apply_audit_admin_name' => $v['apply_audit_admin_name'],
 					'apply_audit_result'=> $v['apply_audit_result'],
@@ -246,8 +412,10 @@ class ControllerUserTransApply  extends Controller {
 		$data = array(
 			'title' => '退款申请',
 			'header' => array(
+				'region_name'		=> '区域',
+				'city_name'		=> '城市',
 				'apply_user_name' 	=> '用户名称',
-				'pdr_sn' 			=> '充值单号',
+				'pdr_sn' 			=> '订单编号',
 				'apply_admin_name' 	=> '申请管理员',
 				'apply_amount' 		=> '申请金额',
 				'apply_state' 		=> '申请状态',
@@ -354,9 +522,10 @@ class ControllerUserTransApply  extends Controller {
 	 * @DateTime 2017-08-11T09:18:24+0800
 	 */
 	protected function getDataColumns() {
+		$this->setDataColumn('区域');
 		$this->setDataColumn('城市');
 		$this->setDataColumn('用户名称');
-		$this->setDataColumn('充值单号');
+		$this->setDataColumn('订单编号');
 		$this->setDataColumn('申请管理员');
 		$this->setDataColumn('申请金额');
 		$this->setDataColumn('申请状态');

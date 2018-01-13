@@ -17,8 +17,8 @@
                     <li><a href="<?php echo $chart_action; ?>" data-toggle="tab">统计图表</a></li>
                     <li class="active"><a href="javascript:;" data-toggle="tab">消费记录列表</a></li>
                     <!-- <li><a href="<?php echo $city_ranking_action; ?>" data-toggle="tab">合伙人排行</a></li> -->
-                    <li><a href="<?php echo $order_free_chart; ?>" data-toggle="tab">免费单车图表</a></li>
-                    <li><a href="<?php echo $order_free_list; ?>" data-toggle="tab">免费单车列表</a></li>
+                    <!-- <li><a href="<?php echo $order_free_chart; ?>" data-toggle="tab">免费单车图表</a></li>
+                    <li><a href="<?php echo $order_free_list; ?>" data-toggle="tab">免费单车列表</a></li> -->
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
@@ -39,6 +39,22 @@
                                     <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['order_state'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
                                     <?php } ?>
                                 </select>
+                                <select name="user_type" class="input-sm">
+                                    <option value>用户类型</option>
+                                    <?php foreach($user_type as $k => $v) { ?>
+                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['user_type'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--全部区域--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--全部城市--</option>
+                                    
+                                </select>
                                  <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
                                     <option value="0">选择时间区间</option>
                                     <?php if(!empty($time_type)) {?>
@@ -47,10 +63,10 @@
                                     <?php }?>
                                     <?php }?>
                                 </select>
-                                <input type="text" name="add_time" value="<?php echo $filter['add_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="下单时间"/>
-                                <input type="text" name="start_time" value="<?php echo $filter['start_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="开始时间"/>
-                                <input type="text" name="end_time" value="<?php echo $filter['end_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="结束时间"/>
-                                <input type="text" name="settlement_time" value="<?php echo $filter['settlement_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="结算时间"/>
+                                <input type="text" name="add_time" value="<?php echo $filter['add_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 150px;" placeholder="下单时间"/>
+                                <input type="text" name="start_time" value="<?php echo $filter['start_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 150px;" placeholder="开始时间"/>
+                                <input type="text" name="end_time" value="<?php echo $filter['end_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 150px;" placeholder="结束时间"/>
+                                <input type="text" name="settlement_time" value="<?php echo $filter['settlement_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 150px;" placeholder="结算时间"/>
                                 <input type="text" name="amount" value="<?php echo $filter['amount']; ?>" class="input-sm" style="border: 1px solid #a9a9a9;" placeholder="订单金额大于"/>
                                 <input type="text" name="ride_time" value="<?php echo $filter['ride_time']; ?>" class="input-sm" style="border: 1px solid #a9a9a9;" placeholder="骑行超过多少分钟"/>
 
@@ -89,12 +105,14 @@
                                 <?php foreach ($data_rows as $data) { ?>
                                 <tr>
                                     <!--<td><input type="checkbox" name="selected[]" value="<?php echo $data['order_id']?>"></td>-->
+                                    <td><?php echo $data['region_name']?></td>
+                                    <td><?php echo $data['city_name']?></td>
+                                    <td><?php echo $user_type[$data['user_type']]?></td>
                                     <td><?php echo $data['order_sn']?></td>
                                     <td><?php echo $data['lock_sn']?></td>
                                     <td><?php echo $data['bicycle_sn']?></td>
                                     <td><?php echo $data['user_name']?></td>
-                                    <td><?php echo $data['city_name']?></td>
-                                    <td><?php echo $data['region_name']?></td>
+                                    
                                     <td><?php echo $data['order_state']?></td>
                                     <td><?php echo $data['pay_amount']?></td>
                                     <td><?php echo $data['refund_amount']?></td>
@@ -116,7 +134,53 @@
     </div>
 </section>
 <!-- /.content -->
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--全部城市--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
 
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--全部城市--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
+</script>
 <script type="text/javascript">
     $(function(){
             addrat();

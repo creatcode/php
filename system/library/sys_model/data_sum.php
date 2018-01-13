@@ -380,30 +380,53 @@ class Data_sum {
     /**
      * 按天统计余额/押金支付(根据城市)
      */
-    public function getDepositSumForDaysCity($where = '',$city_id) {
+    public function getDepositSumForDaysCity($where = '',$field) {
         if (!empty($where)) {
             $where = ' WHERE ' . $where;
         }
-        return $this->db->getRows('select sum(r.pdr_amount) as `total`, FROM_UNIXTIME(`pdr_payment_time`, \'%Y-%m-%d\') as `payment_date`,`pdr_type` FROM rich_deposit_recharge r '.
-            ' LEFT JOIN rich_user u ON u.user_id = r.pdr_user_id '.$where.' AND u.city_id = '.$city_id . ' group by `payment_date`, `pdr_type`');
+        return $this->db->getRows('select '.$field.' FROM rich_deposit_recharge r  LEFT JOIN rich_user u ON u.user_id = r.pdr_user_id LEFT JOIN rich_city c ON c.city_id=u.city_id LEFT JOIN rich_region g ON g.region_id=u.region_id '.$where.' group by payment_date, pdr_type');
     }
 
-    /**
-     * 按天统计余额/押金支付(根据合伙人)
-     */
-    public function getDepositSumForDaysCooperation($where = '',$cooperator_id) {
-        if (!empty($where)) {
-            $where = ' WHERE ' . $where;
-        }
-        return $this->db->getRows('select sum(r.pdr_amount) as `total`, FROM_UNIXTIME(`pdr_payment_time`, \'%Y-%m-%d\') as `payment_date`,`pdr_type` FROM rich_deposit_recharge r '.
-            ' LEFT JOIN rich_user u ON u.user_id = r.pdr_user_id '.$where.' AND u.cooperator_id = '.$cooperator_id . ' group by `payment_date`, `pdr_type`');
-    }
+   
 
 
     /**
      * 按天统计消费金额
      */
-    public function getOrderAmountForDays($where = '', $join = '',$city_id) {
+    public function getOrderAmountForDays($where = '', $join = '',$filed) {
+        if (!empty($where)) {
+            $where = ' WHERE ' . $where;
+        }
+        return $this->db->getRows('select '.$filed.' FROM rich_orders ' . $join . $where . ' group by order_date');
+    }
+
+    /**
+     * 按天统计消费退回金额
+     */
+    public function getRefundOrderAmountForDays($where = '', $join = '',$filed1) {
+        if (!empty($where)) {
+            $where = ' WHERE ' . $where;
+        }
+        return $this->db->getRows('select '.$filed1.' FROM rich_orders_modify_apply ' . $join . $where . ' group by audit_time');
+    }
+
+    /**
+     * 按天统计消费订单数
+     */
+    public function getOrderCountForDays($where = '', $join = '',$filed2) {
+        if (!empty($where)) {
+            $where = ' WHERE ' . $where;
+        }
+        return $this->db->getRows('select '.$filed2.' FROM rich_orders ' . $join . $where . ' group by order_date');
+    }
+
+   /**
+    * dasdasd
+    */
+    /**
+     * 按天统计消费金额
+     */
+    public function getOrderAmountForDays2($where = '', $join = '') {
         if (!empty($where)) {
             $where = ' WHERE ' . $where;
         }
@@ -413,7 +436,7 @@ class Data_sum {
     /**
      * 按天统计消费退回金额
      */
-    public function getRefundOrderAmountForDays($where = '', $join = '') {
+    public function getRefundOrderAmountForDays2($where = '', $join = '') {
         if (!empty($where)) {
             $where = ' WHERE ' . $where;
         }
@@ -423,14 +446,18 @@ class Data_sum {
     /**
      * 按天统计消费订单数
      */
-    public function getOrderCountForDays($where = '', $join = '') {
+    public function getOrderCountForDays2($where = '', $join = '') {
         if (!empty($where)) {
             $where = ' WHERE ' . $where;
         }
         return $this->db->getRows('select count(order_id) as total, FROM_UNIXTIME(`settlement_time`, \'%Y-%m-%d\') as `order_date` FROM rich_orders ' . $join . $where . ' group by order_date');
     }
 
-   
+
+   /**
+    *
+    * dasdasd
+    */
 
     /**
      * 按天统计提现
@@ -446,11 +473,11 @@ class Data_sum {
     /**
      * 按天统计提现(城市)
      */
-    public function getCashSumForDaysCity($where = '', $city_id) {
+    public function getCashSumForDaysCity($where = '',$filed) {
         if (!empty($where)) {
             $where = ' WHERE ' . $where;
         }
-        return $this->db->getRows('select sum(pdc_amount) as total, FROM_UNIXTIME(`pdc_payment_time`, \'%Y-%m-%d\') as `payment_date` FROM rich_deposit_cash d LEFT JOIN rich_user u ON  u.user_id = d.pdc_user_id ' . $where . ' AND u.city_id = '.$city_id.' group by payment_date');
+        return $this->db->getRows('select '.$filed.' FROM rich_deposit_cash d LEFT JOIN rich_user u ON  u.user_id = d.pdc_user_id LEFT JOIN rich_city c ON c.city_id=u.city_id LEFT JOIN rich_region g ON g.region_id=u.region_id' . $where . ' group by payment_date');
     }
 
     /**

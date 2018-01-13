@@ -21,23 +21,26 @@
                         <form class="search_form" id="search_form" action="<?php echo $action; ?>" method="get">
                             <!-- 搜索 -->
                             <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
-                                <select name="city_id" class="input-sm">
-                                    <option value="0">--选择城市--</option>
-                                    <?php foreach($cityList as $v){
-                                        if($city_id ==$v['city_id']){
-                                    ?>
-                                    <option selected="selected" value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php
-                                        }else{
-                                    ?>
-                                    <option value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php }
-                                     } ?>
+                                 <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--全部区域--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--全部城市--</option>
+                                    
                                 </select>
                                 <select class="input-sm" name="user_type">
                                     <option value>用户类型</option>
                                     <?php foreach($user_types as $k => $v) { ?>
                                     <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['user_type'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select class="input-sm" name="payoff_state">
+                                    <option value>支付状态</option>
+                                    <?php foreach($payoff_states as $k => $v) { ?>
+                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['payoff_state'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
                                     <?php } ?>
                                 </select>
                                  <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
@@ -48,7 +51,7 @@
                                     <?php }?>
                                     <?php }?>
                                 </select>
-                                <input type="text" name="search_time" value="<?php echo $filter['search_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9; width: 200px;" placeholder="时间范围"/>
+                                <input type="text" name="search_time" value="<?php echo $filter['search_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9; width: 200px;" placeholder="时间"/>
                                 <div class="pull-right">
                                     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
                                 </div>
@@ -82,17 +85,19 @@
                                 <tbody>
                                 <?php foreach ($data_rows as $data) { ?>
                                 <tr>
-                                    <td><?php echo $data['city']?></td>
+                                    <td><?php echo $data['region_name']?></td>
+                                    <td><?php echo $data['city_name']?></td>
+                                    <td><?php echo $user_types[$data['user_type']]?></td>
                                     <td width="100"><?php echo $data['payoff_start_time']?>-<?php echo $data['payoff_end_time']?></td>
-                                    <td><?php echo $data['cooperator_name']?></td>
+                                    <td><?php echo $data['bicycle_total']?></td>
                                     <td><?php echo $data['bicycle_total']?></td>
                                     <td><?php echo $data['orders_total']?></td>
                                     <td><?php echo $data['daily_usage']?></td>
                                     <td><?php echo $data['orders_amount']?></td>
                                     <td><?php echo $data['commission_ratio']?></td>
-                                    <td><?php echo $data['payoff_base']?></td>
+                                    <!-- <td><?php echo $data['payoff_base']?></td> -->
                                     <td><?php echo $data['subsidy']?></td>
-                                    <td><?php echo $data['payoff_amount']?></td>
+                                    <!-- <td><?php echo $data['payoff_amount']?></td> -->
                                     <td><?php echo $data['cost_recovery']?></td>
                                     <td width="150"><?php echo $data['account_payee']?></td>
                                     <td><?php echo $data['payoff_state']?></td>
@@ -126,7 +131,53 @@
 
 
 <!-- /.content -->
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--全部城市--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
 
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--全部城市--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
+</script>
 <script type="text/javascript">
     $(function(){
             addrat();

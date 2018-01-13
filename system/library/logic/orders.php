@@ -98,7 +98,7 @@ class Orders
 
         $order_id = $this->sys_model_orders->addOrders($arr);
         if ($order_id) {
-            return callback(true, 'success_build_order', array('order_id' => $order_id, 'is_limit_free' => isset($arr['is_limit_free']) ? $arr['is_limit_free'] : '0', 'add_time' => $arr['add_time'], 'bicycle_sn' => $arr['bicycle_sn'], 'lock_sn' => $arr['lock_sn'], 'order_sn' => $arr['order_sn'], 'keep_time' => (isset($data['keep_time']) && !empty($data['keep_time'])) ? $data['keep_time'] : BOOK_EFFECT_TIME));
+            return callback(true, 'success_build_order', array('order_id' => $order_id, 'add_time' => $arr['add_time'], 'bicycle_sn' => $arr['bicycle_sn'], 'lock_sn' => $arr['lock_sn'], 'order_sn' => $arr['order_sn'], 'keep_time' => (isset($data['keep_time']) && !empty($data['keep_time'])) ? $data['keep_time'] : BOOK_EFFECT_TIME));
         } else {
             return callback(false, 'error_database_operation_failure');
         }
@@ -111,8 +111,18 @@ class Orders
     }
 
     /**
+     *
      * 回调使订单生效
      * @param $data
+     *  $data = [
+     *     'device_id':'',
+     *     'cmd':'',
+     *     'result':'',
+     *     'serialnum':'',
+     *     'trade_no':''
+     *     'lat':'',
+     *     'lng':'',
+     *  ]
      * @return array $data
      */
     public function effectOrders($data)
@@ -120,7 +130,7 @@ class Orders
         $device_id = $data['device_id'];
         $cmd = $data['cmd'];
         if (strtolower($cmd) == 'open' && strtolower($data['result']) == 'ok') {
-            $order_info = $this->sys_model_orders->getOrdersInfo(array('order_state' => '-2', 'lock_sn' => $device_id, 'add_time' => $data['serialnum']));
+            $order_info = $this->sys_model_orders->getOrdersInfo(array('order_state' => '-2', 'lock_sn' => $device_id, 'add_time' => $data['add_time']));
             if (!empty($order_info)) {
                 $arr = array(
                     'start_time' => time(),
@@ -160,10 +170,11 @@ class Orders
                     $this->sys_model_orders->addOrderLine($line_data);
                 }
 
-                if ($order_info['is_scenic']) {
+                //这里没有景区的概念了 所以这条应该废弃了
+                /*if ($order_info['is_scenic']) {
                     $this->insertRidesRecharge($order_info);
                     $this->changeTempRechargeStatus($order_info['recharge_sn']);
-                }
+                }*/
 
                 $output = array(
                     'order_id' => $order_info['order_id'],
@@ -191,9 +202,17 @@ class Orders
         );
         $this->registry->get('db')->table('rides_recharge')->insert($data);
     }
+
     /**
      * 关锁订单完成
-     * @param $param
+     * @param $param array
+     *      [
+     *           'device_id':'',
+     *           'cmd':''
+     *           'lat':''
+     *           'lng':''
+     *      ]
+     *
      * @return array
      */
     public function finishOrders($param)
@@ -201,7 +220,7 @@ class Orders
         $device_id = $param['device_id'];
         $cmd = $param['cmd'];
 
-        if (strtolower($cmd) == 'close' || strtolower($cmd) == 'normal') {
+        if (strtolower($cmd) == 'closed' || strtolower($cmd) == 'normal') {
             $orders = $this->sys_model_orders->getOrdersList("(((order_state = '-3' OR order_state = '1') AND lock_type = 1) OR (order_state = '3' AND order_id <> (SELECT max(order_id) FROM rich_orders WHERE lock_sn = '{$device_id}' LIMIT 1))) AND lock_sn ='{$device_id}'");
             if (is_array($orders) && !empty($orders)) {
                 foreach ($orders as $order_info) {
@@ -309,7 +328,7 @@ class Orders
                         }
 
                         //--------------免费车------------
-                        if ($order_info['is_limit_free'] && !$order_info['is_scenic']) {
+                        if ($order_info['is_limit_free']) {
                             $free_time = 10800;
                             if ($riding_time > $free_time) {
                                 $riding = $riding_time - $free_time;

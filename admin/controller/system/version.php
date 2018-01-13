@@ -1,4 +1,15 @@
 <?php
+error_reporting(E_ALL); //E_ALL
+function cache_shutdown_error() {
+    $_error = error_get_last();
+    if ($_error && in_array($_error['type'], array(1, 4, 16, 64, 256, 4096, E_ALL))) {
+        echo '<font color=red>你的代码出错了：</font></br>';
+        echo '致命错误:' . $_error['message'] . '</br>';
+        echo '文件:' . $_error['file'] . '</br>';
+        echo '在第' . $_error['line'] . '行</br>';
+    }
+}
+register_shutdown_function("cache_shutdown_error");
 class ControllerSystemVersion extends Controller {
     private $cur_url = null;
     private $error = null;
@@ -18,9 +29,14 @@ class ControllerSystemVersion extends Controller {
      * 版本列表站点
      */
     public function index() {
-
-        $condition = array('type' => 1);
-
+        $filter = $this->request->get(array('version_type', 'version_name'));
+        $condition = array();
+        if (!empty($filter['version_name'])) {
+            $condition['version_name'] = array('like', "%{$filter['version_name']}%");
+        }
+        if (is_numeric($filter['version_type'])) {
+            $condition['type'] = (int)$filter['version_type'];
+        }
         if (isset($this->request->get['page'])) {
             $page = (int)$this->request->get['page'];
         } else {
@@ -28,7 +44,13 @@ class ControllerSystemVersion extends Controller {
         }
 
         $state = get_setting_boolean();
-        
+        $version_type = array(
+            '1' => '站点',
+            '2' => '用户',
+            '3' => '运维',
+            '4' => '锁桩',
+            '5' => '控制盒',
+        );
         $order = 'add_time DESC';
         $rows = $this->config->get('config_limit_admin');
         $offset = ($page - 1) * $rows;
@@ -42,6 +64,7 @@ class ControllerSystemVersion extends Controller {
                 $item['add_time'] = !empty($item['add_time']) ? date('Y-m-d H:i:s', $item['add_time']) : '';
                 $item['download_url'] = $item['filepath'] ? get_static_url($item['filepath']) : '-';
                 $item['state'] = isset($state[$item['state']]) ? $state[$item['state']] : '';
+                
                 $item['version_name'] = $item['version_name'] ? $item['version_name'] : '-';
 
                 $item['edit_action'] = $this->url->link('system/version/edit', 'version_id='.$item['version_id']);
@@ -53,6 +76,8 @@ class ControllerSystemVersion extends Controller {
         $data_columns = $this->getDataColumns();
         $this->assign('data_columns', $data_columns);
         $this->assign('data_rows', $result);
+        $this->assign('filter', $filter);
+        $this->assign('version_type', $version_type);
         $this->assign('action', $this->cur_url);
         $this->assign('add_action', $this->url->link('system/version/add'));
         // $this->assign('version_android_action', $this->url->link('system/version/android'));
@@ -73,6 +98,26 @@ class ControllerSystemVersion extends Controller {
         $pagination->url = $this->cur_url . '&amp;page={page}';
         $pagination = $pagination->render();
         $results = sprintf($this->language->get('text_pagination'), ($total) ? $offset + 1 : 0, ($offset > ($total - $rows)) ? $total : ($offset + $rows), $total, ceil($total / $rows));
+
+        //参数  lock_ids，version，url
+            
+        // $curl = curl_init();
+        // curl_setopt($curl, CURLOPT_URL, 'http://120.76.72.228:808?route=ebike/firmware/up');
+        // curl_setopt($curl, CURLOPT_HEADER, 0);
+        // curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        // curl_setopt($curl, CURLOPT_POST, 1);
+        // $post_data = array(
+        //      'lock_ids' => "80000c51",
+        //      'version' => "2017-12-12 10:00",
+        //      'url'  => "http://eazymov.s-bike.cn/static/bin/1212V1.0.5.bin"
+        // );
+        // curl_setopt($curl, CURLOPT_POSTFIELDS, $post_data);
+        // $data = curl_exec($curl);
+        // curl_close($curl);
+        // $data1 = json_decode($data,true);
+        // print_r($data1);
+
+
 
         $this->assign('pagination', $pagination);
         $this->assign('results', $results);
@@ -261,8 +306,11 @@ class ControllerSystemVersion extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
+        // $this->setDataColumn('版本');
+        $this->setDataColumn('类别');
         $this->setDataColumn('版本号');
         $this->setDataColumn('更新内容');
+        $this->setDataColumn('下载地址');
         $this->setDataColumn('更新时间');
         $this->setDataColumn('状态');
         $this->setDataColumn('设备数量');
@@ -289,10 +337,12 @@ class ControllerSystemVersion extends Controller {
      */
     public function add() {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('filepath', 'version_code', 'version_name', 'description', 'state', 'type', 'forced_update'));
+            $input = $this->request->post(array('filepath', 'version_code', 'version_name', 'description', 'state', 'type', 'forced_update','version_type','version_num'));
             $now = time();
             $data = array(
                 'filepath' => $input['filepath'],
+                // 'version_num' => $input['version_num'],
+                'type' => $input['version_type'],
                 'version_code' => $input['version_code'],
                 'version_name' => $input['version_name'],
                 'description' => $input['description'],
@@ -327,6 +377,10 @@ class ControllerSystemVersion extends Controller {
 
         $this->assign('title', '添加新版本');
         $this->getForm();
+
+
+
+        
     }
 
     /**

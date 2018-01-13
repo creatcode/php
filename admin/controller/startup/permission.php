@@ -49,6 +49,7 @@ class ControllerStartupPermission extends Controller {
                 'admin/index/couponAdd',
                 'admin/index/refund',
                 'admin/index/finishOrder1',
+                'admin/index/change_available_state',            
 
                 //运维人员管理
                 'operation/operationLocation/apiGetMarker',

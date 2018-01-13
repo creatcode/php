@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>单车管理</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,35 +14,41 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">单车导入</a></li>
-                    <li class=""><a href="<?php echo $lock_action; ?>" data-toggle="tab">车锁管理</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t44'];?></a></li>
+                    <li class=""><a href="<?php echo $lock_action; ?>" data-toggle="tab"><?php echo @$lang['t45'];?></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
                         <form id="table_form" class="table_form" method="post" action="<?php echo $action; ?>">
                         <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
-                            合伙人：
+                            <!--合伙人：
                             <select name="cooper_id" class="input-sm">
                                 <option value="0">总部</option>
                                 <?php foreach($cooperators as $v){ ?>
                                 <option value="<?php echo $v['id']?>"><?php echo $v['cooperator_name']?></option>
                                 <?php }?>
-                            </select>
-                            单车类型：
+                            </select>-->
+                            <?php echo @$lang['t46'];?>：
                             <select name="type" class="input-sm">
                                 <option value="1">小强1</option>
                                 <option value="2">小强2</option>
                             </select>
-                            区域：
-                            <select name="region" class="input-sm">
+                            <?php echo @$lang['t47'];?>：
+                            <select name="region" class="input-sm" onchange="show_city(this)">
                                 <?php foreach($regions as $v){ ?>
                                 <option value="<?php echo $v['region_id']?>"><?php echo $v['region_name']?></option>
                                 <?php }?>
                             </select>
+                            <?php echo @$lang['t48'];?>：
+                            <select name="city" class="input-sm" id="city_id">
+                          
+                                <option value="0">--<?php echo @$lang['t8'];?>--</option>
+                             
+                            </select>
                             <textarea class="hide" name="bicycle_list" >{{bicycleList}}</textarea>
                         </div>
                         <div class="form-group">
-                            <button type="button" v-on:click="upload" class="btn btn-default btn-sm"><i class="fa fa-upload"></i>&nbsp;导入</button>
+                            <button type="button" v-on:click="upload" class="btn btn-default btn-sm"><i class="fa fa-upload"></i>&nbsp;<?php echo @$lang['t13'];?></button>
                         </div>
                         <?php if (isset($error)) { ?>
                         <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;<?php echo $error; ?>
@@ -52,11 +58,11 @@
                             <table id="improtTable" class="table table-bordered table-hover dataTable" role="grid">
                                 <thead>
                                 <tr>
-                                    <td>单车sn</td>
-                                    <td>锁sn</td>
-                                    <td>单车sn重复</td>
-                                    <td>锁创建</td>
-                                    <td>操作</td>
+                                    <td><?php echo @$lang['t49'];?></td>
+                                    <td><?php echo @$lang['t26'];?></td>
+                                    <td><?php echo @$lang['t50'];?></td>
+                                    <td><?php echo @$lang['t51'];?></td>
+                                    <td><?php echo @$lang['t52'];?></td>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -73,8 +79,8 @@
                                 </tr>
                                 </tbody>
                             </table>
-                            <div class="box-footer">
-                                <button type="submit" class="btn btn-info pull-right">提交</button>
+                            <div class="box-footer" style="text-align:center">
+                                <button type="submit" class="btn btn-info pull-right"  style="padding:0 30px;height:40px;font-size:14px;position:relative;right:50%"><?php echo @$lang['t53'];?></button>
                             </div>
                         </form>
                     </div>
@@ -178,5 +184,49 @@
         }
     });
 
+</script>
+<script>
+    var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+
+        var region_id=$(t).val();
+        var a='<option value="">--<?php echo @$lang['t8'];?>--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+		a+="<option value="+index+">"+item+"</option>";
+            });  
+        }
+        $("#city_id").html(a); 
+    }
+    function init_city(){
+        var region_id="<?php echo $filter_regions[0]['region_id'];?>";
+
+        var a='<option value="">--<?php echo @$lang['t8'];?>--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+		a+="<option value="+index;
+                
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
 </script>
 <?php echo $footer;?>

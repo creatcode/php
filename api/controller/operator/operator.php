@@ -1,58 +1,44 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: estronger
  * Date: 2016/12/9
  * Time: 16:03
  */
-class ControllerOperatorOperator extends Controller {
+
+use Enum\ErrorCode;
+
+class ControllerOperatorOperator extends Controller
+{
+
     /**
      * 开锁
      */
-    public function openLock() {
-        $device_id = trim($this->request->post['device_id']);
-        if (empty($device_id)) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
-        }
-
-        $time = 0;
-        //判断的条件写在startup
-        if ($this->config->has('order_add_time')) {
-            $time = $this->config->get('order_add_time');
-        }
-
-        $data = array();
-        if ($this->order_result) {
-            $data['order_sn'] = $this->order_result->order_sn;
-            $data['lock_type'] = $this->order_result->lock_type;
-            $data['is_limit_free'] = $this->order_result->is_limit_free;
-            $data['is_month_card'] = $this->order_result->is_month_card;
-            $data['is_scenic'] = $this->order_result->is_scenic;
-            $data['mac_address'] = $this->order_result->mac_address;
-            $data['encrypt_key'] = $this->order_result->encrypt_key;
-            $data['password'] = $this->order_result->password;
-        }
-        //file_put_contents('type_1.txt', json_encode($data), 8);        
-
+    public function openLock()
+    {
         $this->instructions_instructions = new Instructions\Instructions($this->registry);
-        $result = $this->instructions_instructions->openLock($device_id, $time);
-        if(in_array($device_id, array('063072619956','063072965557'))) {
-            $this->log->write('openLock:'.print_r($result, true));
-        }
+        $result = $this->instructions_instructions->openLock($this->lock['lock_sn']);
+        $return_data = [
+            'order_sn' => $this->order_result['data']['order_sn'],
+            'lock_type' => $this->order_result['data']['lock_type']
+        ];
+
         if ($result['state']) {
-            //$this->response->showSuccessResult($result['data']);
+            $this->response->showSuccessResult($return_data, $this->language->get('success_send_open_lock_instruction'));
         }
-        
-        $this->response->showSuccessResult($data, $this->language->get('success_send_open_lock_instruction'));
+
+        $this->response->showErrorResult($this->language->get('open_lock_failure'), ErrorCode::OPEN_LOCK_FAILURE);
     }
 
     /**
      * 响铃
      */
-    public function beepLock() {
+    public function beepLock()
+    {
         $device_id = $this->request->post['device_id'];
         if (empty($device_id)) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
         }
         $this->load->library('instructions/instructions', true);
         $this->instructions_instructions->beepLock($device_id);
@@ -62,10 +48,11 @@ class ControllerOperatorOperator extends Controller {
     /**
      * 查找锁的位置
      */
-    public function selectLock() {
+    public function selectLock()
+    {
         $device_id = $this->request->post['device_id'];
         if (empty($device_id)) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
         }
         $this->load->library('instructions/instructions', true);
         $this->instructions_instructions->selectLocks($device_id);
@@ -75,10 +62,11 @@ class ControllerOperatorOperator extends Controller {
     /**
      * 查找锁的位置
      */
-    public function lockPosition() {
+    public function lockPosition()
+    {
         $device_id = $this->request->post['device_id'];
         if (!$device_id) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
         }
 
         $this->load->library('logic/location', true);
@@ -92,7 +80,8 @@ class ControllerOperatorOperator extends Controller {
     /**
      * 获取开锁密钥
      */
-    public function openLockSecretKey() {
+    public function openLockSecretKey()
+    {
         $input = $this->request->post(array('order_sn', 'keySource'));
         $user_id = $this->startup_user->userId();
 
@@ -153,7 +142,8 @@ class ControllerOperatorOperator extends Controller {
     /**
      * 获取开锁信息
      */
-    public function getOpenLockResource() {
+    public function getOpenLockResource()
+    {
         $input = $this->request->post(array('bicycle_sn', 'lat', 'lng'));
         if (!$input['bicycle_sn']) {
             $this->response->showErrorResult('单车编号不能为空', 5222);
@@ -193,4 +183,6 @@ class ControllerOperatorOperator extends Controller {
 
         $this->response->showSuccessResult($result, '获取开锁信息成功');
     }
+
+
 }

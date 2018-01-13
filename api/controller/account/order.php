@@ -1,4 +1,6 @@
 <?php
+use Enum\ErrorCode;
+
 class ControllerAccountOrder extends Controller {
     private $direct_output = false;
 
@@ -12,20 +14,20 @@ class ControllerAccountOrder extends Controller {
      */
     public function getOrderInfo() {
         if (!isset($this->request->post['order_sn']) || empty($this->request->post['order_sn'])) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'),ErrorCode::ERROR_MISSING_PARAMETER);
         }
         $order_sn = $this->request->post['order_sn'];
         $this->load->library('sys_model/orders');
         $order_info = $this->sys_model_orders->getOrdersInfo(array('order_sn' => $order_sn));
 
         if (empty($order_info)) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'),ErrorCode::ERROR_MISSING_PARAMETER);
         }
 
         $user_id = $this->startup_user->userId();
         $user_info = $this->startup_user->getUserInfo();
         if ($order_info['user_id'] != $user_id) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'),ErrorCode::ERROR_MISSING_PARAMETER);
         }
         //$order_info['order_state'] = $order_info['order_state'] == -2 ? 0 : $order_info['order_state'];
         $order_info['available_deposit'] = $user_info['available_deposit'];
@@ -110,7 +112,7 @@ class ControllerAccountOrder extends Controller {
                 $order_info['is_scenic'] = $bike_info['is_scenic'];
                 $order_info['left_time'] = (time() - $order_info['start_time'] <= 120) ? 120 - (time() - $order_info['start_time']): 0;
             }
-            $this->response->showSuccessResult(array('has_order' => true, 'current_order' => $this->format($order_info)), $this->language->get('error_no_order'));
+            $this->response->showSuccessResult(array('has_order' => true, 'current_order' => $this->format($order_info)), $this->language->get('success_read'));
         }
     }
 

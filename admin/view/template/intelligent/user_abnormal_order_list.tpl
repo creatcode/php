@@ -23,18 +23,18 @@
                             <table class="table table-bordered table-hover dataTable" role="grid">
                                 <thead>
                                 <tr>
-                                    <th>订单sn</th>
-                                    <th>锁sn</th>
-                                    <th>单车sn</th>
-                                    <th>手机号</th>
-                                    <th>合伙人</th>
-                                    <th>区域</th>
-                                    <th>状态</th>
-                                    <th>实付金额</th>
-                                    <th>开始时间</th>
-                                    <th>结束时间</th>
-                                    <th>下单时间</th>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th><?php echo @$lang['t15'];?></th>
+                                    <th><?php echo @$lang['t16'];?></th>
+                                    <th><?php echo @$lang['t17'];?></th>
+                                    <th><?php echo @$lang['t18'];?></th>
+                     
+                                    <th><?php echo @$lang['t19'];?></th>
+                                    <th><?php echo @$lang['t20'];?></th>
+                                    <th><?php echo @$lang['t21'];?></th>
+                                    <th><?php echo @$lang['t22'];?></th>
+                                    <th><?php echo @$lang['t23'];?></th>
+                                    <th><?php echo @$lang['t23'];?></th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t13'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -45,14 +45,14 @@
                                     <td><?php echo $data['lock_sn']?></td>
                                     <td><?php echo $data['bicycle_sn']?></td>
                                     <td><?php echo $data['user_name']?></td>
-                                    <td><?php echo $data['cooperator_name']?></td>
+             
                                     <td><?php echo $data['region_name']?></td>
                                     <td><?php echo $data['order_state']?></td>
                                     <td><?php echo $data['pay_amount']?></td>
                                     <td><?php echo $data['start_time']?></td>
                                     <td><?php echo $data['end_time']?></td>
                                     <td><?php echo $data['add_time']?></td>
-                                    <td><button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>查看</button></td>
+                                    <td><button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t14'];?></button></td>
                                 </tr>
                                 <?php } ?>
                                 </tbody>

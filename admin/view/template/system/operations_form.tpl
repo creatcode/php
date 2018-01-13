@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>运维人员管理</span>
+        <span></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -26,7 +26,7 @@
                         <form class="form-horizontal" method="post" action="<?php echo $action; ?>">
                             <div class="row">
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">用户名</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t14'];?></label>
                                     <div class="col-sm-5">
                                         <?php if (empty($admin_id)) { ?>
                                         <div class="input-group col-sm-12">
@@ -40,14 +40,14 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">姓名</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t15'];?></label>
                                     <div class="col-sm-5">
                                         <input type="text" name="nickname" value="<?php echo $data['nickname']; ?>" class="form-control" />
                                         <?php if (isset($error['nickname'])) { ?><div class="text-danger"><?php echo $error['nickname']; ?></div><?php } ?>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">角色</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t16'];?></label>
                                     <div class="col-sm-5">
                                         <select name="role_id" class="form-control">
                                             <?php foreach($roles as $k => $v) { ?>
@@ -57,7 +57,7 @@
                                         <?php if (isset($error['role_id'])) { ?><div class="text-danger"><?php echo $error['role_id']; ?></div><?php } ?>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <!--<div class="form-group">
                                     <label class="col-sm-2 control-label">账号归属</label>
                                     <div class="col-sm-5">
                                         <select name="cooperator_id" class="form-control">
@@ -68,32 +68,33 @@
                                         </select>
                                         <?php if (isset($error['cooperator_id'])) { ?><div class="text-danger"><?php echo $error['cooperator_id']; ?></div><?php } ?>
                                     </div>
-                                </div>
+                                </div>-->
+                                <input type="hidden" name="cooperator_id" value="0">
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">密码</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t17'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="password" name="password" class="form-control"  placeholder="不修改密码时可不填" />
+                                        <input type="password" name="password" class="form-control"  placeholder="<?php echo @$lang['t18'];?>" />
                                         <?php if (isset($error['password'])) { ?><div class="text-danger"><?php echo $error['password']; ?></div><?php } ?>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">重复密码</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t19'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="password" name="confirm" class="form-control"  placeholder="不修改密码时可不填" />
+                                        <input type="password" name="confirm" class="form-control"  placeholder="<?php echo @$lang['t20'];?>" />
                                         <?php if (isset($error['confirm'])) { ?><div class="text-danger"><?php echo $error['confirm']; ?></div><?php } ?>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">手机号码</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t21'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="text" name="mobile" class="form-control"  placeholder="请输入手机号码" value="<?php echo $data['mobile']; ?>" />
+                                        <input type="text" name="mobile" class="form-control"  placeholder="<?php echo @$lang['t22'];?>" value="<?php echo $data['mobile']; ?>" />
                                         <?php if (isset($error['mobile'])) { ?><div class="text-danger"><?php echo $error['mobile']; ?></div><?php } ?>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-2 control-label">状态</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t23'];?></label>
                                     <div class="col-sm-5">
-                                        <input type="checkbox" name="state" value="1" placeholder="状态" class="bootstrap-switch in-list" data-on-text="启用" data-off-text="停用" data-label-width="5" <?php echo $data['state']==1 ? 'checked' : ''; ?> />
+                                        <input type="checkbox" name="state" value="1" placeholder="<?php echo @$lang['t23'];?>" class="bootstrap-switch in-list" data-on-text="<?php echo @$lang['t24'];?>" data-off-text="<?php echo @$lang['t25'];?>" data-label-width="5" <?php echo $data['state']==1 ? 'checked' : ''; ?> />
                                         <?php if (isset($error['state'])) { ?><div class="text-danger"><?php echo $error['state']; ?></div><?php } ?>
                                     </div>
                                 </div>
@@ -101,9 +102,9 @@
 
                             <div class="form-group">
                                 <div class="col-sm-7">
-                                    <div class="pull-right">
-                                        <button type="submit" class="btn btn-sm btn-success margin-r-5">提交</button>
-                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default">返回</a>
+                                    <div style="text-align:center">
+                                        <button type="submit" class="btn btn-sm btn-success margin-r-5"  style="margin-right: 40px;padding:0 30px;height:40px;font-size:14px;"><?php echo @$lang['t26'];?></button>
+                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default" style="padding:0 30px;height:40px;font-size:14px;line-height:40px"><?php echo @$lang['t27'];?></a>
                                     </div>
                                 </div>
                             </div>

@@ -14,14 +14,50 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">站点</a></li>
-                    <li class=""><a href="<?php echo $version_user_action; ?>&type=2" data-toggle="tab">用户</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab">版本</a></li>
+                    <!-- <li class=""><a href="<?php echo $version_user_action; ?>&type=2" data-toggle="tab">用户</a></li>
                     <li class=""><a href="<?php echo $version_peration_action; ?>&type=3" data-toggle="tab">运维</a></li>
                     <li class=""><a href="<?php echo $version_lock_action; ?>&type=4" data-toggle="tab">锁桩</a></li>
-                    <li class=""><a href="<?php echo $version_bike_action; ?>&type=5" data-toggle="tab">车辆</a></li>
+                    <li class=""><a href="<?php echo $version_bike_action; ?>&type=5" data-toggle="tab">车辆</a></li> -->
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
+                        <form class="search_form" id="search_form" action="<?php echo $action; ?>" method="get">
+                            <!-- 搜索 -->
+                            <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
+                                <!-- <select class="input-sm" name="cooperator_id">
+                                    <option value="">合伙人</option>
+                                    <?php if (is_array($cooperators) && !empty($cooperators)) { ?>
+                                    <?php foreach($cooperators as $cooperator) { ?>
+                                    <option value="<?php echo $cooperator['cooperator_id']; ?>" <?php echo $cooperator['cooperator_id']==$filter['cooperator_id'] ? 'selected' : ''; ?>><?php echo $cooperator['cooperator_name']; ?></option>
+                                    <?php } ?>
+                                    <?php } ?>
+                                </select> -->
+                                
+                                <select class="input-sm" name="version_type">
+                                    <option value>--选择类别--</option>
+                                    <?php foreach($version_type as $k => $v) { ?>
+                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['version_type'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
+                                    <?php } ?>
+                                </select>
+
+                                <input type="text" id="version_name" name="version_name" value="<?php echo isset($filter['version_name']) ? $filter['version_name'] : ''; ?>"  class="input-sm" style="border: 1px solid #a9a9a9;" placeholder="输入版本号"/>
+                                <!-- <a id='del' class="glyphicon glyphicon-remove btn " style="pointer-events: auto"></a> -->
+
+                                 <!-- <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
+                                    <option value="0">选择时间区间</option>
+                                    <?php if(!empty($time_type)) {?>
+                                    <?php foreach($time_type as $k=>$v){?>
+                                    <option value="<?php echo $k?>" <?php echo $k == @$filter['time_type'] ? 'selected' : ''; ?>><?php echo $v?></option>
+                                    <?php }?>
+                                    <?php }?>
+                                </select>
+                                <input type="text" name="search_time" value="<?php echo $filter['search_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9; width: 200px;" placeholder="时间范围"/> -->
+                                <div class="pull-right">
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
+                                </div>
+                            </div>
+                        </form>
                         <!-- 新增 -->
                         <div class="form-group">
                             <a href="<?php echo $add_action; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
@@ -53,10 +89,13 @@
                                 <?php foreach ($data_rows as $data) { ?>
                                 <tr>
                                     <!--<td><input type="checkbox" name="selected[]" value="<?php echo $data['bicycle_id']?>"></td>-->
-                                    <td><?php echo $data['version_code']?></td>
+                                    <td><?php echo $version_type[$data['type']]?></td>
+                                    <td><?php echo $data['version_name']?></td>
                                     <td><?php echo $data['description']?></td>
+                                    <td><a href="<?php echo $data['download_url']?>"><?php echo $data['download_url']?></a></td>
                                     <td><?php echo $data['add_time']?></td>
                                     <td><?php echo $data['state']?></td>
+                                    <td><?php echo $data['device_num']?></td>
                                     <td><button data-url="<?php echo $data['edit_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-pencil"></i>编辑</button></td>
                                 </tr>
                                 <?php } ?>
@@ -83,5 +122,12 @@
     $("#filter_type").change(function() {
         $("#filter_text").attr("name", $(this).val());
     });
+
+
+    $(function () {
+        $('#del').click(function () {
+            $('#version_name')[0].value = "";
+        })
+    })
 </script>
 <?php echo $footer;?>

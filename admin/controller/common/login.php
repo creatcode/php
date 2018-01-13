@@ -35,7 +35,7 @@ class ControllerCommonLogin extends Controller {
         $this->assign($languages);
         $this->assign('is_login_page', true);
         $this->assign('static', HTTP_IMAGE);
-        $this->assign('title', '小强单车 | 登录');
+        $this->assign('title', 'eazymov | 登录');
         $this->assign('error', $this->error);
 
         $this->assign('action', $this->url->link('common/login', '', true));

@@ -11,6 +11,7 @@ class ControllerOperationViolation extends Controller {
 
         // 加载fault Model
         $this->load->library('sys_model/fault', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -55,10 +56,10 @@ class ControllerOperationViolation extends Controller {
         }
 
         $filter_types = array(
-            'bicycle_sn' => '单车编号',
-            'cooperator_name' => '合伙人',
-            'user_name' => '上报用户',
-            'content' => '上报描述'
+            'bicycle_sn' => $this->language->get('t12'),
+        
+            'user_name' =>$this->language->get('t13') ,
+            'content' => $this->language->get('t14')
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -132,7 +133,7 @@ class ControllerOperationViolation extends Controller {
         $this->assign('results', $results);
 
         $this->assign('export_action', $this->url->link('operation/violation/export'));
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('operation/violation_list', $this->output));
     }
 
@@ -173,7 +174,7 @@ class ControllerOperationViolation extends Controller {
 
         $data = array(
             'title' => array(
-                'bicycle_sn' => '单车编号',
+                'bicycle_sn' => '车辆编号',
                 'add_time' => '上报时间',
             ),
             'list' => $list,
@@ -190,15 +191,15 @@ class ControllerOperationViolation extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
-        $this->setDataColumn('单车编号');
-        $this->setDataColumn('合伙人');
-        $this->setDataColumn('上报用户');
-        $this->setDataColumn('上报描述');
-        $this->setDataColumn('违规类型');
-        $this->setDataColumn('上报时间');
-        $this->setDataColumn('处理状态');
-        $this->setDataColumn('处理时间');
-        $this->setDataColumn('处理人');
+        $this->setDataColumn($this->language->get('t12'));
+
+        $this->setDataColumn($this->language->get('t13'));
+        $this->setDataColumn($this->language->get('t14'));
+        $this->setDataColumn($this->language->get('t15'));
+        $this->setDataColumn($this->language->get('t7'));
+        $this->setDataColumn($this->language->get('t5'));
+        $this->setDataColumn($this->language->get('t16'));
+        $this->setDataColumn($this->language->get('t17'));
         return $this->data_columns;
     }
 
@@ -301,7 +302,7 @@ class ControllerOperationViolation extends Controller {
         $data = array(
             'title' => '违规停放列表',
             'header' => array(
-                'bicycle_sn' => '单车编号',
+                'bicycle_sn' => '车辆编号',
                 'cooperator_name' => '合伙人',
                 'user_name' => '上报用户',
                 'content' => '上报描述',

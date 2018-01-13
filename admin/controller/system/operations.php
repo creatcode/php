@@ -14,6 +14,7 @@ class ControllerSystemOperations extends Controller {
         $this->load->library('sys_model/admin', true);
         $this->load->library('sys_model/rbac', true);
         $this->load->library('logic/admin', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -112,11 +113,11 @@ class ControllerSystemOperations extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
-        $this->setDataColumn('用户名称');
-        $this->setDataColumn('电话');
-        $this->setDataColumn('所属公司');
-        $this->setDataColumn('最后登录时间');
-        $this->setDataColumn('状态');
+        $this->setDataColumn($this->language->get('t4'));
+        $this->setDataColumn($this->language->get('t5'));
+        $this->setDataColumn($this->language->get('t11'));
+        $this->setDataColumn($this->language->get('t12'));
+        $this->setDataColumn($this->language->get('t6'));
         return $this->data_columns;
     }
 

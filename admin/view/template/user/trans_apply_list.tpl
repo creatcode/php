@@ -21,18 +21,15 @@
                         <form class="search_form" id="search_form" action="<?php echo $action; ?>" method="get">
                             <!-- 搜索 -->
                             <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
-                                <select name="city_id" class="input-sm">
-                                    <option value="0">--选择城市--</option>
-                                    <?php foreach($cityList as $v){
-                                        if($city_id ==$v['city_id']){
-                                    ?>
-                                    <option selected="selected" value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php
-                                        }else{
-                                    ?>
-                                    <option value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php }
-                                     } ?>
+                                <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--全部区域--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--全部城市--</option>
+                                    
                                 </select>
                                 <select name="filter_type" id="filter_type" class="input-sm">
                                     <?php if (!empty($filter_types) && is_array($filter_types)) { ?>
@@ -91,6 +88,7 @@
                                 <tbody>
                                 <?php foreach ($data_rows as $data) { ?>
                                 <tr>
+                                    <td><?php echo $data['region_name']?></td>
                                     <td><?php echo $data['city_name']?></td>
                                     <td><?php echo $data['apply_user_name']?></td>
                                     <td><?php echo $data['pdr_sn']?></td>
@@ -123,7 +121,53 @@
     </div>
 </section>
 <!-- /.content -->
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--全部城市--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
 
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--全部城市--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
+</script>
 <script type="text/javascript">
    $(function(){
             addrat();

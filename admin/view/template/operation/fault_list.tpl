@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>故障记录列表</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,8 +14,9 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li <?php echo $bike_type==1?'class="active"':'';?>><a href="<?php echo $bike_type_1_url;?>" data-toggle="tab">桩车</a></li>
-                    <li <?php echo $bike_type==2?'class="active"':'';?>><a href="<?php echo $bike_type_2_url;?>" data-toggle="tab">单车</a></li>
+                    <li <?php echo $bike_type==2?'class="active"':'';?>><a href="<?php echo $bike_type_2_url;?>" data-toggle="tab"><?php echo @$lang['t3'];?></a></li>
+                    <li <?php echo $bike_type==1?'class="active"':'';?>><a href="<?php echo $bike_type_1_url;?>" data-toggle="tab"><?php echo @$lang['t4'];?></a></li>
+                    
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
@@ -31,13 +32,13 @@
                                 </select>
                                 <input type="text" name="<?php echo $filter_type; ?>" value="<?php echo isset($filter[$filter_type]) ? $filter[$filter_type] : ''; ?>" id="filter_text" class="input-sm" style="border: 1px solid #a9a9a9;"/>
                                 <select class="input-sm" name="fault_source">
-                                    <option value>故障来源</option>
+                                    <option value><?php echo @$lang['t5'];?></option>
                                     <?php foreach($fault_source as $k => $v) { ?>
-                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['fault_source'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
+                                    <option value="<?php echo $k; ?>"><?php echo $v; ?></option>
                                     <?php } ?>
                                 </select>
                                 <select class="input-sm" name="fault_type">
-                                    <option value>故障类型</option>
+                                    <option value><?php echo @$lang['t6'];?></option>
                                     <?php foreach($fault_types[$bike_type] as $k => $v) { ?>
                                     <option value>--<?php echo $v['parent_type'];?>--</option>
                                     <?php
@@ -50,22 +51,42 @@
                                     <?php } ?>
                                 </select>
                                 <select class="input-sm" name="processed">
-                                    <option value>处理状态</option>
+                                    <option value><?php echo @$lang['t7'];?></option>
                                     <?php foreach($process_states as $k => $v) { ?>
                                     <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['processed'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
                                     <?php } ?>
                                 </select>
-                                <input type="text" name="add_time" value="<?php echo $filter['add_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="上报时间"/>
+                                <select class="input-sm" name="">
+                                    <option value>--<?php echo @$lang['t8'];?>--</option>
+                                    
+                                </select>
+                                <select class="input-sm" name="">
+                                    <option value>--<?php echo @$lang['t9'];?>--</option>
+                                    
+                                </select>
+                                <select class="input-sm" name="">
+                                    <option value><?php echo @$lang['t10'];?></option>
+                                    
+                                </select>
+                                <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
+                                    <option value="0"><?php echo @$lang['t11'];?></option>
+                                    <?php if(!empty($time_type)) {?>
+                                    <?php foreach($time_type as $k=>$v){?>
+                                    <option value="<?php echo $k?>" <?php echo $k == @$filter['time_type'] ? 'selected' : ''; ?>><?php echo $v?></option>
+                                    <?php }?>
+                                    <?php }?>
+                                </select>
+                                <input type="text" name="add_time" value="<?php echo $filter['add_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="<?php echo @$lang['t13'];?>"/>
                                 <div class="pull-right">
-                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;<?php echo @$lang['t12'];?></button>
                                 </div>
                             </div>
                         </form>
                         <!-- 新增 -->
                         <div class="form-group">
                             <!-- <button class="btn btn-default btn-sm button-upload" data-action="<?php echo $import_action; ?>"><i class="fa fa-upload"></i>&nbsp;导入</button> -->
-                            <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;导出</button>
-                            <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_unused_action; ?>"><i class="fa fa-download"></i>&nbsp;导出五天未使用的单车</button>
+                            <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;<?php echo @$lang['t14'];?></button>
+                            <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_unused_action; ?>"><i class="fa fa-download"></i>&nbsp;<?php echo @$lang['t15'];?></button>
                         </div>
                         <?php if (isset($error['warning'])) { ?>
                         <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;<?php echo $error['warning']; ?>
@@ -85,7 +106,7 @@
                                     <?php foreach ($data_columns as $column) { ?>
                                     <th><?php echo $column['text']; ?></th>
                                     <?php } ?>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t16'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -95,25 +116,29 @@
                                     <td class="open-marker" data-bicycle-id="<?php echo $data['bicycle_id']?>" title="锁编号<?php echo $data['lock_sn']?>"><?php echo $data['bicycle_sn']?></td>
                                     <td><?php echo $data['fault_type']?></td>
                                     <td><?php echo $data['user_name']?></td>
-                                    <td><?php echo $data['cooperator_name']?></td>
+                                    <td>区域名</td>
+                                    <td>城市名</td>
                                     <td title="<?php echo $data['add_time_delta']?>"><?php echo $data['add_time']?></td>
                                     <td><?php echo $data['processed']?></td>
                                     <td title="<?php echo $data['handling_time_delta']?>"><?php echo $data['handling_time']?></td>
                                     <td><?php echo $data['nickname']?></td>
-                     
+                                    <td><?php echo ''?></td>
+                                     <td><?php echo ''?></td>
                                     <!--<td>
                                         <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>查看</button>
                                     </td>-->
                                     <td>
                                         <div class="btn-group">
-                                            <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>查看</button>
+                                            <button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t17'];?></button>
                                             <?php if($data['fault_type_id'] == 12){ ?>
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="#" onclick="finishOrder(<?php echo $data['lock_sn']?>, <?php echo $data['lng']?>, <?php echo $data['lat']?>)">快速处理</a></li>
+
+                                                <li><a href="#" onclick="finishOrder(<?php echo $data['lock_sn']?>, <?php echo $data['lng']?>, <?php echo $data['lat']?>)"><?php echo @$lang['t18'];?></a></li>
+
                                             </ul>
                                             <?php } ?>
                                         </div>
@@ -131,12 +156,30 @@
     </div>
 </section>
 <script type="text/javascript">
-    $('.date-range').daterangepicker({
-        locale:{
-            format: 'YYYY-MM-DD',
-            isAutoVal:false,
-        }
+    $(function(){
+            addrat();
     });
+        var b = "";
+        function addrat(){
+        var a = $("#time_select").val();
+        if(a==1){
+            b = "YYYY";
+        }else if(a==2){
+            b = "YYYY-MM";
+        }else if(a==3){
+            b = "YYYY-MM-DD";
+        }else if(a==0){
+            b = "YYYY-MM-DD";
+        }
+        $('.date-range').daterangepicker({
+            "showDropdowns": true,
+            locale:{
+                format: b,
+                isAutoVal:false,
+            }
+      });
+        
+    };
 
     $("#filter_type").change(function() {
         $("#filter_text").attr("name", $(this).val());
@@ -160,7 +203,7 @@
             global: false,
             success: function (result) {
                 if(!result.errorCode){
-                    alert('操作成功');
+                    alert('<?php echo @$lang['t19'];?>');
                 }
             }
         });

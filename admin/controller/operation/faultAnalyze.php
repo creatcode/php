@@ -11,6 +11,7 @@ class ControllerOperationFaultAnalyze extends Controller
         $this->load->library('sys_model/bicycle', true);
         $this->load->library('sys_model/fault', true);
         $this->load->library('sys_model/intelligent', true);
+        $this->assign('lang', $this->language->all());
     }
 
 
@@ -65,7 +66,7 @@ class ControllerOperationFaultAnalyze extends Controller
         $page_info = $this->page($total, $page, $rows, $filter, $offset);
         $this->assign('pagination', $page_info['pagination']);
         $this->assign('results', $page_info['results']);
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('intelligent/fault_bicycle_list', $this->output));
     }
 
@@ -90,6 +91,58 @@ class ControllerOperationFaultAnalyze extends Controller
         $total = $this->sys_model_fault->getTotalFaults($condition);
         $field = 'fault_type_id,fault_type_name';
         $type_list = $this->sys_model_fault->getFaultTypeList(array('is_show' => 1), '', '', $field);
+        $type_list=array(
+            array(
+                'fault_type_id'=>1,
+                'fault_type_name'=>'锁'
+            ),
+            array(
+                'fault_type_id'=>2,
+                'fault_type_name'=>'刹车'
+            ),
+            array(
+                'fault_type_id'=>3,
+                'fault_type_name'=>'龙头'
+            ),
+            array(
+                'fault_type_id'=>4,
+                'fault_type_name'=>'车铃'
+            ),
+            array(
+                'fault_type_id'=>5,
+                'fault_type_name'=>'传动轴'
+            ),
+            array(
+                'fault_type_id'=>6,
+                'fault_type_name'=>'脚踏板'
+            ),
+            array(
+                'fault_type_id'=>7,
+                'fault_type_name'=>'车座'
+            ),
+            array(
+                'fault_type_id'=>8,
+                'fault_type_name'=>'轮胎'
+            ),
+            array(
+                'fault_type_id'=>9,
+                'fault_type_name'=>'控制盒故障'
+            ),
+            array(
+                'fault_type_id'=>10,
+                'fault_type_name'=>'读卡器'
+            ),
+            array(
+                'fault_type_id'=>11,
+                'fault_type_name'=>'低电量'
+            ),
+            array(
+                'fault_type_id'=>12,
+                'fault_type_name'=>'其他'
+            ),
+            
+            
+        );
         foreach ($type_list as &$type) {
             foreach ($result as $re) {
                 if ($re['fault_type']) {
@@ -116,6 +169,7 @@ class ControllerOperationFaultAnalyze extends Controller
         $this->assign('filter', $filter);
         $this->assign('action', $this->cur_url);
         $this->assign('fault_analyze_url', $this->url->link('operation/faultAnalyze'));
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('intelligent/chart', $this->output));
     }
 

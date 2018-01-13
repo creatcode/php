@@ -84,7 +84,7 @@ class Sms {
     }
 
     /**
-     * 注册最后一步检测短信是否验证过，并且没有使用
+     * 注册最后一步检测短信是否发送过，并且没有使用
      * @param $mobile
      * @param $code
      * @param string $type
@@ -103,6 +103,13 @@ class Sms {
         return true;
     }
 
+    /**
+     * 如果验证码还没有使用 返回真 并且将短信设置为已经使用状态
+     * @param $mobile
+     * @param $code
+     * @param string $type
+     * @return bool
+     */
     public function enInvalid($mobile, $code, $type = 'register') {
         if($mobile=='15088159005' || $mobile=='13926578916' || $mobile=='18819843907' || $mobile=='13035837339' || $mobile =='13416632205') return true; //苹果测试人员的特别通道。
         if (empty($code)) return false;
@@ -154,9 +161,9 @@ class Sms {
             }
         }*/
         //fix vincemt : 2017-08-25 检查User-Agent是否合法
-        if(!check_user_agent()){
+        /*if(!check_user_agent()){
             return true;
-        }  
+        }*/
 		if(empty($mobile) || empty($type) || empty($ip)){
 			return true;
 		}

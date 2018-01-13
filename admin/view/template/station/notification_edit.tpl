@@ -21,7 +21,7 @@
         
                         <form class="form-horizontal" method="post" action="">
 							<div class="form-group">
-                                    <label class="col-sm-2 control-label">类型</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t12'];?></label>
                                     <div class="col-sm-5">
                                         <select name="cooperator_id" class="form-control">
                                             <option value="0">调度</option>
@@ -32,7 +32,7 @@
                                     </div>
                                 </div>
 							<div class="form-group">
-                                    <label class="col-sm-2 control-label">指派到</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t13'];?></label>
                                     <div class="col-sm-5">
                                         <select name="cooperator_id" class="form-control">
                                             <option value="0">运维员a</option>
@@ -46,18 +46,18 @@
                                     </div>
                                 </div>
 							<div class="form-group">
-                                    <label class="col-sm-2 control-label">指令内容</label>
+                                    <label class="col-sm-2 control-label"><?php echo @$lang['t14'];?></label>
                                     <div class="col-sm-5">
                                         <textarea  class="form-control date" rows="5"></textarea>
                                        
                                     </div>
                                 </div>
                             <div class="form-group">
-                                <div class="col-sm-10">
-                                    <div class="pull-right">
+                                <div class="col-sm-8">
+                                    <div style="text-align:center">
                                       
-                                        <button type="submit" class="btn btn-sm btn-success margin-r-5">提交</button>
-                                        <a href="" class="btn btn-sm btn-default">返回</a>
+                                        <button type="submit" class="btn btn-sm btn-success margin-r-5"  style="margin-right: 40px;padding:0 30px;height:40px;font-size:14px;"><?php echo @$lang['t15'];?></button>
+                                        <a href="" class="btn btn-sm btn-default" style="padding:0 30px;height:40px;font-size:14px;line-height:40px"><?php echo @$lang['t16'];?></a>
                                     </div>
                                 </div>
                             </div>

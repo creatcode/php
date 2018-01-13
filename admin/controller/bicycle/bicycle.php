@@ -1,9 +1,12 @@
 <?php
-class ControllerBicycleBicycle extends Controller {
+
+class ControllerBicycleBicycle extends Controller
+{
     private $cur_url = null;
     private $error = null;
 
-    public function __construct($registry) {
+    public function __construct($registry)
+    {
         parent::__construct($registry);
 
         // 当前网址
@@ -15,17 +18,22 @@ class ControllerBicycleBicycle extends Controller {
 
         // 加载 region Model
         $this->load->library('sys_model/region', true);
+        $this->assign('lang', $this->language->all());
     }
 
     /**
-     * 单车列表
+     * 车辆列表
      */
-    public function index() {
-        $filter = $this->request->get(array('bicycle_sn', 'type', 'lock_sn', 'region_name', 'cooperator_name', 'is_using', 'add_time'));
+    public function index()
+    {
+        $filter = $this->request->get(array('bicycle_sn', 'lock_sn', 'full_bicycle_sn', 'region_id', 'city_id', 'bicycle_status', 'add_time', 'type'));
 
         $condition = array();
         if (!empty($filter['bicycle_sn'])) {
             $condition['bicycle_sn'] = array('like', "%{$filter['bicycle_sn']}%");
+        }
+        if (!empty($filter['full_bicycle_sn'])) {
+            $condition['bicycle.full_bicycle_sn'] = array('like', "%{$filter['full_bicycle_sn']}%");
         }
         if (is_numeric($filter['type'])) {
             $condition['type'] = (int)$filter['type'];
@@ -33,14 +41,14 @@ class ControllerBicycleBicycle extends Controller {
         if (!empty($filter['lock_sn'])) {
             $condition['bicycle.lock_sn'] = array('like', "%{$filter['lock_sn']}%");
         }
-        if (!empty($filter['region_name'])) {
-            $condition['region.region_name'] = array('like', "%{$filter['region_name']}%");
+        if (!empty($filter['region_id'])) {
+            $condition['bicycle.region_id'] = (int)$filter['region_id'];
         }
-        if (!empty($filter['cooperator_name'])) {
-            $condition['cooperator.cooperator_name'] = array('like', "%{$filter['cooperator_name']}%");
+        if (!empty($filter['city_id'])) {
+            $condition['bicycle.city_id'] = (int)$filter['city_id'];
         }
-        if (is_numeric($filter['is_using'])) {
-            $condition['is_using'] = (int)$filter['is_using'];
+        if (is_numeric($filter['bicycle_status'])) {
+            $condition['bicycle.bicycle_status'] = (int)$filter['bicycle_status'];
         }
         if (!empty($filter['add_time'])) {
             $add_time = explode(' 至 ', $filter['add_time']);
@@ -61,11 +69,11 @@ class ControllerBicycleBicycle extends Controller {
         $offset = ($page - 1) * $rows;
         $limit = sprintf('%d, %d', $offset, $rows);
 
-        $field = 'bicycle.*,region.region_name,cooperator.cooperator_name,lock.lock_type';
+        $field = 'bicycle.*,region.region_name,lock.lock_type,lock.battery,city.city_name';
 
         $join = array(
             'region' => 'region.region_id=bicycle.region_id',
-            'cooperator' => 'cooperator.cooperator_id=bicycle.cooperator_id',
+            'city' => 'city.city_id=bicycle.city_id',
             'lock' => 'lock.lock_sn=bicycle.lock_sn'
         );
 
@@ -75,7 +83,8 @@ class ControllerBicycleBicycle extends Controller {
         $model = array(
             'type' => get_bicycle_type(),
             'lock_type' => get_lock_type(),
-            'is_using' => get_common_boolean()
+            'is_using' => get_common_boolean(),
+            'bicycle_status' => get_bicycle_status()
         );
         if (is_array($result) && !empty($result)) {
             foreach ($result as &$item) {
@@ -83,17 +92,18 @@ class ControllerBicycleBicycle extends Controller {
                     $item[$k] = isset($v[$item[$k]]) ? $v[$item[$k]] : '';
                 }
                 $item['add_time'] = isset($item['add_time']) && !empty($item['add_time']) ? date('Y-m-d H:i:s', $item['add_time']) : '';
-                $item['edit_action'] = $this->url->link('bicycle/bicycle/edit', 'bicycle_id='.$item['bicycle_id']);
-                $item['delete_action'] = $this->url->link('bicycle/bicycle/delete', 'bicycle_id='.$item['bicycle_id']);
-                $item['info_action'] = $this->url->link('bicycle/bicycle/info', 'bicycle_id='.$item['bicycle_id']);
+                $item['edit_action'] = $this->url->link('bicycle/bicycle/edit', 'bicycle_id=' . $item['bicycle_id']);
+                $item['delete_action'] = $this->url->link('bicycle/bicycle/delete', 'bicycle_id=' . $item['bicycle_id']);
+                $item['info_action'] = $this->url->link('bicycle/bicycle/info', 'bicycle_id=' . $item['bicycle_id']);
+                $item['full_bicycle_sn'] = empty($item['full_bicycle_sn']) ? '' : $item['full_bicycle_sn'];
+                $item['bike_status'] = '可租用';
             }
         }
 
         $filter_types = array(
-            'bicycle_sn' => '单车编号',
-            'lock_sn' => '车锁编号',
-            'region_name' => '区域',
-            'cooperator_name' => '合伙人',
+            'bicycle_sn' => $this->language->get('t25'),
+            'lock_sn' => $this->language->get('t26'),
+            'full_bicycle_sn' => $this->language->get('t27')
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -101,12 +111,12 @@ class ControllerBicycleBicycle extends Controller {
             $filter_type = key($filter_types);
         }
 
-        // 使用中单车数
+        // 使用中车辆数
         $condition = array(
             'is_using' => 1
         );
         $using_bicycle = $this->sys_model_bicycle->getTotalBicycles($condition);
-        // 故障单车数
+        // 故障车辆数
         $condition = array(
             'fault' => 1
         );
@@ -130,8 +140,8 @@ class ControllerBicycleBicycle extends Controller {
         $this->assign('export_action', $this->url->link('bicycle/bicycle/export'));
         $this->assign('export_qrcode_action', $this->url->link('bicycle/bicycle/export_qrcode'));
         $this->assign('import_bicycle_action', $this->url->link('bicycle/bicycle/importBicycle'));
-        $this->assign('exchange_lock_action', $this->url->link('bicycle/bicycle/exchangelock','type=normal'));
-        $this->assign('exchange_lock_action_bt', $this->url->link('bicycle/bicycle/exchangelock','type=bt'));
+        $this->assign('exchange_lock_action', $this->url->link('bicycle/bicycle/exchangelock', 'type=normal'));
+        $this->assign('exchange_lock_action_bt', $this->url->link('bicycle/bicycle/exchangelock', 'type=bt'));
         if (isset($this->session->data['success'])) {
             $this->assign('success', $this->session->data['success']);
             unset($this->session->data['success']);
@@ -148,6 +158,14 @@ class ControllerBicycleBicycle extends Controller {
         $this->assign('pagination', $pagination);
         $this->assign('results', $results);
 
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
+        $this->assign('time_type', get_time_type());
         $this->response->setOutput($this->load->view('bicycle/bicycle_list', $this->output));
     }
 
@@ -155,22 +173,28 @@ class ControllerBicycleBicycle extends Controller {
      * 表格字段
      * @return mixed
      */
-    protected function getDataColumns() {
-        $this->setDataColumn('单车编号');
-        $this->setDataColumn('车锁编号');
-        $this->setDataColumn('单车类型');
-        $this->setDataColumn('锁类型');
-        $this->setDataColumn('城市');
-        $this->setDataColumn('合伙人');
-        $this->setDataColumn('是否使用中');
-        $this->setDataColumn('添加时间');
+    protected function getDataColumns()
+    {
+        $this->setDataColumn($this->language->get('t25'));
+        $this->setDataColumn($this->language->get('t26'));
+        $this->setDataColumn($this->language->get('t27'));
+        $this->setDataColumn($this->language->get('t28'));
+        $this->setDataColumn($this->language->get('t54'));
+        $this->setDataColumn($this->language->get('t55'));
+        $this->setDataColumn($this->language->get('t56'));
+        $this->setDataColumn($this->language->get('t57'));
+
+        $this->setDataColumn($this->language->get('t58'));
+        $this->setDataColumn($this->language->get('t39'));
+        $this->setDataColumn($this->language->get('t59'));
         return $this->data_columns;
     }
 
     /**
-     * 批量添加单车
+     * 批量添加车辆
      */
-    public function batchadd() {
+    public function batchadd()
+    {
         // 设置不会超时
         set_time_limit(0);
         $bicycle_ids = $bicycles = array();
@@ -210,7 +234,7 @@ class ControllerBicycleBicycle extends Controller {
 
                 // 生成二维码图片
                 $qrcodeInfo = array(
-                    'qrcodeText' => sprintf('https://open.s-bike.cn/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $data['bicycle_sn']),
+                    'qrcodeText' => sprintf('https://open.eazymov.net/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $data['bicycle_sn']),
                     'fullcode' => sprintf('%03d%02d %06d', $region['region_city_code'], $region['region_city_ranking'], $data['bicycle_sn']),
                     'code' => $data['bicycle_sn']
                 );
@@ -226,14 +250,14 @@ class ControllerBicycleBicycle extends Controller {
             $data = array(
                 'admin_id' => $this->logic_admin->getId(),
                 'admin_name' => $this->logic_admin->getadmin_name(),
-                'log_description' => '批量添加单车：' . implode(',', $bicycle_ids),
+                'log_description' => '批量添加车辆：' . implode(',', $bicycle_ids),
                 'log_ip' => $this->request->ip_address(),
                 'log_type_id' => 7,
                 'log_time' => date('Y-m-d H:i:s')
             );
             $this->sys_model_admin_log->addAdminLog($data);
 
-            $this->session->data['success'] = '批量添加单车成功！';
+            $this->session->data['success'] = '批量添加车辆成功！';
         }
 
         $this->assign('title', '批量添加');
@@ -265,9 +289,10 @@ class ControllerBicycleBicycle extends Controller {
 
 
     /**
-     * 批量添加单车（连号）
+     * 批量添加车辆（连号）
      */
-    public function batchadd_consecutive() {
+    public function batchadd_consecutive()
+    {
         // 设置不会超时
         set_time_limit(0);
         $bicycle_ids = $bicycles = array();
@@ -307,7 +332,7 @@ class ControllerBicycleBicycle extends Controller {
 
                 // 生成二维码图片
                 $qrcodeInfo = array(
-                    'qrcodeText' => sprintf('https://open.s-bike.cn/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $data['bicycle_sn']),
+                    'qrcodeText' => sprintf('https://open.eazymov.net/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $data['bicycle_sn']),
                     'fullcode' => sprintf('%03d%02d %06d', $region['region_city_code'], $region['region_city_ranking'], $data['bicycle_sn']),
                     'code' => $data['bicycle_sn']
                 );
@@ -323,14 +348,14 @@ class ControllerBicycleBicycle extends Controller {
             $data = array(
                 'admin_id' => $this->logic_admin->getId(),
                 'admin_name' => $this->logic_admin->getadmin_name(),
-                'log_description' => '批量添加单车：' . implode(',', $bicycle_ids),
+                'log_description' => '批量添加车辆：' . implode(',', $bicycle_ids),
                 'log_ip' => $this->request->ip_address(),
                 'log_type_id' => 7,
                 'log_time' => date('Y-m-d H:i:s')
             );
             $this->sys_model_admin_log->addAdminLog($data);
 
-            $this->session->data['success'] = '批量添加单车成功！';
+            $this->session->data['success'] = '批量添加车辆成功！';
         }
 
         $this->assign('title', '批量添加');
@@ -361,19 +386,20 @@ class ControllerBicycleBicycle extends Controller {
     }
 
     /**
-     * 添加单车
+     * 添加车辆
      */
-    public function add() {
-        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_id', 'cooperator_id'));
+    public function add()
+    {
+        if (($this->request->server['REQUEST_METHOD'] == 'POST')) {
+            $input = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_id', 'city_id', 'full_bicycle_sn'));
 
-            // 判断单车是否重复
+            // 判断车辆是否重复
             $condition = array(
                 'bicycle_sn' => $input['bicycle_sn']
             );
             $exist = $this->sys_model_bicycle->getTotalBicycles($condition);
             if ($exist) {
-                die('单车编号已存在!');
+                die('车辆编号已存在!');
             }
 
             /*判断lock_sn是否存在 开始*/
@@ -392,12 +418,13 @@ class ControllerBicycleBicycle extends Controller {
                 'bicycle_sn' => $input['bicycle_sn'],
                 'region_id' => $input['region_id'],
                 'region_name' => $region['region_name'],
-                'full_bicycle_sn' => $full_bicycle_sn,
+                'full_bicycle_sn' => $input['full_bicycle_sn'],
                 'type' => (int)$input['type'],
                 'lock_sn' => $lock_info['lock_sn'],
                 'lock_id' => $lock_info['lock_id'],
-                'cooperator_id' => $input['cooperator_id'],
-                'add_time' => $now
+                'cooperator_id' => 0,
+                'add_time' => $now,
+                'city_id' => $input['city_id']
             );
             $bicycle_id = $this->sys_model_bicycle->addBicycle($data);
 
@@ -406,7 +433,7 @@ class ControllerBicycleBicycle extends Controller {
             $data = array(
                 'admin_id' => $this->logic_admin->getId(),
                 'admin_name' => $this->logic_admin->getadmin_name(),
-                'log_description' => '添加单车：' . $bicycle_id,
+                'log_description' => '添加车辆：' . $bicycle_id,
                 'log_ip' => $this->request->ip_address(),
                 'log_type_id' => 7,
                 'log_time' => date('Y-m-d H:i:s')
@@ -416,7 +443,7 @@ class ControllerBicycleBicycle extends Controller {
 
             // 生成二维码图片
             $data = array(
-                'qrcodeText' => sprintf('https://open.s-bike.cn/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $input['bicycle_sn']),
+                'qrcodeText' => sprintf('https://open.eazymov.net/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $input['bicycle_sn']),
                 'fullcode' => sprintf('%03d%02d %06d', $region['region_city_code'], $region['region_city_ranking'], $input['bicycle_sn']),
                 'code' => $input['bicycle_sn']
             );
@@ -427,33 +454,43 @@ class ControllerBicycleBicycle extends Controller {
             $this->load->controller('common/qrcode/buildTailQrCode', $data);
 
 
-            $this->session->data['success'] = '添加单车成功！';
+            $this->session->data['success'] = '添加车辆成功！';
 
             $filter = array('bicycle_sn', 'type', 'lock_sn', 'region_name', 'cooperator_name', 'is_using');
 
             $this->load->controller('common/base/redirect', $this->url->link('bicycle/bicycle', $filter, true));
         }
 
-        $this->assign('title', '新增单车');
+        $this->assign('title', '新增车辆');
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
+
         $this->getForm();
     }
 
     /**
-     * 编辑单车
+     * 编辑车辆
      */
-    public function edit() {
+    public function edit()
+    {
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_id', 'cooperator_id'));
+            $input = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_id', 'city_id', 'full_bicycle_sn'));
             $bicycle_id = $this->request->get['bicycle_id'];
 
-            // 判断单车是否重复
+            // 判断车辆是否重复
             $condition = array(
                 'bicycle_sn' => $input['bicycle_sn'],
                 'bicycle_id' => array('neq', $bicycle_id)
             );
             $exist = $this->sys_model_bicycle->getTotalBicycles($condition);
             if ($exist) {
-                die('单车编号已存在!');
+                die('车辆编号已存在!');
             }
 
             /*判断lock_sn是否存在 开始*/
@@ -473,7 +510,8 @@ class ControllerBicycleBicycle extends Controller {
                 'type' => (int)$input['type'],
                 'lock_sn' => $lock_info['lock_sn'],
                 'lock_id' => $lock_info['lock_id'],
-                'cooperator_id' => $input['cooperator_id'],
+                'city_id' => $input['city_id'],
+                'full_bicycle_sn' => $input['full_bicycle_sn'],
             );
             $condition = array(
                 'bicycle_id' => $bicycle_id
@@ -485,7 +523,7 @@ class ControllerBicycleBicycle extends Controller {
             $data = array(
                 'admin_id' => $this->logic_admin->getId(),
                 'admin_name' => $this->logic_admin->getadmin_name(),
-                'log_description' => '编辑单车：' . $bicycle_id,
+                'log_description' => '编辑车辆：' . $bicycle_id,
                 'log_ip' => $this->request->ip_address(),
                 'log_type_id' => 7,
                 'log_time' => date('Y-m-d H:i:s')
@@ -494,7 +532,7 @@ class ControllerBicycleBicycle extends Controller {
 
             // 生成二维码图片
             $data = array(
-                'qrcodeText' => sprintf('https://open.s-bike.cn/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $input['bicycle_sn']),
+                'qrcodeText' => sprintf('https://open.eazymov.net/?b=%03d%02d%06d', $region['region_city_code'], $region['region_city_ranking'], $input['bicycle_sn']),
                 'fullcode' => sprintf('%03d%02d %06d', $region['region_city_code'], $region['region_city_ranking'], $input['bicycle_sn']),
                 'code' => $input['bicycle_sn']
             );
@@ -504,21 +542,31 @@ class ControllerBicycleBicycle extends Controller {
             $this->load->controller('common/qrcode/buildBackQrCode', $data);
             $this->load->controller('common/qrcode/buildTailQrCode', $data);
 
-            $this->session->data['success'] = '编辑单车成功！';
+            $this->session->data['success'] = '编辑车辆成功！';
 
             $filter = array('bicycle_sn', 'type', 'lock_sn', 'region_name', 'cooperator_name', 'is_using');
 
             $this->load->controller('common/base/redirect', $this->url->link('bicycle/bicycle', $filter, true));
         }
 
-        $this->assign('title', '编辑单车');
+        $this->assign('title', '编辑车辆');
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
+
         $this->getForm();
     }
 
     /**
-     * 删除单车
+     * 删除车辆
      */
-    public function delete() {
+    public function delete()
+    {
         if (isset($this->request->get['bicycle_id']) && $this->validateDelete()) {
             $condition = array(
                 'bicycle_id' => $this->request->get['bicycle_id']
@@ -530,14 +578,14 @@ class ControllerBicycleBicycle extends Controller {
             $data = array(
                 'admin_id' => $this->logic_admin->getId(),
                 'admin_name' => $this->logic_admin->getadmin_name(),
-                'log_description' => '删除单车：' . $this->request->get['bicycle_id'],
+                'log_description' => '删除车辆：' . $this->request->get['bicycle_id'],
                 'log_ip' => $this->request->ip_address(),
                 'log_type_id' => 7,
                 'log_time' => date('Y-m-d H:i:s')
             );
             $this->sys_model_admin_log->addAdminLog($data);
 
-            $this->session->data['success'] = '删除单车成功！';
+            $this->session->data['success'] = '删除车辆成功！';
         }
 
         if (isset($this->session->data['success'])) {
@@ -550,15 +598,24 @@ class ControllerBicycleBicycle extends Controller {
     }
 
     /**
-     * 单车详情
+     * 车辆详情
      */
-    public function info() {
+    public function info()
+    {
         // 编辑时获取已有的数据
         $bicycle_id = $this->request->get('bicycle_id');
         $condition = array(
             'bicycle_id' => $bicycle_id
         );
         $info = $this->sys_model_bicycle->getBicycleInfo($condition);
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $region = $this->sys_model_region->getRegionList(['region_id' => $info['region_id']], '', '', 'region_id,region_name');
+        $region_name = empty($region[0]['region_name']) ? '未知区域' : $region[0]['region_name'];
+        $city = $this->sys_model_city->getCityList(['region_id' => $info['city_id']], '', '', 'city_id,city_name', []);
+        $city_name = empty($city[0]['city_name']) ? '未知城市' : $city[0]['city_name'];
+        $info['place'] = $region_name . ',' . $city_name;
         if (!empty($info)) {
             $model = array(
                 'type' => get_bicycle_type(),
@@ -589,17 +646,32 @@ class ControllerBicycleBicycle extends Controller {
     }
 
     /**
-     *单车导入数据页面
+     *车辆导入数据页面
      */
-    public function importBicycle(){
-        if($this->request->server['REQUEST_METHOD'] == 'POST'){
-            $input = $this->request->post(array('cooper_id', 'type', 'region', 'bicycle_list'));
+    public function importBicycle()
+    {
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        if ($this->request->server['REQUEST_METHOD'] == 'POST') {
+            $input = $this->request->post(array('cooper_id', 'type', 'region', 'bicycle_list', 'city'));
+            $city = $input['city'];
+
             $region_info = $this->sys_model_region->getRegionInfo(array('region_id' => $input['region']));
             $bicycle_array = json_decode(html_entity_decode($input['bicycle_list']), true);
             $count = count($bicycle_array);
-            for($i=0;$i<$count;$i++) {
-                if($bicycle_array[$i]['has_bicycle_sn'] || 0 == $bicycle_array[$i]['has_lock_sn']){
+            for ($i = 0; $i < $count; $i++) {
+                if (empty($city)) {
+                    $bicycle_error = '请选择城市';
+                    $this->assign('error', $bicycle_error);
+                    break;
+                }
+                if ($bicycle_array[$i]['has_bicycle_sn']) {
                     $bicycle_error = '有重复数据';
+                    $this->assign('error', $bicycle_error);
+                    break;
+                }
+                if (0 == $bicycle_array[$i]['has_lock_sn']) {
+                    $bicycle_error = '没有锁数据';
                     $this->assign('error', $bicycle_error);
                     break;
                 }
@@ -610,8 +682,9 @@ class ControllerBicycleBicycle extends Controller {
                     'region_id' => $region_info['region_id'],
                     'region_name' => $region_info['region_name'],
                     'full_bicycle_sn' => sprintf('%03d%02d%06d', $region_info['region_city_code'], $region_info['region_city_ranking'], $bicycle_array[$i]['bicycle_sn']),
-                    'cooperator_id' => $input['cooper_id'],
+                    'cooperator_id' => 0,
                     'add_time' => TIMESTAMP,
+                    'city_id' => $city,
                 );
                 $this->sys_model_bicycle->addBicycle($data);
             }
@@ -620,6 +693,13 @@ class ControllerBicycleBicycle extends Controller {
                 $this->load->controller('common/base/redirect', $this->url->link('bicycle/bicycle', $filter, true));
             }
         }
+
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+        $this->assign('filter_regions', $filter_regions);
+
         $this->load->library('sys_model/cooperator', true);
         $cooperators = $this->sys_model_cooperator->getCooperatorList(array('state' => 1));
         $regions = $this->sys_model_region->getRegionList();
@@ -629,13 +709,15 @@ class ControllerBicycleBicycle extends Controller {
         $this->assign('static_server', HTTP_IMAGE);
         $this->assign('cooperators', $cooperators);
         $this->assign('regions', $regions);
+        $this->assign('lock_action', $this->url->link('lock/lock'));
         $this->response->setOutput($this->load->view('bicycle/bicycle_import', $this->output));
     }
 
     /**
-     * 导入单车
+     * 导入车辆
      */
-    public function import() {
+    public function import()
+    {
         // 获取上传EXCEL文件数据
         $excelData = $this->load->controller('common/base/importExcel');
         $data = '';
@@ -660,13 +742,14 @@ class ControllerBicycleBicycle extends Controller {
                 }
             }
         }
-        $this->response->showSuccessResult($data, '导入成功单车');
+        $this->response->showSuccessResult($data, '导入成功车辆');
     }
 
     /**
      * 导出
      */
-    public function export() {
+    public function export()
+    {
         @ini_set('memory_limit', '2048M');
         $filter = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_name', 'cooperator_name', 'is_using'));
 
@@ -691,65 +774,69 @@ class ControllerBicycleBicycle extends Controller {
         }
         $order = 'bicycle.add_time DESC';
         $limit = '';
-        $field = 'bicycle.*,cooperator.cooperator_name,lock.system_time,(select end_time from rich_orders where rich_orders.bicycle_id=bicycle.bicycle_id and order_state=2 order by end_time desc limit 1) as noUsedDays';
-
+//        $field = 'bicycle.*,cooperator.cooperator_name,lock.system_time,(select end_time from rich_orders where rich_orders.bicycle_id=bicycle.bicycle_id and order_state=2 order by end_time desc limit 1) as noUsedDays';
+        $field = 'bicycle.*,lock.lock_type,lock.battery,city.city_name';
         $join = array(
-            'cooperator' => 'cooperator.cooperator_id=bicycle.cooperator_id',
             'lock' => 'lock.lock_sn=bicycle.lock_sn',
+            'city' => 'city.city_id=bicycle.city_id',
         );
 
         $header = array(
-            'bicycle_sn' => '单车编号',
+            'bicycle_sn' => '车辆编号',
             'lock_sn' => '车锁编号',
-            'type' => '单车类型',
+            'full_bicycle_sn' => '车身号',
+            'type' => '车辆类型',
+            'lock_type' => '锁类型',
+            'battery' => '车身电量',
             'region_name' => '区域',
-            'cooperator_name' => '合伙人',
+            'city_id' => '城市',
             'is_using' => '是否使用中',
-            'illegal_parking' => '是否违停',
-            'fault' => '是否故障',
-            'lost' => '是否失联',
-            'noUsedDays' => '未使用天数',
+            'add_time' => '添加时间',
+            'bicycle_status' => '车辆状态',
         );
-        
+
         $total = $this->sys_model_bicycle->getTotalBicycles($condition, $join);
 
-        if($total > 50000) {
+        if ($total > 50000) {
             $data = array(
-                'filename' => '单车列表',
-                'title' => '单车列表-导出列表记录太多了，请使用筛选条件缩窄范围',
+                'filename' => '车辆列表',
+                'title' => '车辆列表-导出列表记录太多了，请使用筛选条件缩窄范围',
                 'header' => $header,
-                'list' => array(array('bicycle_sn' => '共 '.$total.' 条记录'))
+                'list' => array(array('bicycle_sn' => '共 ' . $total . ' 条记录'))
             );
             $this->load->controller('common/base/exportExcel', $data);
             exit;
         }
 
-        $now = TIMESTAMP;
         $bicycles = $this->sys_model_bicycle->getBicycleList($condition, $order, $limit, $field, $join);
         $list = array();
         if (is_array($bicycles) && !empty($bicycles)) {
             $bicycle_types = get_bicycle_type();
+            $lock_type = get_lock_type();
             $use_states = get_common_boolean();
+            $bicycle_states = get_bicycle_status();
             foreach ($bicycles as $bicycle) {
-                $islost = intval(boolval($now - 3600 > $bicycle['system_time']));
+                $bicycle['add_time'] = date("Y-m-d H:i", $bicycle['add_time']);
                 $list[] = array(
                     'bicycle_sn' => $bicycle['bicycle_sn'],
                     'lock_sn' => $bicycle['lock_sn'],
+                    'full_bicycle_sn' => $bicycle['full_bicycle_sn'],
                     'type' => $bicycle_types[$bicycle['type']],
+                    'lock_type' => $lock_type[$bicycle['lock_type']],
+                    'battery' => $bicycle['battery'] . '%',
                     'region_name' => $bicycle['region_name'],
-                    'cooperator_name' => $bicycle['cooperator_name'],
+                    'city_id' => $bicycle['city_name'],
                     'is_using' => $use_states[$bicycle['is_using']],
-                    'illegal_parking' => $use_states[$bicycle['illegal_parking']],
-                    'fault' => $use_states[$bicycle['fault']],
-                    'lost' => $use_states[$islost],
-                    'noUsedDays' => !empty($bicycle['noUsedDays']) ? floor(($now - $bicycle['noUsedDays']) / 86400) : '从未使用过'
+                    'add_time' => $bicycle['add_time'],
+                    'bicycle_status' => $bicycle_states[$bicycle['bicycle_status']],
+
                 );
             }
         }
 
         $data = array(
-            'title' => '单车列表',
-            'header' => $header, 
+            'title' => '车辆列表',
+            'header' => $header,
             'list' => $list
         );
         $this->load->controller('common/base/exportExcel', $data);
@@ -758,7 +845,8 @@ class ControllerBicycleBicycle extends Controller {
     /**
      * 导出二维码
      */
-    public function export_qrcode() {
+    public function export_qrcode()
+    {
         set_time_limit(0);
         if (isset($this->request->get['operation']) && $this->request->get['operation'] == 'export') {
             $filter = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_name', 'cooperator_name', 'is_using', 'add_time'));
@@ -910,7 +998,7 @@ class ControllerBicycleBicycle extends Controller {
                 foreach ($bicycles as $bicycle) {
                     // 生成二维码图片
                     $qrcodeInfo = array(
-                        'qrcodeText' => sprintf('https://open.s-bike.cn/?b=%03d%02d%06d', $bicycle['region_city_code'], $bicycle['region_city_ranking'], $bicycle['bicycle_sn']),
+                        'qrcodeText' => sprintf('https://open.eazymov.net/?b=%03d%02d%06d', $bicycle['region_city_code'], $bicycle['region_city_ranking'], $bicycle['bicycle_sn']),
                         'fullcode' => sprintf('%03d%02d %06d', $bicycle['region_city_code'], $bicycle['region_city_ranking'], $bicycle['bicycle_sn']),
                         'code' => $bicycle['bicycle_sn']
                     );
@@ -991,7 +1079,7 @@ class ControllerBicycleBicycle extends Controller {
             }
 
             $filter_types = array(
-                'bicycle_sn' => '单车编号',
+                'bicycle_sn' => '车辆编号',
                 'lock_sn' => '车锁编号',
                 'region_name' => '区域',
                 'cooperator_name' => '合伙人',
@@ -1002,21 +1090,21 @@ class ControllerBicycleBicycle extends Controller {
                 $filter_type = key($filter_types);
             }
 
-            // 使用中单车数
+            // 使用中车辆数
             $condition = array(
                 'is_using' => 1
             );
             $using_bicycle = $this->sys_model_bicycle->getTotalBicycles($condition);
-            // 故障单车数
+            // 故障车辆数
             $condition = array(
                 'fault' => 1
             );
             $fault_bicycle = $this->sys_model_bicycle->getTotalBicycles($condition);
 
             $data_columns = array(
-                '单车编号',
+                '车辆编号',
                 '车锁编号',
-                '单车类型',
+                '车辆类型',
                 '区域',
                 '合伙人',
                 '是否使用中',
@@ -1049,7 +1137,8 @@ class ControllerBicycleBicycle extends Controller {
         }
     }
 
-    private function getForm() {
+    private function getForm()
+    {
         // 编辑时获取已有的数据
         $info = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_id', 'cooperator_id'));
         $bicycle_id = $this->request->get('bicycle_id');
@@ -1089,7 +1178,8 @@ class ControllerBicycleBicycle extends Controller {
      * 验证表单数据
      * @return bool
      */
-    private function validateForm() {
+    private function validateForm()
+    {
         $input = $this->request->post(array('bicycle_sn', 'type', 'lock_sn', 'region_id'));
 
         foreach ($input as $k => $v) {
@@ -1102,9 +1192,9 @@ class ControllerBicycleBicycle extends Controller {
             $this->error['warning'] = '警告: 存在错误，请检查！';
         }
 
-        if(!$this->request->get('bicycle_id')){
+        if (!$this->request->get('bicycle_id')) {
             if ($this->sys_model_bicycle->getBicycleInfo(['bicycle_sn' => $this->request->post('bicycle_sn'), 'lock_sn' => $this->request->post('bicycle_sn'), '_logic' => 'or'])) {
-                $this->error['warning'] = '单车编号或者车锁编号有重复';
+                $this->error['warning'] = '车辆编号或者车锁编号有重复';
             }
         }
 
@@ -1114,18 +1204,21 @@ class ControllerBicycleBicycle extends Controller {
     /**
      * 验证删除条件
      */
-    private function validateDelete() {
+    private function validateDelete()
+    {
         return !$this->error;
     }
 
     /**
      * 验证批量添加条件
      */
-    private function validateBatchaddForm() {
+    private function validateBatchaddForm()
+    {
         return !$this->error;
     }
 
-    private function buildBicycleSN() {
+    private function buildBicycleSN()
+    {
         $bicycle_sn = token(6, 'number');
 
         $rec = $this->checkBicycleSN($bicycle_sn);
@@ -1135,7 +1228,8 @@ class ControllerBicycleBicycle extends Controller {
         return $bicycle_sn;
     }
 
-    private function checkBicycleSN($bicycle_sn) {
+    private function checkBicycleSN($bicycle_sn)
+    {
         $condition = array(
             'bicycle_sn' => $bicycle_sn
         );
@@ -1145,63 +1239,65 @@ class ControllerBicycleBicycle extends Controller {
         }
         return true;
     }
-	/**
-	* 换锁
-	*/
-	public function exchangelock() {
-        if(!empty($this->request->get['type'])&&$this->request->get['type']==='bt'){
-            $type='bt';
-        }elseif(!empty($this->request->get['type'])&&$this->request->get['type']==='normal'){
-            $type='normal';
+
+    /**
+     * 换锁
+     */
+    public function exchangelock()
+    {
+        if (!empty($this->request->get['type']) && $this->request->get['type'] === 'bt') {
+            $type = 'bt';
+        } elseif (!empty($this->request->get['type']) && $this->request->get['type'] === 'normal') {
+            $type = 'normal';
         }
-		if(!empty($this->request->post['op'])&&$this->request->post['op']==='search_lock_sn'){//搜索锁，因为权限问题，不想整那么多权限，放在同一个控制器好了
-			$lock_sn=$this->request->post['search_lock_sn'];
-			$this->load->library('sys_model/lock', true);//加载锁模型
-			$c=array();//查询条件
-			$c['lock_sn']=array('like','%'.$lock_sn.'%');
-			$lock_info=$this->sys_model_lock->getLockList($c);//查询符合条件的数据
-			$lock_num=count($lock_info);
-			$return_data=array(
-				'lock_num'=>$lock_num,
-				'lock_info'=>$lock_info
-			);
-			$this->response->showSuccessResult($return_data);
-			die();
-		}
-		if(!empty($this->request->post['op'])&&$this->request->post['op']==='search_bicycle_sn'){//搜索单车的，理由同上
-			$bicycle_sn=$this->request->post['search_bicycle_sn'];
-			$c=array();//查询条件
-			$c['bicycle_sn']=array('like','%'.$bicycle_sn.'%');
-			$bicycle_info=$this->sys_model_bicycle->getBicycleList($c);//查询符合条件的数据
-			$bicycle_num=count($bicycle_info);
-			$return_data=array(
-				'bicycle_num'=>$bicycle_num,
-				'bicycle_info'=>$bicycle_info
-			);
-			$this->response->showSuccessResult($return_data);
-			die();
-		}
-		if(!empty($this->request->post['op'])&&$this->request->post['op']==='exchange'){//提交保存改锁的，理由同上
-			$lock_sn=empty($this->request->post['lock_sn'])?0:$this->request->post['lock_sn'];
-			$lock_name=empty($this->request->post['lock_name'])?'':$this->request->post['lock_name'];
-			$lock_type=empty($this->request->post['lock_type'])?0:$this->request->post['lock_type'];
-			$lock_cooperator_id=empty($this->request->post['lock_cooperator_id'])?0:$this->request->post['lock_cooperator_id'];
-			$lock_platform=empty($this->request->post['lock_platform'])?0:$this->request->post['lock_platform'];
-			$lock_factory=empty($this->request->post['lock_factory'])?0:$this->request->post['lock_factory'];
-			$lock_batch_number=empty($this->request->post['lock_batch_number'])?0:$this->request->post['lock_batch_number'];
-			$bicycle_sn=empty($this->request->post['bicycle_sn'])?'':$this->request->post['bicycle_sn'];
-			$bicycle_type=empty($this->request->post['bicycle_type'])?0:$this->request->post['bicycle_type'];
-			$bicycle_region_id=empty($this->request->post['bicycle_region_id'])?0:$this->request->post['bicycle_region_id'];
-			$bicycle_cooperator_id=empty($this->request->post['bicycle_cooperator_id'])?0:$this->request->post['bicycle_cooperator_id'];
-			/*处理锁 开始 */
-			if($type==='normal') {//普通换锁处理
-                $c2=array(
-                    'lock_sn'=>$lock_sn
+        if (!empty($this->request->post['op']) && $this->request->post['op'] === 'search_lock_sn') {//搜索锁，因为权限问题，不想整那么多权限，放在同一个控制器好了
+            $lock_sn = $this->request->post['search_lock_sn'];
+            $this->load->library('sys_model/lock', true);//加载锁模型
+            $c = array();//查询条件
+            $c['lock_sn'] = array('like', '%' . $lock_sn . '%');
+            $lock_info = $this->sys_model_lock->getLockList($c);//查询符合条件的数据
+            $lock_num = count($lock_info);
+            $return_data = array(
+                'lock_num' => $lock_num,
+                'lock_info' => $lock_info
+            );
+            $this->response->showSuccessResult($return_data);
+            die();
+        }
+        if (!empty($this->request->post['op']) && $this->request->post['op'] === 'search_bicycle_sn') {//搜索车辆的，理由同上
+            $bicycle_sn = $this->request->post['search_bicycle_sn'];
+            $c = array();//查询条件
+            $c['bicycle_sn'] = array('like', '%' . $bicycle_sn . '%');
+            $bicycle_info = $this->sys_model_bicycle->getBicycleList($c);//查询符合条件的数据
+            $bicycle_num = count($bicycle_info);
+            $return_data = array(
+                'bicycle_num' => $bicycle_num,
+                'bicycle_info' => $bicycle_info
+            );
+            $this->response->showSuccessResult($return_data);
+            die();
+        }
+        if (!empty($this->request->post['op']) && $this->request->post['op'] === 'exchange') {//提交保存改锁的，理由同上
+            $lock_sn = empty($this->request->post['lock_sn']) ? 0 : $this->request->post['lock_sn'];
+            $lock_name = empty($this->request->post['lock_name']) ? '' : $this->request->post['lock_name'];
+            $lock_type = empty($this->request->post['lock_type']) ? 0 : $this->request->post['lock_type'];
+            $lock_cooperator_id = empty($this->request->post['lock_cooperator_id']) ? 0 : $this->request->post['lock_cooperator_id'];
+            $lock_platform = empty($this->request->post['lock_platform']) ? 0 : $this->request->post['lock_platform'];
+            $lock_factory = empty($this->request->post['lock_factory']) ? 0 : $this->request->post['lock_factory'];
+            $lock_batch_number = empty($this->request->post['lock_batch_number']) ? 0 : $this->request->post['lock_batch_number'];
+            $bicycle_sn = empty($this->request->post['bicycle_sn']) ? '' : $this->request->post['bicycle_sn'];
+            $bicycle_type = empty($this->request->post['bicycle_type']) ? 0 : $this->request->post['bicycle_type'];
+            $bicycle_region_id = empty($this->request->post['bicycle_region_id']) ? 0 : $this->request->post['bicycle_region_id'];
+            $bicycle_cooperator_id = empty($this->request->post['bicycle_cooperator_id']) ? 0 : $this->request->post['bicycle_cooperator_id'];
+            /*处理锁 开始 */
+            if ($type === 'normal') {//普通换锁处理
+                $c2 = array(
+                    'lock_sn' => $lock_sn
                 );
                 $bicycle_info2 = $this->sys_model_bicycle->getBicycleInfo($c2);
                 if ($bicycle_info2['bicycle_id'] > 0) {
                     $return_data = array(
-                        'info' => '此锁已用在单车' . $bicycle_info2['bicycle_sn'] . '上，此次操作失败。',
+                        'info' => '此锁已用在车辆' . $bicycle_info2['bicycle_sn'] . '上，此次操作失败。',
                         'state' => -3,
                     );
                     $this->response->showSuccessResult($return_data);
@@ -1232,7 +1328,7 @@ class ControllerBicycleBicycle extends Controller {
                 }
                 /*处理锁 结束*/
 
-                /*处理单车 开始*/
+                /*处理车辆 开始*/
                 $old_lock_sn = null;//旧锁编号
                 $c = array(
                     'bicycle_sn' => $bicycle_sn
@@ -1271,13 +1367,13 @@ class ControllerBicycleBicycle extends Controller {
                     $full_bicycle_sn = sprintf('%03d%02d%06d', $region_info['region_city_code'], $region_info['region_city_ranking'], $bicycle_sn);
                     $d2 = array(
                         'add_time' => time(),
-                        'full_bicycle_sn' => $full_bicycle_sn//单车管理那边改地区也不会影响full_bicycle_sn属性，所以应该放在这里
+                        'full_bicycle_sn' => $full_bicycle_sn//车辆管理那边改地区也不会影响full_bicycle_sn属性，所以应该放在这里
                     );
                     $d = array_merge($d, $d2);
                     $this->sys_model_bicycle->addBicycle($d);
 
                 }
-                /*处理单车 结束*/
+                /*处理车辆 结束*/
                 $return_data = array(
                     'bicycle_sn' => $bicycle_sn,
                     'old_lock_sn' => $old_lock_sn,
@@ -1314,7 +1410,7 @@ class ControllerBicycleBicycle extends Controller {
                     $full_bicycle_sn = sprintf('%03d%02d%06d', $region_info['region_city_code'], $region_info['region_city_ranking'], $bicycle_sn);
                     $d2 = array(
                         'add_time' => time(),
-                        'full_bicycle_sn' => $full_bicycle_sn//单车管理那边改地区也不会影响full_bicycle_sn属性，所以应该放在这里
+                        'full_bicycle_sn' => $full_bicycle_sn//车辆管理那边改地区也不会影响full_bicycle_sn属性，所以应该放在这里
                     );
                     $d = array_merge($d, $d2);
                     $this->sys_model_bicycle->addBicycle($d);
@@ -1333,11 +1429,11 @@ class ControllerBicycleBicycle extends Controller {
         $this->assign('cooperators', $cooperators);
 
         $search['search_lock'] = $this->url->link('bicycle/bicycle/searchlock');//搜索的链接，搜索锁
-        $search['search_bicycle'] = $this->url->link('bicycle/bicycle/searchbicycle');//搜索的链接，搜索单车
+        $search['search_bicycle'] = $this->url->link('bicycle/bicycle/searchbicycle');//搜索的链接，搜索车辆
         $this->assign('search', $search);
 
-        $this->assign('return_action', $this->url->link('bicycle/bicycle'));//单车类型
-        $this->assign('types', get_bicycle_type());//单车类型
+        $this->assign('return_action', $this->url->link('bicycle/bicycle'));//车辆类型
+        $this->assign('types', get_bicycle_type());//车辆类型
 
         $this->load->library('sys_model/region', true);//加载区域模型
         $condition = array();
@@ -1348,7 +1444,8 @@ class ControllerBicycleBicycle extends Controller {
         $this->response->setOutput($this->load->view('bicycle/bicycle_exchangelock', $this->output));
     }
 
-    private function bikeChangeLock($lock_sn){
+    private function bikeChangeLock($lock_sn)
+    {
         $condition_check_lock = array(
             'lock_sn' => $lock_sn,
         );

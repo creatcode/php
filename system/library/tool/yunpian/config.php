@@ -5,7 +5,7 @@
 //You can get the APIKEY and APISECRET from http://www.yunpian.com/ when log on.
 
 $yunpian_config = array();
-$yunpian_config['APIKEY'] = "c4f3c58e7cf0de21d53e7f8e80df384e";
+$yunpian_config['APIKEY'] = "4da28fa0dd774a99d8bf39214750cadf";
 
 
 // php sdk 暂不支持加密算法

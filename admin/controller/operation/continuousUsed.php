@@ -10,6 +10,7 @@ class ControllerOperationContinuousUsed extends Controller
         $this->cur_url = $this->url->link($this->request->get['route']);
         $this->load->library('sys_model/orders', true);
         $this->load->library('sys_model/intelligent', true);
+        $this->assign('lang',$this->language->all());
     }
 
 
@@ -68,7 +69,7 @@ class ControllerOperationContinuousUsed extends Controller
         $this->assign('pagination', $page_info['pagination']);
         $this->assign('results', $page_info['results']);
         $this->assign('info_url', $this->url->link('operation/continuousUsed/info'));
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('intelligent/continuous_used_bike', $this->output));
     }
 
@@ -106,11 +107,11 @@ class ControllerOperationContinuousUsed extends Controller
 
     protected function getDataColumns()
     {
-        $this->setDataColumn('用户id');
-        $this->setDataColumn('用户电话');
-        $this->setDataColumn('单车sn');
-        $this->setDataColumn('占用次数');
-        $this->setDataColumn('持续天数');
+        $this->setDataColumn($this->language->get('t2'));
+        $this->setDataColumn($this->language->get('t3'));
+        $this->setDataColumn($this->language->get('t4'));
+        //$this->setDataColumn('占用次数');
+        $this->setDataColumn($this->language->get('t5'));
         return $this->data_columns;
     }
 

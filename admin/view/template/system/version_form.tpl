@@ -28,12 +28,12 @@
                             <div class="row">
                                 <div class="form-group">
                                     <label class="col-sm-2 control-label">类型</label>
-                                    <div class="btn-group col-sm-5">
-                                        <button type="button" class="btn btn-default select-ios active">站点</button>
+                                    <div class="btn-group col-sm-5" id="ver">
+                                        <button type="button" class="btn btn-default select-site active">站点</button>
                                         <button type="button" class="btn btn-default select-android">用户</button>
                                         <button type="button" class="btn btn-default select-yunwei-android">运维</button>
                                         <button type="button" class="btn btn-default select-locker">锁桩</button>
-                                        <button type="button" class="btn btn-default select-bike">车辆</button>
+                                        <button type="button" class="btn btn-default select-bike">控制盒</button>
                                     </div>
                                 </div>
                              </div>
@@ -85,9 +85,9 @@
 
                             <div class="form-group">
                                 <div class="col-sm-7">
-                                    <div class="pull-right">
-                                        <button type="submit" class="btn btn-sm btn-success margin-r-5">提交</button>
-                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default">返回</a>
+                                    <div class="text-center">
+                                        <button type="submit" class="btn btn-sm btn-success margin-r-5" style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;">提交</button>
+                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default" style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;">返回</a>
                                     </div>
                                 </div>
                             </div>
@@ -105,32 +105,80 @@ $(document).ready(function() {
     $('input.bootstrap-switch').bootstrapSwitch();
 });
 
-if("<?php echo $data['type']; ?>" == 1){
-    $(".version-type").val(1);
-    $(".version-code-android").show();
-    $(".version-code-ios").show();
-    $(".select-ios").addClass("active");
-    $(".select-android").attr("disabled","disabled");
-    $(".select-android").removeClass("active");
-    $(".select-yunwei-android").attr("disabled","disabled");
-    $(".select-yunwei-android").removeClass("active");
+if("<?php echo $data['type']; ?>" == 1 || "<?php echo $data['type']; ?>" == 4 || "<?php echo $data['type']; ?>" == 5){
+    $(".version-type").val("<?php echo $data['type']; ?>");
+    $(".version-code-android").show();  //文件
+    $(".version-code-ios").show();  //版本号
+    if("<?php echo $data['type']; ?>" == 4){
+        $(".select-locker").addClass("active");
+        $(".select-android").attr("disabled","disabled");
+        $(".select-android").removeClass("active");
+        $(".select-yunwei-android").attr("disabled","disabled");
+        $(".select-yunwei-android").removeClass("active");
+        $(".select-bike").attr("disabled","disabled");
+        $(".select-bike").removeClass("active");
+        $(".select-site").attr("disabled","disabled");
+        $(".select-site").removeClass("active");
+    }else if("<?php echo $data['type']; ?>" == 5){
+        $(".select-bike").addClass("active");
+        $(".select-android").attr("disabled","disabled");
+        $(".select-android").removeClass("active");
+        $(".select-yunwei-android").attr("disabled","disabled");
+        $(".select-yunwei-android").removeClass("active");
+        $(".select-locker").attr("disabled","disabled");
+        $(".select-locker").removeClass("active");
+        $(".select-site").attr("disabled","disabled");
+        $(".select-site").removeClass("active");
+    }else if("<?php echo $data['type']; ?>" == 1){
+        $(".select-site").addClass("active");
+        $(".select-android").attr("disabled","disabled");
+        $(".select-android").removeClass("active");
+        $(".select-yunwei-android").attr("disabled","disabled");
+        $(".select-yunwei-android").removeClass("active");
+        $(".select-locker").attr("disabled","disabled");
+        $(".select-locker").removeClass("active");
+        $(".select-bike").attr("disabled","disabled");
+        $(".select-bike").removeClass("active");
+    }
 }else if("<?php echo $data['type']; ?>" == 2 || "<?php echo $data['type']; ?>" == 3){
     $(".version-type").val("<?php echo $data['type']; ?>");
-    $(".version-code-ios").show();
+    $(".version-code-ios").hide();
     $(".version-code-android").show();
     $(".select-android").addClass("active");
-    $(".select-ios").attr("disabled","disabled");
-    $(".select-ios").removeClass("active");
-    $selected = "<?php echo $data['type']; ?>" == 2 ? '.select-yunwei-android' : '.select-android';
-    $($selected).attr("disabled","disabled");
-    $($selected).removeClass("active");
+    $(".select-site").attr("disabled","disabled");
+    $(".select-site").removeClass("active");
+    $(".select-locker").attr("disabled","disabled");
+    $(".select-locker").removeClass("active");
+    $(".select-bike").attr("disabled","disabled");
+    $(".select-bike").removeClass("active");
+    if("<?php echo $data['type']; ?>" == 3){
+        $(".select-yunwei-android").addClass("active");
+        $(".select-site").attr("disabled","disabled");
+        $(".select-site").removeClass("active");
+        $(".select-locker").attr("disabled","disabled");
+        $(".select-locker").removeClass("active");
+        $(".select-bike").attr("disabled","disabled");
+        $(".select-bike").removeClass("active");
+        $(".select-android").attr("disabled","disabled");
+        $(".select-android").removeClass("active");
+    }else{
+        $(".select-android").addClass("active");
+        $(".select-site").attr("disabled","disabled");
+        $(".select-site").removeClass("active");
+        $(".select-locker").attr("disabled","disabled");
+        $(".select-locker").removeClass("active");
+        $(".select-bike").attr("disabled","disabled");
+        $(".select-bike").removeClass("active");
+        $(".select-yunwei-android").attr("disabled","disabled");
+        $(".select-yunwei-android").removeClass("active");
+    }
 }
 
-$(document).on('click','.select-ios',function(){
+$(document).on('click','.select-site',function(){
     $(".version-type").val(1);
     $(".version-code-android").show();
     $(".version-code-ios").show();
-    $(".select-ios").addClass("active");
+    $(".select-site").addClass("active");
     $(".select-android").removeClass("active");
     $(".select-yunwei-android").removeClass("active");
     $(".select-locker").removeClass("active");
@@ -141,7 +189,7 @@ $(document).on('click','.select-android',function(){
     $(".version-code-ios").hide();
     $(".version-code-android").show();
     $(".select-android").addClass("active");
-    $(".select-ios").removeClass("active");
+    $(".select-site").removeClass("active");
     $(".select-yunwei-android").removeClass("active");
     $(".select-locker").removeClass("active");
     $(".select-bike").removeClass("active");
@@ -151,7 +199,7 @@ $(document).on('click','.select-yunwei-android',function(){
     $(".version-code-ios").hide();
     $(".version-code-android").show();
     $(".select-yunwei-android").addClass("active");
-    $(".select-ios").removeClass("active");
+    $(".select-site").removeClass("active");
     $(".select-android").removeClass("active");
     $(".select-locker").removeClass("active");
     $(".select-bike").removeClass("active");
@@ -161,7 +209,7 @@ $(document).on('click','.select-locker',function(){
     $(".version-code-ios").show();
     $(".version-code-android").show();
     $(".select-locker").addClass("active");
-    $(".select-ios").removeClass("active");
+    $(".select-site").removeClass("active");
     $(".select-android").removeClass("active");
     $(".select-yunwei-android").removeClass("active");
     $(".select-bike").removeClass("active");
@@ -171,7 +219,7 @@ $(document).on('click','.select-bike',function(){
     $(".version-code-ios").show();
     $(".version-code-android").show();
     $(".select-bike").addClass("active");
-    $(".select-ios").removeClass("active");
+    $(".select-site").removeClass("active");
     $(".select-android").removeClass("active");
     $(".select-yunwei-android").removeClass("active");
     $(".select-locker").removeClass("active");

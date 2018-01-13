@@ -1,7 +1,6 @@
 <?php
-error_reporting(0);
-ini_set('display_errors', 0);
-ini_set('error_log', dirname(__FILE__) . 'error_log.txt');
+//error_reporting(0);
+//ini_set('display_errors', 0);
 
 if (version_compare(phpversion(), '5.3.0', '<') == true) {
     die('PHP5.3+ Required');

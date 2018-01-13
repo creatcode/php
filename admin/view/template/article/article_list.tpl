@@ -75,6 +75,7 @@
                                     <td><?php echo $data['article_title']?></td>
                                     <td><?php echo $data['category_id']?></td>
                                     <td><?php echo $data['article_sort']?></td>
+                                    <!-- <td><?php echo $lan_type[$data['lan_type']]?></td> -->
                                     <td>
                                         <div class="btn-group">
                                             <button data-url="<?php echo $data['edit_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-pencil"></i>编辑</button>

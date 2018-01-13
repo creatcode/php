@@ -54,10 +54,8 @@ class Trans {
                 }
             }
             $on = implode(',', $join);
-
             $this->db->join($joinType)->on($on);
         }
-
         return $this->db->table($table)->field($field)->join($joinType)->where($condition)->order($order)->limit($limit)->select();
     }
 

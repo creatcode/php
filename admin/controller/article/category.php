@@ -189,6 +189,7 @@ class ControllerArticleCategory extends Controller {
             $info = $this->sys_model_article->getArticleCategoryInfo($condition);
         }
 
+        $this->assign('return_action',$this->url->link('article/category'));
         $this->assign('data', $info);
         $this->assign('action', $this->cur_url . '&category_id=' . $category_id);
         $this->assign('error', $this->error);

@@ -51,8 +51,24 @@ class Orders {
         return $this->db->table($table)->where($where)->count('order_id');
     }
 
-    public function getOrdersInfo($where, $field = '*', $order = 'order_id desc') {
-        return $this->db->table('orders')->field($field)->where($where)->order($order)->find();
+    public function getOrdersInfo($where, $field = '*', $order = 'order_id desc',$join='') {
+        $table = 'orders as orders';
+        if (is_array($join) && !empty($join)) {
+            $addTables = array_keys($join);
+            $joinType = '';
+            if (!empty($addTables) && is_array($addTables)) {
+                foreach ($addTables as $v) {
+                    $filter = '/(lock)/i';
+                    preg_match($filter, $v) ? $table .= sprintf(',%s as %s', $v, '`' .$v . '`') :
+                        $table .= sprintf(',%s as %s', $v, $v);
+                    $joinType .= ',left';
+                }
+            }
+            $on = implode(',', $join);
+
+            $this->db->join($joinType)->on($on);
+        }
+        return $this->db->table($table)->field($field)->where($where)->order($order)->find();
     }
 
     public function addOrderLine($data) {

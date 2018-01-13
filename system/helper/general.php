@@ -381,6 +381,13 @@ function is_mobile($mobile) {
     return false;
 }
 
+function is_email($email){
+    if(preg_match("/^([0-9A-Za-z\\-_\\.]+)@([0-9a-z]+\\.[a-z]{2,3}(\\.[a-z]{2})?)$/i",$email)){
+        return true;
+    }
+    return false;
+}
+
 function pass_hash($password) {
     $hash = md5($password);
     return md5(substr($hash, 16, 16) . substr($hash, 0, 16));

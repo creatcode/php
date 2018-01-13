@@ -17,26 +17,23 @@
                     <li class="active"><a href="javascript:;" data-toggle="tab">统计图表</a></li>
                     <li><a href="<?php echo $index_action; ?>" data-toggle="tab">消费记录列表</a></li>
                     <!-- <li><a href="<?php echo $city_ranking_action; ?>" data-toggle="tab">合伙人排行</a></li> -->
-                    <li><a href="<?php echo $order_free_chart; ?>" data-toggle="tab">免费单车图表</a></li>
-                    <li><a href="<?php echo $order_free_list; ?>" data-toggle="tab">免费单车列表</a></li>
+                   <!--  <li><a href="<?php echo $order_free_chart; ?>" data-toggle="tab">免费单车图表</a></li>
+                    <li><a href="<?php echo $order_free_list; ?>" data-toggle="tab">免费单车列表</a></li> -->
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active">
                         <form class="search_form" id="search_form" action="<?php echo $action; ?>" method="get">
                             <!-- 搜索 -->
                             <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
-                                <select name="city_id" class="input-sm">
-                                    <option value="0">--选择城市--</option>
-                                    <?php foreach($cityList as $v){
-                                        if($city_id ==$v['city_id']){
-                                    ?>
-                                    <option selected="selected" value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php
-                                        }else{
-                                    ?>
-                                    <option value="<?php echo $v['city_id']; ?>"><?php echo $v['city_name']; ?> </option>
-                                    <?php }
-                                     } ?>
+                                <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--全部区域--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--全部城市--</option>
+                                    
                                 </select>
                                 <select name="user_type" class="input-sm">
                                     <option value>用户类型</option>
@@ -64,17 +61,7 @@
                                     <span class="col-sm-4 col-lg-2">消费总计：<strong><?php echo $orderAmountTotal; ?></strong>元</span>
                                     <span class="col-sm-4 col-lg-2">退回总计：<strong><?php echo $refundAmountTotal; ?></strong>元</span>
                                     <span class="col-sm-4">订单数：<strong><?php echo $ordersTotal; ?></strong></span>
-                                    <!-- <div class="pull-right">
-                                                <a href="#" style="color: #fff;" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-calendar"></i> <i class="caret"></i></a>
-                                                <ul id="range" class="dropdown-menu dropdown-menu-right">
-                                                   
-                                                    <li class="active"><a href="#">年</a></li>
-                                                    <li class=""><a href="#">月</a></li>
-                                                    <li class=""><a href="#">季</a></li>
-                                                    <li class=""><a href="#">周</a></li>
-                                                    <li class=""><a href="#">日</a></li>
-                                                </ul>
-                                    </div> -->
+                                    
                                 </div>
                             </div>
                         </div>
@@ -92,15 +79,53 @@
     </div>
 </section>
 <!-- /.content -->
-<!-- <script type="text/javascript">
-    $('#range a').on('click', function(e) {
-        e.preventDefault();
-        $(this).parent().parent().find('li').removeClass('active');
-        $(this).parent().addClass('active');
-    });
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--全部城市--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
 
-    $('#range .active a').trigger('click');
-</script> -->
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--全部城市--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
+</script>
 
 <script type="text/javascript">
     $(function(){
@@ -146,7 +171,8 @@
         ykeys: ['amount', 'refund', 'number'],
         labels: ['消费金额', '退回金额', '订单数'],
         lineColors: ['#f56954', '#00a65a', '#3c8dbc'],
-        hideHover: 'auto'
+        hideHover: 'auto',
+        parseTime: false
     });
     
 </script>

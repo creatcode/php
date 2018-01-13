@@ -61,6 +61,7 @@ class Advertisement {
         }
 
         return $this->db->table($table)->field($field)->where($where)->order($order)->limit($limit)->select();
+       // return $this->db->getLastSql();
     }
 
     /**

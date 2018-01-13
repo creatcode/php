@@ -36,9 +36,15 @@ class ControllerStartupVersion extends Controller {
             'operator/operator/lockposition',
             'account/order/book',
         );
+	//调试阶段 不需要判断版本
+	return;
+
         $route = $this->request->get['route'];
         $route = strtolower($route);
-
+	
+	//测试阶段不做版本比较 不知道为什么这里会有点错误 后面再调试
+	return;
+	
         if (in_array($route, $in)) {
             $this->load->library('sys_model/bicycle');
             $this->load->library('sys_model/region');

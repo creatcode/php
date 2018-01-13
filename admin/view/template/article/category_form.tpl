@@ -43,9 +43,9 @@
 
                             <div class="form-group">
                                 <div class="col-sm-7">
-                                    <div class="pull-right">
-                                        <button type="submit" class="btn btn-sm btn-success margin-r-5">提交</button>
-                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default">返回</a>
+                                    <div class="text-center">
+                                        <button type="submit" class="btn btn-sm btn-success margin-r-5" style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;">提交</button>
+                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default" style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;">返回</a>
                                     </div>
                                 </div>
                             </div>

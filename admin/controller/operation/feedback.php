@@ -11,6 +11,7 @@ class ControllerOperationFeedback extends Controller {
 
         // 加载feedback Model
         $this->load->library('sys_model/feedback', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -43,8 +44,8 @@ class ControllerOperationFeedback extends Controller {
         }
 
         $filter_types = array(
-            'user_name' => '用户名',
-            'content' => '反馈内容',
+            'user_name' => $this->language->get('t2'),
+            'content' => $this->language->get('t3'),
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -103,7 +104,7 @@ class ControllerOperationFeedback extends Controller {
         $this->assign('results', $results);
 
         $this->assign('export_action', $this->url->link('operation/feedback/export'));
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('operation/feedback_list', $this->output));
     }
 
@@ -112,9 +113,9 @@ class ControllerOperationFeedback extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
-        $this->setDataColumn('用户名');
-        $this->setDataColumn('反馈内容');
-        $this->setDataColumn('反馈时间');
+        $this->setDataColumn($this->language->get('t2'));
+        $this->setDataColumn($this->language->get('t3'));
+        $this->setDataColumn($this->language->get('t4'));
         return $this->data_columns;
     }
 

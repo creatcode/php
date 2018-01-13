@@ -3,6 +3,7 @@
 <tr>
     <td id="order-bicycle_sn" style="cursor:pointer;"><?php echo $v['bicycle_sn'] ?></td>
     <td><?php echo $v['region_name'] ?></td>
+    <td><?php echo $v['city_name'] ?></td>
     <td>￥<?php echo $v['pay_amount'] ?></td>
     <td title="下单时间：<?php echo $v['add_time'] ?>&#13;开始时间：<?php echo $v['start_time'] ?>&#13;结束时间：<?php echo $v['end_time'] ?>"><?php echo $v['settlement_time'] ?></td>
     <td style="text-align:center;"><?php echo $v['coupon'] ?></td>

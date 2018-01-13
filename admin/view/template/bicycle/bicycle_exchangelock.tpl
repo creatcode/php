@@ -110,7 +110,7 @@
 											</select>
 										</div>
 									</div>
-									<div class="form-group">
+									<!--<div class="form-group">
 										<label class="col-sm-2 control-label">合伙人</label>
 										<div class="col-sm-5">
 											<select name="lock_cooperator_id" id="lock_cooperator_id" class="form-control">
@@ -120,7 +120,8 @@
 												<?php } ?>
 											</select>
 										</div>
-									</div>
+									</div>-->
+                                                                        <input type="hidden" name="lock_cooperator_id" value="0">
 									<div class="form-group">
 										<label class="col-sm-2 control-label">锁平台</label>
 										<div class="col-sm-5">

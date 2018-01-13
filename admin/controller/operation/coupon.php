@@ -71,6 +71,14 @@ class ControllerOperationCoupon extends Controller {
             }
         }
 
+        
+         $this->load->library('sys_model/region');
+        $regionList = $this->sys_model_region->getRegionList();
+
+        if(empty($regionList)){
+            $this->load->controller('common/base/redirect', $this->url->link('operation/coupon', $filter, true));
+        }
+        $this->assign('regionList', $regionList);
         $data_columns = $this->getDataColumns();
         $this->assign('data_columns', $data_columns);
         $this->assign('data_rows', $result);
@@ -97,7 +105,7 @@ class ControllerOperationCoupon extends Controller {
         $this->assign('chart_action', $this->url->link('operation/coupon/chart'));
         $this->assign('cooperation_action', $this->url->link('operation/coupon/cooperation'));
         $this->assign('region_action', $this->url->link('operation/coupon/region'));
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('operation/coupon_list', $this->output));
     }
 
@@ -223,7 +231,7 @@ class ControllerOperationCoupon extends Controller {
         $this->assign('filter', $filter);
         $this->assign('list_action', $this->url->link('operation/coupon'));
         $this->assign('action', $this->url->link('operation/coupon/region'));
-
+        $this->assign('time_type',get_time_type());
         unset($res, $countByDay, $couponSum);
         $this->assign('regionList',$regionList);
         $this->assign('region_id',$w['region_id']);
@@ -486,10 +494,11 @@ class ControllerOperationCoupon extends Controller {
      */
     protected function getDataColumns() {
         $this->setDataColumn('用户名称');
-        $this->setDataColumn('优惠券号码');
+        //$this->setDataColumn('优惠券号码');
         $this->setDataColumn('优惠券名称');
         $this->setDataColumn('是否使用');
-        $this->setDataColumn('发券人(账号)');
+        $this->setDataColumn('发券人(账号)'); 
+        $this->setDataColumn('发券途径');
         $this->setDataColumn('生效时间');
         $this->setDataColumn('失效时间');
         return $this->data_columns;

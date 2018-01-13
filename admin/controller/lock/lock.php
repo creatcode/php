@@ -12,6 +12,7 @@ class ControllerLockLock extends Controller {
         // 加载Lock Model
         $this->load->library('sys_model/lock', true);
         $this->load->library('sys_model/bicycle', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
@@ -83,8 +84,7 @@ class ControllerLockLock extends Controller {
 
         $filter_types = array(
             'lock_sn' => '车锁编号',
-            'lock_name' => '车锁名称',
-            'cooperator_name' => '合伙人'
+
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -148,13 +148,13 @@ class ControllerLockLock extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
-        $this->setDataColumn('锁编号');
-        $this->setDataColumn('锁名称');
-        $this->setDataColumn('合伙人');
-        $this->setDataColumn('当前电量（百分比）');
-        $this->setDataColumn('开锁次数');
-        $this->setDataColumn('更新时间');
-        $this->setDataColumn('状态');
+        $this->setDataColumn($this->language->get('t24'));
+        /*$this->setDataColumn('锁名称');
+        $this->setDataColumn('合伙人');*/
+        $this->setDataColumn($this->language->get('t35'));
+        $this->setDataColumn($this->language->get('t37'));
+        $this->setDataColumn($this->language->get('t38'));
+        $this->setDataColumn($this->language->get('t39'));
         return $this->data_columns;
     }
 
@@ -162,17 +162,17 @@ class ControllerLockLock extends Controller {
      * 添加锁
      */
     public function add() {
-        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('lock_sn', 'lock_name', 'automatch','lock_type','cooperator_id','lock_platform','lock_factory','batch_num'));
+        if (($this->request->server['REQUEST_METHOD'] == 'POST') ) {
+            $input = $this->request->post(array('lock_sn', 'lock_name', 'automatch','lock_type','lock_platform','lock_factory','batch_num'));
             $data = array(
                 'lock_sn' => $input['lock_sn'],
                 'lock_name' => $input['lock_name'],
                 'lock_type' => $input['lock_type'],
-                'cooperator_id' => $input['cooperator_id'],
                 'lock_platform' => $input['lock_platform'],
                 'lock_factory' => $input['lock_factory'],
                 'batch_num' => $input['batch_num'],
             );
+
             $lock_id = $this->sys_model_lock->addLock($data);
             // 自动匹配单车
             if ($input['automatch']) {
@@ -222,13 +222,13 @@ class ControllerLockLock extends Controller {
      * 编辑锁
      */
     public function edit() {
-        if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validateForm()) {
-            $input = $this->request->post(array('lock_name','lock_type','cooperator_id','lock_platform','lock_factory','batch_num'));
+        if (($this->request->server['REQUEST_METHOD'] == 'POST')) {
+            $input = $this->request->post(array('lock_name','lock_type','lock_platform','lock_factory','batch_num'));
             $lock_id = $this->request->get['lock_id'];
             $data = array(
                 'lock_name' => $input['lock_name'],
                 'lock_type' => $input['lock_type'],
-                'cooperator_id' => $input['cooperator_id'],
+            
                 'lock_platform' => $input['lock_platform'],
                 'lock_factory' => $input['lock_factory'],
                 'batch_num' => $input['batch_num']
@@ -310,7 +310,7 @@ class ControllerLockLock extends Controller {
         }
 
         $this->assign('data', $info);
-
+        $this->assign('return_action', $this->url->link('lock/lock'));
         $this->response->setOutput($this->load->view('lock/lock_info', $this->output));
     }
 
@@ -363,7 +363,7 @@ class ControllerLockLock extends Controller {
                 $list[] = array(
                     'lock_sn' => $item['lock_sn'],
                     'lock_name' => $item['lock_name'],
-                    'cooperator_name' => $item['cooperator_name'],
+//                    'cooperator_name' => $item['cooperator_name'],
                     'gy' => $item['gy'],
                     'open_nums' => $item['open_nums'],
                     'system_time' => $item['system_time'] == 0 ? '没有更新过' : date('Y-m-d H:i:s', $item['system_time']),
@@ -377,7 +377,7 @@ class ControllerLockLock extends Controller {
             'header' => array(
                 'lock_sn' => '锁编号',
                 'lock_name' => '锁名称',
-                'cooperator_name' => '合伙人',
+//                'cooperator_name' => '合伙人',
                 'gy' => '当前电量（百分比）',
                 'open_nums' => '开锁次数',
                 'system_time' => '更新时间',

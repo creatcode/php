@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>站点运维通知</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,9 +14,9 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="<?php echo $nofification_url;?>" data-toggle="tab">站点运维通知</a></li>
-					<li><a href="<?php echo $threshold_url;?>" data-toggle="tab">阀值通知</a></li>
-					<li><a href="<?php echo $unused_url;?>" data-toggle="tab">长时间未用通知</a></li>
+                    <li class="active"><a href="<?php echo $nofification_url;?>" data-toggle="tab"><?php echo @$lang['t3'];?></a></li>
+					<li><a href="<?php echo $threshold_url;?>" data-toggle="tab"><?php echo @$lang['t4'];?></a></li>
+					<li><a href="<?php echo $unused_url;?>" data-toggle="tab"><?php echo @$lang['t5'];?></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
@@ -38,13 +38,13 @@
                                 </select>
                                 
                                 <div class="pull-right">
-                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;<?php echo @$lang['t7'];?></button>
                                 </div>
                             </div>
                         </form>
                         <!-- 新增 -->
                         <div class="form-group">
-                            <a href="<?php echo $add_url; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                            <a href="<?php echo $add_url; ?>" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp;<?php echo @$lang['t8'];?></a>
 
                         </div>
                         <form id="table_form" class="table_form" method="post">
@@ -55,7 +55,7 @@
                                     <?php foreach ($data_columns as $column) { ?>
                                     <th><?php echo $column['text']; ?></th>
                                     <?php } ?>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t9'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -72,14 +72,14 @@
                                    
                                     <td>
                                         <div class="btn-group">
-                                            <button data-url="<?php echo $data['edit_url']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>编辑</button>
+                                            <button data-url="<?php echo $data['edit_url']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t10'];?></button>
                                        
                                             <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
                                                 <span class="caret"></span>
                                                 <span class="sr-only">Toggle Dropdown</span>
                                             </button>
                                             <ul class="dropdown-menu" role="menu">
-                                                <li><a href="#" >删除</a></li>
+                                                <li><a href="#" ><?php echo @$lang['t11'];?></a></li>
                                             </ul>
                                     
                                         </div>

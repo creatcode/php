@@ -5,7 +5,8 @@
         <meta http-equiv="X-UA-COMPATIBLE" content="IE=edge">
         <title><?php echo $title; ?></title>
         <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-        <link rel="stylesheet" href="<?php echo $static . "AdminLTE-2.3.7/"?>bootstrap/css/bootstrap.min.css">
+        <link rel="shortcut icon" href="<?php echo $static . "images/";?>bitbug_favicon.ico" />
+        <link rel="stylesheet" href="<?php echo $static . "AdminLTE-2.3.7/"?>bootstrap/css/bootstrap.min.css?v=<?php echo time();?>">
         <link rel="stylesheet" href="<?php echo $static . "AdminLTE-2.3.7/"?>dist/css/font-awesome.min.css">
         <link rel="stylesheet" href="<?php echo $static . "AdminLTE-2.3.7/"?>dist/css/ionicons.min.css">
         <link rel="stylesheet" href="<?php echo $static . "AdminLTE-2.3.7/"?>dist/css/AdminLTE.min.css">
@@ -140,6 +141,10 @@
             </a>
 
             <div class="navbar-custom-menu">
+                <select class="input-sm" style="float: left; margin-top: 10px;" onchange="go_lang(this)" id="choose_system_lang">
+                    <option value="cn" >简体中文</option>
+                    <option value="en" >English</option>
+                </select>
                 <ul class="nav navbar-nav">
                     <!-- 首页 -->
                     <li class="dropdown">

@@ -16,6 +16,7 @@
                 <ul class="nav nav-tabs">
                     <li ><a href="<?php echo $recharge_give_action; ?>" data-toggle="tab">充值优惠列表</a></li>
                     <li class="active"><a href="javascript:;" data-toggle="tab">充值优惠统计</a></li>
+                    <li><a href="<?php echo $setting_action;?>" data-toggle="tab">充值优惠设置</a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active">
@@ -23,13 +24,13 @@
                             <!-- 搜索 -->
                             <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
                                 <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
-                                    <option value="">--请选择区域--</option>
+                                    <option value="">--全部区域--</option>
                                     <?php foreach($filter_regions as $k => $v) { ?>
                                     <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
                                     <?php } ?>
                                 </select>
                                 <select name="city_id" id="city_id" class="input-sm">
-                                    <option value="">--请选择城市--</option>
+                                    <option value="">--全部城市--</option>
                                     
                                 </select>
                                  <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
@@ -40,7 +41,7 @@
                                     <?php }?>
                                     <?php }?>
                                 </select>
-                                <input type="text" name="pdr_payment_time" value="<?php echo $filter['pdr_payment_time']; ?>" class="input-sm date-range"  style="border: 1px solid #a9a9a9;width: 300px;" placeholder="支付时间"/>
+                                <input type="text" name="pdr_payment_time" value="<?php echo $filter['pdr_payment_time']; ?>" class="input-sm date-range"  style="border: 1px solid #a9a9a9;width: 300px;" placeholder="时间"/>
                                 <div class="pull-right">
                                     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
                                 </div>
@@ -109,7 +110,8 @@
         ykeys: ['amount', 'refund'],
         labels: ['充值金额', '赠送金额'],
         lineColors: ['#f56954', '#00a65a'],
-        hideHover: 'auto'
+        hideHover: 'auto',
+        parseTime: false
     });
 
 
@@ -130,7 +132,7 @@
     ?>
     function show_city(t){
         var region_id=$(t).val();
-        var a='<option value="">--请选择城市--</option>';
+        var a='<option value="">--全部城市--</option>';
         // $.("#region_id").remove();
         if(region_id){
             region_data[region_id].forEach(function (item,index,input) {
@@ -143,7 +145,7 @@
     function init_city(){
         var region_id="<?php echo $filter['region_id'];?>";
         var city_id="<?php echo $filter['city_id'];?>";
-        var a='<option value="">--请选择城市--</option>';
+        var a='<option value="">--全部城市--</option>';
         if(region_id&&city_id){
             region_data[region_id].forEach(function (item,index,input) {
         a+="<option value="+index;

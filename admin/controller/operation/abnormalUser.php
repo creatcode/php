@@ -14,6 +14,7 @@ class ControllerOperationAbnormalUser extends Controller
 //        $this->load->library('sys_model/intelligent', true);
         $this->sys_model_orders = new Sys_Model\orders($registry);
         $this->sys_model_intelligent = new Sys_Model\intelligent($registry);
+        $this->assign('lang',$this->language->all());
     }
 
 
@@ -76,7 +77,7 @@ class ControllerOperationAbnormalUser extends Controller
         $page_info = $this->page($total, $page, $rows, $filter, $offset);
         $this->assign('pagination', $page_info['pagination']);
         $this->assign('results', $page_info['results']);
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('intelligent/abnormal_user_list', $this->output));
     }
 
@@ -113,9 +114,9 @@ class ControllerOperationAbnormalUser extends Controller
 
     protected function getDataColumns()
     {
-        $this->setDataColumn('用户');
-        $this->setDataColumn('手机号');
-        $this->setDataColumn('异常次数');
+        $this->setDataColumn($this->language->get('t2'));
+        $this->setDataColumn($this->language->get('t3'));
+        $this->setDataColumn($this->language->get('t4'));
         return $this->data_columns;
     }
 

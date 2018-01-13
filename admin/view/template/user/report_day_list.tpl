@@ -31,24 +31,21 @@
                                     <?php } ?>
                                     <?php } ?>
                                 </select> -->
-                                <select name="city_state" id="filter_type" class="input-sm">
-                                    <option value="">--选择区域--</option>
-                                    <option value="">中国</option>
-                                    <option value="">中国1</option>
-                                    <option value="">中国2</option>
-                                    <option value="">中国3</option>
+                                <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--请选择区域--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
                                 </select>
-                                <select name="city_state" id="filter_type" class="input-sm">
-                                    <option value="">--选择城市--</option>
-                                    <option value="">东莞</option>
-                                    <option value="">东莞1</option>
-                                    <option value="">东莞2</option>
-                                    <option value="">东莞3</option>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--请选择城市--</option>
+                                    
                                 </select>
-                                <select class="input-sm" name="cooperator_id">
-                                    <option value="">用户类型</option>
-                                    <option value="">App用户</option>
-                                    <option value="">刷卡用户</option>
+                                <select class="input-sm" name="user_type">
+                                    <option value>用户类型</option>
+                                    <?php foreach($user_types as $k => $v) { ?>
+                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['user_type'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
+                                    <?php } ?>
                                 </select>
                                  <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
                                     <option value="0">选择时间区间</option>
@@ -147,6 +144,53 @@
       });
         
     };
+</script>
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--请选择城市--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
+
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--请选择城市--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
 </script>
 <script type="text/javascript">
     <?php if (!empty($filter['cooperator_id'])) { ?>

@@ -10,6 +10,7 @@ function cache_shutdown_error() {
     }
 }
 register_shutdown_function("cache_shutdown_error");
+use Tool\ArrayUtil;
 class ControllerUserOrder extends Controller {
     private $cur_url = null;
     private $error = null;
@@ -22,13 +23,14 @@ class ControllerUserOrder extends Controller {
 
         // 加载bicycle Model
         $this->load->library('sys_model/orders', true);
+        $this->assign('lang',$this->language->all());
     }
 
     /**
      * 消费记录列表
      */
     public function index() {
-        $filter = $this->request->get(array('filter_type', 'order_sn', 'lock_sn', 'bicycle_sn', 'user_name', 'cooperator_name', 'region_name', 'order_state', 'add_time', 'start_time', 'end_time', 'settlement_time', 'amount' ,'ride_time','user_types','time_type'));
+        $filter = $this->request->get(array('filter_type', 'order_sn', 'lock_sn', 'bicycle_sn', 'user_name',  'region_name', 'order_state', 'add_time', 'start_time', 'end_time', 'settlement_time', 'amount' ,'ride_time','user_type','time_type','city_id','region_id'));
 
         $condition = array();
         if (!empty($filter['order_sn'])) {
@@ -43,43 +45,202 @@ class ControllerUserOrder extends Controller {
         if (!empty($filter['user_name'])) {
             $condition['user_name'] = array('like', "%{$filter['user_name']}%");
         }
-        if (!empty($filter['cooperator_name'])) {
-            $condition['cooperator_name'] = array('like', "%{$filter['cooperator_name']}%");
+        if (is_numeric($filter['city_id'])) {
+            $condition['user.city_id'] = (int)$filter['city_id'];
         }
-        if (!empty($filter['region_name'])) {
-            $condition['region_name'] = array('like', "%{$filter['region_name']}%");
+        if (is_numeric($filter['region_id'])) {
+            $condition['user.region_id'] = (int)$filter['region_id'];
         }
         if (is_numeric($filter['order_state'])) {
             $condition['order_state'] = (int)$filter['order_state'];
         }
-        if (!empty($filter['add_time'])) {
-            $pdr_add_time = explode(' 至 ', $filter['add_time']);
-            $condition['orders.add_time'] = array(
-                array('egt', strtotime($pdr_add_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_add_time[1])))
-            );
+        if (is_numeric($filter['user_type'])) {
+            $condition['user_type'] = (int)$filter['user_type'];
         }
-        if (!empty($filter['start_time'])) {
-            $pdr_start_time = explode(' 至 ', $filter['start_time']);
-            $condition['orders.start_time'] = array(
-                array('egt', strtotime($pdr_start_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_start_time[1])))
-            );
+        $pdr_add_time = explode(' 至 ', $filter['add_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_add_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_add_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_add_time[1])))
+                );
+            }else{
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_add_time[1])))
+                );
+            }
         }
-        if (!empty($filter['end_time'])) {
-            $pdr_end_time = explode(' 至 ', $filter['end_time']);
-            $condition['orders.end_time'] = array(
-                array('egt', strtotime($pdr_end_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_end_time[1])))
-            );
+        ////////-------------2
+        $pdr_start_time = explode(' 至 ', $filter['start_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_start_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_start_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_start_time[1])))
+                );
+            }else{
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_start_time[1])))
+                );
+            }
         }
-        if (!empty($filter['settlement_time'])) {
-            $pdr_settlement_time = explode(' 至 ', $filter['settlement_time']);
-            $condition['orders.settlement_time'] = array(
-                array('egt', strtotime($pdr_settlement_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_settlement_time[1])))
-            );
+        ///////////-------3
+        $pdr_end_time = explode(' 至 ', $filter['end_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_end_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_end_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_end_time[1])))
+                );
+            }else{
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_end_time[1])))
+                );
+            }
         }
+        //////////////------4
+        $pdr_settlement_time = explode(' 至 ', $filter['settlement_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_settlement_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_settlement_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_settlement_time[1])))
+                );
+            }else{
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_settlement_time[1])))
+                );
+            }
+        }
+        /////////////
         if (is_numeric($filter['amount'])) {
             $condition['pay_amount'] = array('egt',(int)$filter['amount']);
         }
@@ -89,13 +250,25 @@ class ControllerUserOrder extends Controller {
             $condition['orders.order_state'] = 1;
         }
 
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+
         $filter_types = array(
-            'order_sn' => '订单sn',
-            'lock_sn' => '锁sn',
-            'bicycle_sn' => '单车sn',
-            'user_name' => '手机号',
-            'cooperator_name' => '合伙人',
-            'region_name' => '区域',
+            'order_sn' => '订单编号',
+            'lock_sn' => 'RFID',
+            'bicycle_sn' => '车辆编号',
+            'user_name' => '用户名',
+            // 'cooperator_name' => '合伙人',
+            // 'region_name' => '区域',
+        );
+        $user_type = array(
+            '0' => 'App用户',
+            '1' => '刷卡用户',
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -113,9 +286,11 @@ class ControllerUserOrder extends Controller {
         $rows = $this->config->get('config_limit_admin');
         $offset = ($page - 1) * $rows;
         $limit = sprintf('%d, %d', $offset, $rows);
-        $field = 'orders.*, city.city_name';
+        $field = 'orders.*, city.city_name,region.region_name,user.user_type';
         $join = array(
-            'city' => 'city.city_id=orders.city_id',
+            'user' => 'user.user_id=orders.user_id',
+            'city' => 'city.city_id=user.city_id',
+            'region' => 'region.region_id=user.region_id'
         );
 
         $result = $this->sys_model_orders->getOrdersList($condition, $order, $limit, $field, $join);
@@ -140,7 +315,9 @@ class ControllerUserOrder extends Controller {
 
         $data_columns = $this->getDataColumns();
         $this->assign('time_type',get_time_type());
+        $this->assign('filter_regions', $filter_regions);
         $this->assign('data_columns', $data_columns);
+        $this->assign('user_type', $user_type);
         $this->assign('data_rows', $result);
         $this->assign('filter', $filter);
         $this->assign('filter_type', $filter_type);
@@ -184,12 +361,13 @@ class ControllerUserOrder extends Controller {
      * @return mixed
      */
     protected function getDataColumns() {
-        $this->setDataColumn('订单sn');
-        $this->setDataColumn('锁sn');
-        $this->setDataColumn('单车sn');
-        $this->setDataColumn('手机号');
-        $this->setDataColumn('城市');
         $this->setDataColumn('区域');
+        $this->setDataColumn('城市');
+        $this->setDataColumn('用户类型');
+        $this->setDataColumn('订单编号');
+        $this->setDataColumn('RFID');
+        $this->setDataColumn('车辆编号');
+        $this->setDataColumn('用户名');
         $this->setDataColumn('状态');
         $this->setDataColumn('实付金额');
         $this->setDataColumn('已退金额');
@@ -294,68 +472,139 @@ class ControllerUserOrder extends Controller {
      */
     public function chart() {
         $this->load->library('sys_model/cooperator', true);
-        $filter = $this->request->get(array('city_id', 'add_time','user_type','time_type'));
+        $filter = $this->request->get(array('city_id', 'add_time','user_type','time_type','region_id'));
         $refundWhere = '`apply_state`=\'1\'';
         $orderWhere = '`order_state`=\'2\'';
-        if (!empty($filter['city_id'])) {
-            $refundWhere .= " AND city_id = '{$filter['city_id']}'";
-            $orderWhere .= " AND city_id = '{$filter['city_id']}'";
+        
+        if (is_numeric($filter['city_id'])) {
+            $refundWhere .= " AND rich_user.city_id = '{$filter['city_id']}'";
+            $orderWhere .= " AND rich_user.city_id = '{$filter['city_id']}'";
         }
-
+        if (is_numeric($filter['region_id'])) {
+            $refundWhere .= " AND rich_user.region_id = '{$filter['region_id']}'";
+            $orderWhere .= " AND rich_user.region_id = '{$filter['region_id']}'";
+        }
         if (is_numeric($filter['user_type'])) {
-            $condition['user_type'] = $filter['user_type'];
+            $refundWhere .= " AND user_type = '{$filter['user_type']}'";
+            $orderWhere .= " AND user_type = '{$filter['user_type']}'";
         }
 
-        if (!empty($filter['add_time'])) {
-            $pdr_add_time = explode(' 至 ', $filter['add_time']);
-
-            $firstday = strtotime($pdr_add_time[0]);
-            $lastday  = bcadd(86399, strtotime($pdr_add_time[1]));
-            $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
-            $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
-        } else {
-            $firstday = strtotime(date('Y-m-01'));
-            $lastday  = bcadd(86399, strtotime(date('Y-m-d')));
-            $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
-            $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
-        }
-
-        //获取城市列表
-        $this->load->library('sys_model/city');
-        $cityList = $this->sys_model_city->getCityList('');
-        if(empty($cityList)){
-            $this->load->controller('common/base/redirect', $this->url->link('operation/coupon', $filter, true));
-        }
-        // var_dump($cityList);
-        if(is_numeric($filter['city_id'])){
-            $w['city_id'] = $filter['city_id'];
+        $pdr_add_time = explode(' 至 ', $filter['add_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['add_time'])) {
+                $firstday = strtotime($pdr_add_time[0].'-01-01');
+                $lastday = bcadd(86399,strtotime($pdr_add_time[1].'-12-31'));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            } else {
+                $firstday = strtotime(date('Y-01-01'));
+                $lastday = bcadd(86399,strtotime(date('Y-12-31')));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['add_time'])) {
+                $firstday = strtotime($pdr_add_time[0]);
+                $lastday = bcadd(86399, strtotime($pdr_add_time[1].'+1 month -1 day'));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            } else {
+                $firstday = strtotime(date('Y-m'));
+                $lastday = bcadd(86399, strtotime(date('Y-m-t')));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['add_time'])) {
+                $firstday = strtotime($pdr_add_time[0]);
+                $lastday = bcadd(86399, strtotime($pdr_add_time[1]));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            }else{
+                $firstday = strtotime(date('Y-m-d'));
+                $lastday = bcadd(86399, strtotime(date('Y-m-d')));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            }
         }else{
-            $w['city_id'] = 0;
+            if (!empty($filter['add_time'])) {
+                $firstday = strtotime($pdr_add_time[0]);
+                $lastday = bcadd(86399, strtotime($pdr_add_time[1]));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            }else{
+                $firstday = strtotime(date('Y-m-01'));
+                $lastday  = bcadd(86399,strtotime(date('Y-m-d')));
+                $refundWhere .= " AND apply_audit_time >= '$firstday' AND apply_audit_time <= '$lastday'";
+                $orderWhere .= " AND settlement_time >= '$firstday' AND settlement_time <= '$lastday'";
+            }
+        }        
+
+       
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+
+        if($filter['time_type']==1){
+            //消费金额
+            $filed = "sum(pay_amount) as total, FROM_UNIXTIME(settlement_time, '%Y-%m-%d') as order_date";
+            //退回总计
+            $filed1= "sum(apply_cash_amount) as total, FROM_UNIXTIME(apply_audit_time, '%Y-%m-%d') as audit_time";
+            //订单数
+            $filed2="count(order_id) as total, FROM_UNIXTIME(settlement_time, '%Y-%m-%d') as order_date";
+        }else if($filter['time_type']==2){
+            $filed = "sum(pay_amount) as total, FROM_UNIXTIME(settlement_time, '%Y-%m') as order_date";
+            $filed1= "sum(apply_cash_amount) as total, FROM_UNIXTIME(apply_audit_time, '%Y-%m') as audit_time";
+            $filed2="count(order_id) as total, FROM_UNIXTIME(settlement_time, '%Y-%m') as order_date";
+        }else{
+            $filed = "sum(pay_amount) as total, FROM_UNIXTIME(settlement_time, '%Y') as order_date";
+            $filed1= "sum(apply_cash_amount) as total, FROM_UNIXTIME(apply_audit_time, '%Y') as audit_time";
+            $filed2="count(order_id) as total, FROM_UNIXTIME(settlement_time, '%Y') as order_date";
+        
         }
 
         // 初始化订单统计数据
         $dailyAmount = $dailyOrders = array();
-        while ($firstday <= $lastday) {
+        if ($filter['time_type']==1) {
+            while ($firstday <= $lastday) {
+            $tempDay = date('Y', $firstday);
+            $dailyAmount[$tempDay] = $dailyOrders[$tempDay] = 0;
+            $firstday = strtotime('+1 day', $firstday);
+        }
+        }else if($filter['time_type']==2){
+            while ($firstday <= $lastday) {
+            $tempDay = date('Y-m', $firstday);
+            $dailyAmount[$tempDay] = $dailyOrders[$tempDay] = 0;
+            $firstday = strtotime('+1 day', $firstday);
+        }
+        }else{
+            while ($firstday <= $lastday) {
             $tempDay = date('Y-m-d', $firstday);
             $dailyAmount[$tempDay] = $dailyOrders[$tempDay] = 0;
             $firstday = strtotime('+1 day', $firstday);
         }
+        }
+        
         
         $this->load->library('sys_model/data_sum', true);
         // 每天消费金额
-        $join = '';
-        $amountResult = $this->sys_model_data_sum->getOrderAmountForDays($orderWhere,$join,$w['city_id']);
+        $join = 'LEFT JOIN rich_user on rich_user.user_id=rich_orders.user_id LEFT JOIN rich_city on rich_city.city_id=rich_user.city_id LEFT JOIN rich_region on rich_region.region_id=rich_user.region_id';
+        $amountResult = $this->sys_model_data_sum->getOrderAmountForDays($orderWhere,$join,$filed);
         $amountResult = array_column($amountResult, 'total', 'order_date');
 
         // 每天退回消费金额
-        $join = 'LEFT JOIN rich_orders ON rich_orders.order_sn=rich_orders_modify_apply.order_sn';
-        $refundResult = $this->sys_model_data_sum->getRefundOrderAmountForDays($refundWhere, $join);
+        $join = 'LEFT JOIN rich_orders ON rich_orders.order_sn=rich_orders_modify_apply.order_sn LEFT JOIN rich_user on rich_user.user_id=rich_orders.user_id LEFT JOIN rich_city on rich_city.city_id=rich_user.city_id LEFT JOIN rich_region on rich_region.region_id=rich_user.region_id';
+        $refundResult = $this->sys_model_data_sum->getRefundOrderAmountForDays($refundWhere, $join,$filed1);
         $refundResult = array_column($refundResult, 'total', 'audit_time');
 
         // 每天订单数
-        $numberResult = $this->sys_model_data_sum->getOrderCountForDays($orderWhere);
+        $join = 'LEFT JOIN rich_user on rich_user.user_id=rich_orders.user_id LEFT JOIN rich_city on rich_city.city_id=rich_user.city_id LEFT JOIN rich_region on rich_region.region_id=rich_user.region_id';
+        $numberResult = $this->sys_model_data_sum->getOrderCountForDays($orderWhere,$join,$filed2);
         $numberResult = array_column($numberResult, 'total', 'order_date');
-
         $orderData = array();
         $orderAmountTotal = $refundAmountTotal = $ordersTotal = 0;
         if (is_array($dailyAmount) && !empty($dailyAmount)) {
@@ -393,8 +642,7 @@ class ControllerUserOrder extends Controller {
 
         $this->assign('time_type',get_time_type());
         $this->assign('user_types', $user_types);
-        $this->assign('cityList', $cityList);
-        $this->assign('city_id',$w['city_id']);
+        $this->assign('filter_regions', $filter_regions);
         $this->assign('filter', $filter);
         $this->assign('user_types', $user_types);
         $this->assign('orderData', $orderData);
@@ -538,7 +786,7 @@ class ControllerUserOrder extends Controller {
      * 导出
      */
     public function export() {
-        $filter = $this->request->post(array('filter_type', 'order_sn', 'lock_sn', 'bicycle_sn', 'user_name', 'cooperator_name', 'region_name', 'order_state', 'add_time', 'start_time', 'end_time', 'settlement_time'));
+         $filter = $this->request->get(array('filter_type', 'order_sn', 'lock_sn', 'bicycle_sn', 'user_name',  'region_name', 'order_state', 'add_time', 'start_time', 'end_time', 'settlement_time', 'amount' ,'ride_time','user_type','time_type','city_id','region_id'));
 
         $condition = array();
         if (!empty($filter['order_sn'])) {
@@ -553,70 +801,248 @@ class ControllerUserOrder extends Controller {
         if (!empty($filter['user_name'])) {
             $condition['user_name'] = array('like', "%{$filter['user_name']}%");
         }
-        if (!empty($filter['cooperator_name'])) {
-            $condition['cooperator_name'] = array('like', "%{$filter['cooperator_name']}%");
+        if (is_numeric($filter['city_id'])) {
+            $condition['user.city_id'] = (int)$filter['city_id'];
         }
-        if (!empty($filter['region_name'])) {
-            $condition['region_name'] = array('like', "%{$filter['region_name']}%");
+        if (is_numeric($filter['region_id'])) {
+            $condition['user.region_id'] = (int)$filter['region_id'];
         }
         if (is_numeric($filter['order_state'])) {
             $condition['order_state'] = (int)$filter['order_state'];
         }
-        if (!empty($filter['add_time'])) {
-            $pdr_add_time = explode(' 至 ', $filter['add_time']);
-            $condition['orders.add_time'] = array(
-                array('egt', strtotime($pdr_add_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_add_time[1])))
-            );
+        if (is_numeric($filter['user_type'])) {
+            $condition['user_type'] = (int)$filter['user_type'];
         }
-        if (!empty($filter['start_time'])) {
-            $pdr_start_time = explode(' 至 ', $filter['start_time']);
-            $condition['orders.start_time'] = array(
-                array('egt', strtotime($pdr_start_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_start_time[1])))
-            );
+        $pdr_add_time = explode(' 至 ', $filter['add_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_add_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_add_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_add_time[1])))
+                );
+            }else{
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['add_time'])) {
+                $condition['orders.add_time'] = array(
+                    array('egt', strtotime($pdr_add_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_add_time[1])))
+                );
+            }
         }
-        if (!empty($filter['end_time'])) {
-            $pdr_end_time = explode(' 至 ', $filter['end_time']);
-            $condition['orders.end_time'] = array(
-                array('egt', strtotime($pdr_end_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_end_time[1])))
-            );
+        ////////-------------2
+        $pdr_start_time = explode(' 至 ', $filter['start_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_start_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_start_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_start_time[1])))
+                );
+            }else{
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['start_time'])) {
+                $condition['orders.start_time'] = array(
+                    array('egt', strtotime($pdr_start_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_start_time[1])))
+                );
+            }
         }
-        if (!empty($filter['settlement_time'])) {
-            $pdr_settlement_time = explode(' 至 ', $filter['settlement_time']);
-            $condition['orders.settlement_time'] = array(
-                array('egt', strtotime($pdr_settlement_time[0])),
-                array('elt', bcadd(86399, strtotime($pdr_settlement_time[1])))
-            );
+        ///////////-------3
+        $pdr_end_time = explode(' 至 ', $filter['end_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_end_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_end_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_end_time[1])))
+                );
+            }else{
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['end_time'])) {
+                $condition['orders.end_time'] = array(
+                    array('egt', strtotime($pdr_end_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_end_time[1])))
+                );
+            }
         }
+        //////////////------4
+        $pdr_settlement_time = explode(' 至 ', $filter['settlement_time']);
+        if($filter['time_type']==1){
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0].'-01-01')),
+                    array('elt', bcadd(86399, bcadd(86399,strtotime($pdr_settlement_time[1].'-12-31'))))
+                );
+            } else {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime(date('Y-01-01'))),
+                    array('elt', bcadd(86399,strtotime(date('Y-12-31'))))
+                );
+            }
+        }else if($filter['time_type']==2){
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_settlement_time[1].'+1 month -1 day')))
+                );
+            } else {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime(date('Y-m'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-t'))))
+                );
+            }
+        }else if($filter['time_type']==3){
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_settlement_time[1])))
+                );
+            }else{
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime(date('Y-m-d'))),
+                    array('elt', bcadd(86399, strtotime(date('Y-m-d'))))
+                );
+            }
+        }else{
+            if (!empty($filter['settlement_time'])) {
+                $condition['orders.settlement_time'] = array(
+                    array('egt', strtotime($pdr_settlement_time[0])),
+                    array('elt', bcadd(86399, strtotime($pdr_settlement_time[1])))
+                );
+            }
+        }
+        /////////////
+        if (is_numeric($filter['amount'])) {
+            $condition['pay_amount'] = array('egt',(int)$filter['amount']);
+        }
+
+        if (is_numeric($filter['ride_time'])) {
+            $condition['orders.start_time'] = array('elt',time() - $filter['ride_time']*60);
+            $condition['orders.order_state'] = 1;
+        }
+
         $order = 'orders.add_time DESC';
-        $limit = '';
-        $field = 'orders.*, cooperator.cooperator_name';
+        $limit = "";
+         $field = 'orders.*,city.city_name,region.region_name,user.user_type';
         $join = array(
-            'cooperator' => 'cooperator.cooperator_id=orders.cooperator_id',
+            'user' => 'user.user_id=orders.user_id',
+            'city' => 'city.city_id=user.city_id',
+            'region' => 'region.region_id=user.region_id'
         );
         $result = $this->sys_model_orders->getOrdersList($condition, $order, $limit, $field, $join);
+        $user_type=array(
+            '0' =>'App用户',
+            '1' =>'刷卡用户'
+        );
         if (is_array($result) && !empty($result)) {
             $order_state = get_order_state();
             foreach ($result as &$v) {
+                // exit(var_dump($v));
                 $v['order_state'] = $order_state[$v['order_state']];
                 $v['start_time'] = !empty($v['start_time']) ? date('Y-m-d H:i:s', $v['start_time']) : '';
                 $v['end_time'] = !empty($v['end_time']) ? date('Y-m-d H:i:s', $v['end_time']) : '';
                 $v['add_time'] = !empty($v['add_time']) ? date('Y-m-d H:i:s', $v['add_time']) : '';
                 $v['settlement_time'] = !empty($v['settlement_time']) ? date('Y-m-d H:i:s', $v['settlement_time']) : '';
+                $v['user_type'] = $user_type[(int)$v['user_type']];
+               
             }
         }
 
         $data = array(
             'title' => '消费记录列表',
             'header' => array(
-                'order_sn' => '订单sn',
-                'lock_sn' => '锁sn',
-                'bicycle_sn' => '单车sn',
-                'user_name' => '手机号',
-                'cooperator_name' => '合伙人',
                 'region_name' => '区域',
+                'city_name' => '城市',
+                'user_type' => '用户类型',
+                'order_sn' => '订单编号',
+                'lock_sn' => '锁编号',
+                'bicycle_sn' => '单车编号',
+                'user_name' => '用户名',
                 'order_state' => '状态',
                 'pay_amount' => '实付金额',
                 'refund_amount' => '已退金额',

@@ -104,9 +104,10 @@ class Bicycle {
      */
     public function getBicycleLockMarker($where = array(), $field = '', $limit = '') {
         $field .= 'b.bicycle_id,b.bicycle_sn,b.type,b.fee,b.last_used_time,r.region_id,r.region_name,r.region_city_code,r.region_city_ranking,';
-        $field .= 'l.lock_sn,l.lat,l.lng';
+        $field .= 'l.lock_sn,l.lat,l.lng,l.battery';
         $on = 'b.lock_sn=l.lock_sn,b.region_id=r.region_id';
         $result = $this->db->table('bicycle as b,lock as l,region as r')->where($where)->field($field)->join('left,left')->on($on)->limit($limit)->select();
+        //var_dump( $this->db->getLastSql());
         return $result;
     }
 
@@ -194,8 +195,8 @@ class Bicycle {
             ."LEFT JOIN (SELECT bicycle_id, order_id FROM ".DB_PREFIX."orders WHERE order_state=-3) AS od3 ON b.bicycle_id = od3.bicycle_id "
             ."WHERE l.lat<>'' AND l.lng<> '' "
             .(empty($cooperator_id) ? '': ' AND b.cooperator_id=' . ($cooperator_id + 0) . ' ')
-            //."AND l.lat>=$min_lat AND l.lat<=$max_lat " . $lng_bound
-            ." GROUP BY b.bicycle_id limit 10";
+            ."AND l.lat>=$min_lat AND l.lat<=$max_lat " . $lng_bound
+            ." GROUP BY b.bicycle_id";
         return $this->db->getRows($sql);
     }
 

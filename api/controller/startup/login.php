@@ -18,11 +18,17 @@ class ControllerStartupLogin extends Controller {
             'account/coupon/getcouponfrontpage',//首页分享获取优惠券
             'account/account/getuserinfobyencrypt',
             'account/account/getorderdetailbyencrypt',
+            'account/account/getregions',//获取地区列表
+            'account/account/passwordlogin',
+            'account/account/getlanguagesetting',
+            'account/account/emailregisteractive',
+            'account/account/setiostoken',
             'payment/alipay/notify',
             'payment/wxpay/notify',
             'location/location/getbicyclelocation',
             'location/location/getbicyclelocation1',
             'location/location/getlocalprice',
+            'location/location/getstation',
             'system/common/wechat_jssdk',
             'system/common/wechat',
             'system/common/wechatapp',
@@ -40,6 +46,16 @@ class ControllerStartupLogin extends Controller {
             'article/index/ad',
             'account/ad/index',
             'account/ad',
+            'account/account/test',
+            'account/account/getemailstatus',//获取邮件状态
+            'account/account/updateemail_confirm',//确认修改邮箱
+            'account/creditcard/cc',//测试用
+            'account/account/sendforgetcode',//发送忘记密码验证码
+            'account/account/checkforgetcode',//验证忘记密码验证码
+            'account/account/resetpassword',//没登录重新设置密码
+            'account/account/sendforgetemail',//发送重新设置密码
+            'account/account/checkforgetemail',//确认重新设置密码
+            'account/account/getdepositamount',//获取应该充值多少押金
         );
 
         if (!in_array($route, $ignore)) {

@@ -21,9 +21,12 @@ class ControllerAdminIndex extends Controller {
         $this->load->library('sys_model/region',true);
         $this->load->library('sys_model/repair',true);
         $this->load->library('sys_model/rbac',true);
+        $this->assign('lang',$this->language->all());
     }
 
     public function index() {
+		//echo '2222222';return false;
+        //echo $this->language->get('heading_title_t');
         $this->summary();
         $this->assign('servertime', time());
         $this->assign('export_action', $this->url->link('bicycle/bicycle/export'),'',true);
@@ -532,7 +535,7 @@ class ControllerAdminIndex extends Controller {
         $info['uuid'] = strlen($info['uuid']) == 40? 'IOS': 'android';
         $info['add_time'] = !empty($info['add_time']) ? date('Y-m-d H:i:s', $info['add_time']) : '';
         $info['avatar'] = !empty($info['avatar']) ? $info['avatar'] : HTTPS_CATALOG.'images/user_default.png';
-
+        $info['login_time'] = !empty($info['login_time'])? date('Y-m-d H:i:s', $info['login_time']): '-';
         $this->response->showSuccessResult($info);
     }
 
@@ -612,9 +615,10 @@ class ControllerAdminIndex extends Controller {
             $v['order_state_describe'] = $get_order_state[$v['order_state']];
             $v['pay_amount'] = $v['order_state'] == 2? ($v['pay_amount'] - $v['refund_amount']) : $v['order_amount'];
             $v['coupon'] = $v['coupon_id'] == 0? '否': '是';
-            $v['is_limit_free'] = $v['is_limit_free'] == 0? '否': '是';
-            $v['is_month_card'] = $v['is_month_card'] == 0? '否': '是';
+            /*$v['is_limit_free'] = $v['is_limit_free'] == 0? '否': '是';
+            $v['is_month_card'] = $v['is_month_card'] == 0? '否': '是';*/
             $v['order_state'] = $get_order_state[$v['order_state']];
+            $v['city_name'] = '城市名';
         }
 
         $this->assign('page', $page+1);
@@ -1073,5 +1077,11 @@ class ControllerAdminIndex extends Controller {
                 die($result['msg']);
             }
         }
+    }
+    public function change_available_state(){
+        $user_id= $this->request->post('user_id');
+        $state= $this->request->post('state');
+        $this->sys_model_user->updateUser(['user_id'=>$user_id], ['available_state'=>$state]);
+        $this->response->showSuccessResult();
     }
 }

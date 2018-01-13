@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>用户管理</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,7 +14,7 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li class="active"><a href="javascript:;" data-toggle="tab">用户信息详情</a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t15'];?></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="bicycle">
@@ -26,83 +26,64 @@
                         <form class="form-horizontal" method="post">
                             <div class="row">
                                 <div class="form-group col-sm-12">
-                                    <label for="" class="col-sm-2 control-label">头像</label>
+                                    <label for="" class="col-sm-2 control-label"><?php echo @$lang['t16'];?></label>
                                     <div class="col-sm-10">
                                         <?php if ($data['avatar']) { ?><span class="img-thumbnail"><img src="<?php echo $data['avatar']; ?>" style="max-width:100px;max-height:100px;" /></span><?php } ?>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">手机号码</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t17'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['mobile']; ?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">用户姓名</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t18'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['nickname']; ?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">押金(元)</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t19'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['deposit']; ?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">可用金额(元)</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t20'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['available_deposit']; ?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">信用积分</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t21'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['credit_point']; ?></h5>
                                     </div>
                                 </div>
 
-                                <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">实名认证状态</label>
-                                    <div class="col-sm-8">
-                                        <h5><?php echo $verify_states[$data['verify_state']]; ?></h5>
-                                    </div>
-                                </div>
-                                <?php if ($data['verify_state'] ==1) { ?>
-                                <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">真实姓名</label>
-                                    <div class="col-sm-8">
-                                        <h5><?php echo $data['real_name']; ?></h5>
-                                    </div>
-                                </div>
-                                <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">身份证</label>
-                                    <div class="col-sm-8">
-                                        <h5><?php echo $data['identification']; ?></h5>
-                                    </div>
-                                </div>
-                                <?php } ?>
+             
 
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">是否可踩车</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t22'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $available_states[$data['available_state']]; ?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">最近登录时间</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t23'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['login_time']; ?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">最近登录ip</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t24'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['ip']; ?></h5>
                                     </div>
                                 </div>
                                 <div class="form-group col-sm-6">
-                                    <label for="" class="col-sm-4 control-label">注册时间</label>
+                                    <label for="" class="col-sm-4 control-label"><?php echo @$lang['t25'];?></label>
                                     <div class="col-sm-8">
                                         <h5><?php echo $data['add_time']; ?></h5>
                                     </div>
@@ -110,8 +91,8 @@
                             </div>
                             <div class="form-group">
                                 <div class="col-sm-12">
-                                    <div class="pull-right">
-                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default">返回</a>
+                                    <div class="text-center">
+                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default" style="padding: 0 30px;height: 40px;font-size: 14px;line-height: 40px;"><?php echo @$lang['t26'];?></a>
                                     </div>
                                 </div>
                             </div>

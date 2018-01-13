@@ -1,5 +1,9 @@
 <?php
 namespace Logic;
+
+use \Enum\RegisterType;
+use \Enum\ErrorCode;
+
 class User {
     private $sys_model_user;
     public $_user_info = array();
@@ -49,11 +53,25 @@ class User {
         return callback(false, '验证失败');
     }
 
+    public function register($data,$register_type){
+        switch($register_type){
+            case RegisterType::MOBILE:
+                return $this->mobileRegister($data);
+                break;
+            case RegisterType::EMAIL:
+                return $this->emailRegister($data);
+                break;
+            default:
+                throw new \Exception("register_failure",ErrorCode::REGISTER_FAILURE);
+        }
+    }
+
     /**
      * @param $data
      * @return mixed
      */
-    public function register($data) {
+    public function mobileRegister($data) {
+
         $arr = array();
         $arr['nickname'] = $arr['mobile'] = $data['mobile'];
         $arr['uuid'] = $data['uuid'];
@@ -67,8 +85,13 @@ class User {
         $arr['platform'] = isset($data['from']) ? $data['from'] : 'android';
         if (isset($data['register_region_id'])) $arr['register_region_id'] = $data['register_region_id'];
         if (isset($data['cooperator_id'])) $arr['cooperator_id'] = $data['cooperator_id'];
-        if ($this->sys_model_user->existsMobile($data['mobile'])) {
-            return callback(false, '此号码已经被注册');
+        $user = $this->sys_model_user->getUserInfo(['mobile'=>$data['mobile']]);
+        if($user){
+            if(!empty($user['password']))
+                return callback(false, '此号码已经被注册');
+            else{
+                return callback(true, '注册成功', array('user_id' => $user['user_id'], 'user_sn' => $user['user_sn']));
+            }
         }
         $insert_id = $this->sys_model_user->addUser($arr);
         if ($insert_id) {
@@ -77,6 +100,49 @@ class User {
             return callback(false, '注册失败，写入数据库失败');
         }
     }
+
+
+    /**
+     * 邮箱方式注册
+     */
+    private function emailRegister($data){
+
+        $arr = array();
+        $arr['nickname'] = $arr['email'] = $data['email'];
+        $arr['uuid'] = $data['uuid'];
+        $arr['login_time'] = time();
+        $arr['ip'] = getIP();
+        $arr['user_sn'] = $this->make_sn();
+        $arr['add_time'] = TIMESTAMP;
+        $arr['update_time'] = TIMESTAMP;
+        $arr['register_lat'] = isset($data['register_lat']) ? $data['register_lat'] : '';
+        $arr['register_lng'] = isset($data['register_lng']) ? $data['register_lng'] : '';
+        $arr['platform'] = isset($data['from']) ? $data['from'] : 'android';
+        if (isset($data['register_region_id'])) $arr['register_region_id'] = $data['register_region_id'];
+        if (isset($data['cooperator_id'])) $arr['cooperator_id'] = $data['cooperator_id'];
+        $user = $this->sys_model_user->getUserInfo(['email'=>$data['email']]);
+        if($user){
+            //如果还没有设置密码 则需要重新激活 用户可能是 在设置密码阶段退出了 所以这个激活是失效的 再次注册的时候 需要重新激活一次
+            if($user['is_active']){
+                return callback(false, '此号码已经被注册!');
+            }
+            $this->sys_model_user->updateUser(['user_id'=>$user['user_id']],$user);
+            $return_data = ['user_id'=>$user['user_id'],'user_sn'=>$user['user_sn']];
+        }else{
+            $insert_id = $this->sys_model_user->addUser($arr);
+            if($insert_id)
+                $return_data = ['user_id'=>$insert_id,'user_sn'=>$arr['user_sn']];
+            else
+                $return_data = [];
+        }
+
+        if ($return_data) {
+            return callback(true, '注册成功', $return_data);
+        } else {
+            return callback(false, '注册失败，写入数据库失败');
+        }
+    }
+
 
     /**
      * 写入实名认证
@@ -203,5 +269,54 @@ class User {
 
     public function logout($user_id) {
         return $this->updateUserInfo($user_id, array('uuid' => ''));
+    }
+
+    /**
+     * 设置密码
+     * @param $user_id
+     * @param $password
+     * @return mixed
+     */
+    public function setPassword($user_id,$password){
+        $password = md5($password.'thisispassword');
+        return $this->sys_model_user->updateUser(['user_id'=>$user_id],['password'=>$password]);
+    }
+
+    /**
+     * 检查密码
+     * @param $password
+     * @param $username string  email 或者 mobile
+     */
+    public function passwordLogin($username,$password,$uuid){
+        $password = md5($password.'thisispassword');
+        $user = $this->sys_model_user->getUserInfo(['mobile'=>$username,'password'=>$password]);
+        if(!$user){
+            $user = $this->sys_model_user->getUserInfo(['email'=>$username,'password'=>$password,'is_active'=>1]);
+        }
+        if(!$user){
+            return callback(false, 'login failure');
+        }
+        $user['uuid'] = $uuid;
+        $this->sys_model_user->updateUser(['user_id'=>$user['user_id']],$user);
+        $info = array(
+            'user_id' => $user['user_id'],
+            'user_sn' => $user['user_sn'],
+            'mobile' => $user['mobile'],
+            'nickname' => $user['nickname'],
+            'avatar' => $user['avatar'],
+            'deposit' => $user['deposit'],
+            'deposit_state' => $user['deposit_state'],
+            'available_deposit' => $user['available_deposit'],
+            'freeze_deposit' => $user['freeze_deposit'],
+            'credit_point' => $user['credit_point'],
+            'real_name' => $user['real_name'],
+            'identification' => $user['identification'],
+            'verify_state' => $user['verify_state'],
+            'available_state' => $user['available_state'],
+            'recommend_num' => $user['recommend_num'],
+            'email' => $user['email'],
+        );
+
+        return callback(true, '登录成功', $info);
     }
 }

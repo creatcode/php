@@ -1,4 +1,16 @@
 <?php
+error_reporting(E_ALL); //E_ALL
+function cache_shutdown_error() {
+    $_error = error_get_last();
+    if ($_error && in_array($_error['type'], array(1, 4, 16, 64, 256, 4096, E_ALL))) {
+        echo '<font color=red>你的代码出错了：</font></br>';
+        echo '致命错误:' . $_error['message'] . '</br>';
+        echo '文件:' . $_error['file'] . '</br>';
+        echo '在第' . $_error['line'] . '行</br>';
+    }
+}
+register_shutdown_function("cache_shutdown_error");
+use Tool\ArrayUtil;
 class ControllerUserUser extends Controller {
     public function __construct($registry) {
         parent::__construct($registry);
@@ -8,10 +20,11 @@ class ControllerUserUser extends Controller {
 
         // 加载user Model
         $this->load->library('sys_model/user', true);
+        $this->assign('lang',$this->language->all());
     }
 
     public function index() {
-        $filter = $this->request->get(array('filter_type', 'mobile', 'deposit', 'available_deposit', 'credit_point', 'available_state', 'add_time', 'cooperator', 'nickname'));
+        $filter = $this->request->get(array('filter_type', 'mobile', 'deposit', 'available_deposit', 'credit_point', 'available_state', 'add_time', 'region_id','city_id', 'nickname'));
 
         $condition = array();
         if (!empty($filter['mobile'])) {
@@ -36,17 +49,17 @@ class ControllerUserUser extends Controller {
                 array('elt', bcadd(86399, strtotime($add_time[1])))
             );
         }
-        if (!empty($filter['cooperator'])) {
-            $this->load->library('sys_model/cooperator');
-            $cooperator_info = $this->sys_model_cooperator->getCooperatorInfo(
-                array(
-                    'cooperator_name' => array(
-                        'like' , $filter['cooperator'].'%'
-                    ),
-                )
-            );
-            $condition['cooperator_id'] = (int)$cooperator_info['cooperator_id'];
-        }
+        // if (!empty($filter['cooperator'])) {
+        //     $this->load->library('sys_model/cooperator');
+        //     $cooperator_info = $this->sys_model_cooperator->getCooperatorInfo(
+        //         array(
+        //             'cooperator_name' => array(
+        //                 'like' , $filter['cooperator'].'%'
+        //             ),
+        //         )
+        //     );
+        //     $condition['cooperator_id'] = (int)$cooperator_info['cooperator_id'];
+        // }
 
         if (!empty($filter['nickname'])) {
             $condition['nickname'] = array(
@@ -58,10 +71,10 @@ class ControllerUserUser extends Controller {
 
 
         $filter_types = array(
-            'city'          => '城市',
-            'mobile'        => '手机号码',
-            'cooperator'    => '合伙人'
-            // 'nickname'      => '用户名'
+            'mobile'        => $this->language->get('t27'),
+            'nickname'    => $this->language->get('t28'),
+             'email'      => $this->language->get('t29'),
+            'facebook'=>$this->language->get('t30')
         );
         $filter_type = $this->request->get('filter_type');
         if (empty($filter_type)) {
@@ -74,6 +87,17 @@ class ControllerUserUser extends Controller {
         } else {
             $page = 1;
         }
+
+        $this->load->library('sys_model/region');
+        $this->load->library('sys_model/city');
+        
+        $filter_regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name');
+        foreach ($filter_regions as $key2 => $val2) {
+            $filter_regions[$key2]['city'] = $this->sys_model_city->getCityList(['region_id' => $val2['region_id']], '', '', 'city_id,city_name', []); //地区下面的城市数据
+        }
+
+
+        $this->assign('filter_regions', $filter_regions);
 
         $order = 'add_time DESC';
         $rows = $this->config->get('config_limit_admin');
@@ -143,21 +167,23 @@ class ControllerUserUser extends Controller {
         $this->assign('user_chart_action', $this->url->link('user/user/chart'));
         $this->assign('cooperator_chart_action', $this->url->link('user/user/cooperator_chart'));
         $this->assign('region_chart_action', $this->url->link('user/user/region_chart'));
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('user/user_list', $this->output));
     }
 
     // 表格字段
     // 表格字段
     protected function getDataColumns() {
-        $this->setDataColumn('手机号码');
-        $this->setDataColumn('用户名');
-        $this->setDataColumn('押金(元)');
-        $this->setDataColumn('可用金额(元)');
-        $this->setDataColumn('注册时间');
-        $this->setDataColumn('终端设备');
-        $this->setDataColumn('注册地');
-        $this->setDataColumn('第一次用车地');
+        $this->setDataColumn($this->language->get('t31'));
+        $this->setDataColumn($this->language->get('t32'));
+        $this->setDataColumn($this->language->get('t27'));
+        $this->setDataColumn($this->language->get('t28'));
+        $this->setDataColumn($this->language->get('t33'));
+        $this->setDataColumn($this->language->get('t34'));
+        $this->setDataColumn($this->language->get('t25'));
+        $this->setDataColumn($this->language->get('t35'));
+        $this->setDataColumn($this->language->get('t36'));
+        $this->setDataColumn($this->language->get('t37'));
         return $this->data_columns;
     }
 
@@ -384,7 +410,7 @@ class ControllerUserUser extends Controller {
 
 
         #全部合伙人
-        $this->load->library('sys_model/cooperator');
+        /*$this->load->library('sys_model/cooperator');
         $cooperatorList = $this->sys_model_cooperator->getCooperatorList();
         if(empty($cooperatorList)){
             $this->load->controller('common/base/redirect', $this->url->link('operation/coupon', $filter, true));
@@ -393,7 +419,7 @@ class ControllerUserUser extends Controller {
             $w['cooperator_id'] = $filter['cooperator_id'];
         }else{
             $w['cooperator_id'] = $cooperatorList[0]['cooperator_id'];
-        }
+        }*/
 
         $color_arr = array('#f56954','#00a65a','#f39c12','#00c0ef','#3c8dbc','#d2d6de','#FF1493','#DC143C','#191970','#00FF7F','#FFD700','#90EE90','#5F9EA0','#FFB6C1');
 
@@ -436,7 +462,7 @@ class ControllerUserUser extends Controller {
         $data['user_cooperator'] = array();
         $coo_user_arr = array();
         $count = 0;
-      foreach($cooperatorList as $k => $v){
+      /*foreach($cooperatorList as $k => $v){
             $where = $condition;
             $where[] = array('cooperator_id' => $v['cooperator_id']);
             $total = $this->sys_model_user->getTotalUsers($where);
@@ -449,7 +475,7 @@ class ControllerUserUser extends Controller {
                 'px'          => $var,
                 'highlight'   => isset($color_arr[$k]) ? $color_arr[$k] : '000000',
             );
-        }
+        }*/
         $var_ping = $user_total ? round((($user_total - $count)/$user_total)*100,2)."%(".($user_total - $count).")" : "0%(0)";
         $coo_user_arr[]= array(
             'color'      => "#A52A2A",
@@ -543,7 +569,7 @@ class ControllerUserUser extends Controller {
 
         $this->assign('data', $data);
         $this->assign('filter', $filter);
-        $this->assign('cooperList', $cooperatorList);
+        //$this->assign('cooperList', $cooperatorList);
         $this->assign('user_cooperator_arr', $coo_user_arr);
         $this->assign('static', HTTPS_CATALOG);
         $this->assign('user_list_action', $this->url->link('user/user'));
@@ -551,7 +577,7 @@ class ControllerUserUser extends Controller {
         $this->assign('cooperator_chart_action', $this->url->link('user/user/cooperator_chart'));
         $this->assign('region_chart_action', $this->url->link('user/user/region_chart'));
         $this->assign('add_action', $this->url->link('user/user/chart'));
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('user/user_chart', $this->output));
     }
 
@@ -678,14 +704,14 @@ class ControllerUserUser extends Controller {
             'key' => 'ios',
             'name' => 'ios',
         );
-        $platform_arr[] = array(
+        /*$platform_arr[] = array(
             'key' => 'mini_app',
             'name' => '微信小程序',
         );
         $platform_arr[] = array(
             'key' => 'wechat',
             'name' => '微信',
-        );
+        );*/
 
         $data['user_reg_type'] = array();
         $user_reg_type_arr = array();
@@ -726,7 +752,7 @@ class ControllerUserUser extends Controller {
         $this->assign('cooperator_chart_action', $this->url->link('user/user/cooperator_chart'));
         $this->assign('region_chart_action', $this->url->link('user/user/region_chart'));
         $this->assign('add_action', $this->url->link('user/user/region_chart'));
-
+        $this->assign('time_type',get_time_type());
         $this->response->setOutput($this->load->view('user/user_region_chart', $this->output));
     }
 

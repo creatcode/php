@@ -16,18 +16,32 @@ class ControllerStartupStartup extends Controller {
                 $this->config->set($setting['key'], json_decode($setting['value'], true));
             }
         }
-
+        if (isset($this->request->get['lang'])) {
+            $lang = $this->request->get['lang'];
+            setcookie('lang',$lang,60*60*24+time());
+        } else if(!empty($_COOKIE['lang'])){
+            $lang = $_COOKIE['lang'];
+        }else{
+            $lang = $this->config->get('config_admin_language');
+        }
+        $this->assign('now_lang',$lang);
         $where = array(
-            'code' => $this->db->escape($this->config->get('config_admin_language'))
+            'code' => $this->db->escape($lang)
         );
-
         $result = $this->db->table('language')->where($where)->find();
         if ($result) {
             $this->config->set('config_language_id', $result['language_id']);
-        }
+            $parts = explode('/', preg_replace('/[^a-zA-Z0-9_\/]/', '', (string)$this->request->get('route')));
+            if (count($parts) >= 2) {
+                // Language
+                $language = new Language($result['directory']);
+                $language->load($result['directory']);
+                $controller_language = sprintf('%s/%s', $parts[0], $parts[1]);
+                $language->load($controller_language);
+                $this->registry->set('language', $language);
 
-        $language = new Language($this->config->get('config_admin_language'));
-        $language->load($this->config->get('config_admin_language'));
-        $this->registry->set('language', $language);
+                
+            }
+        }
     }
 }

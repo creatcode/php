@@ -2,7 +2,7 @@
 <!-- Content Header (Page header) -->
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>提现管理</span>
+        <span><?php echo @$lang['t2'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>',this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -14,8 +14,8 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li><a href="<?php echo $chart_action; ?>" data-toggle="tab">统计图表</a></li>
-                    <li class="active"><a href="javascript:;" data-toggle="tab">提现列表</a></li>
+                    <li><a href="<?php echo $chart_action; ?>" data-toggle="tab"><?php echo @$lang['t47'];?></a></li>
+                    <li class="active"><a href="javascript:;" data-toggle="tab"><?php echo @$lang['t3'];?></a></li>
                     <!-- <li><a href="<?php echo $cooperation_cashapply_url; ?>" data-toggle="tab">合伙人提现统计</a></li> -->
                 </ul>
                 <div class="tab-content">
@@ -32,48 +32,58 @@
                                 </select>
                                 <input type="text" name="<?php echo $filter_type; ?>" value="<?php echo isset($filter[$filter_type]) ? $filter[$filter_type] : ''; ?>" id="filter_text" class="input-sm" style="border: 1px solid #a9a9a9;"/>
                                 <select name="pdc_type" class="input-sm">
-                                    <option value>退款类型</option>
+                                    <option value><?php echo @$lang['t8'];?></option>
                                     <?php foreach($cashapply_types as $k => $v) { ?>
                                     <option value="<?php echo $k;?>" <?php echo (string)$k == $filter['pdc_type'] ? 'selected' : ''; ?>><?php echo $v;?></option>
                                     <?php }?>
                                 </select>
                                 <select name="pdc_payment_code" class="input-sm">
-                                    <option value>支付方式</option>
+                                    <option value><?php echo @$lang['t12'];?></option>
                                     <?php foreach ($payment_codes as $payment_code) { ?>
                                     <option value="<?php echo $payment_code['code'];?>" <?php echo (string)$payment_code['code'] == $filter['pdc_payment_code'] ? 'selected' : ''; ?>><?php echo $payment_code['text']; ?></option>
                                     <?php } ?>
                                 </select>
                                 <select name="pdc_payment_type" class="input-sm">
-                                    <option value>支付途径</option>
+                                    <option value><?php echo @$lang['t14'];?></option>
                                     <?php foreach($payment_types as $k => $v) { ?>
                                     <option value="<?php echo $k;?>" <?php echo (string)$k == $filter['pdc_payment_type'] ? 'selected' : ''; ?>><?php echo $v;?></option>
                                     <?php }?>
                                 </select>
                                 <select name="pdc_payment_state" class="input-sm">
-                                    <option value>提现支付状态</option>
+                                    <option value><?php echo @$lang['t17'];?></option>
                                     <?php foreach($payment_states as $state) { ?>
                                     <option value="<?php echo $state['value'];?>" <?php echo (string)$state['value'] == $filter['pdc_payment_state'] ? 'selected' : ''; ?>><?php echo $state['text'];?></option>
                                     <?php }?>
                                 </select>
+                                <select name="region_id" id="region_id" class="input-sm" onchange="show_city(this)">
+                                    <option value="">--<?php echo @$lang['t23'];?>--</option>
+                                    <?php foreach($filter_regions as $k => $v) { ?>
+                                    <option value="<?php echo $v['region_id']; ?>" <?php echo (string)$v['region_id'] == @$filter['region_id'] ? 'selected' : ''; ?>><?php echo $v['region_name']; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <select name="city_id" id="city_id" class="input-sm">
+                                    <option value="">--<?php echo @$lang['t24'];?>--</option>
+                                    
+                                </select>
                                  <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
-                                    <option value="0">选择时间区间</option>
+                                    <option value="0"><?php echo @$lang['t25'];?></option>
                                     <?php if(!empty($time_type)) {?>
                                     <?php foreach($time_type as $k=>$v){?>
                                     <option value="<?php echo $k?>" <?php echo $k == @$filter['time_type'] ? 'selected' : ''; ?>><?php echo $v?></option>
                                     <?php }?>
                                     <?php }?>
                                 </select>
-                                <input type="text" name="pdc_payment_time" value="<?php echo $filter['pdc_payment_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="支付时间"/>
+                                <input type="text" name="pdc_payment_time" value="<?php echo $filter['pdc_payment_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px;" placeholder="<?php echo @$lang['t29'];?>"/>
 
                                 <div class="pull-right">
-                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;搜索</button>
+                                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-search"></i>&nbsp;<?php echo @$lang['t30'];?></button>
                                 </div>
                             </div>
                         </form>
                         <!-- 新增 -->
                         <div class="form-group">
                            <!-- <button class="btn btn-default btn-sm button-upload" data-action="<?php echo $import_action; ?>"><i class="fa fa-upload"></i>&nbsp;导入</button>-->
-                            <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;导出</button>
+                            <button class="btn btn-default btn-sm" form="search_form" formmethod="post" formaction="<?php echo $export_action; ?>"><i class="fa fa-download"></i>&nbsp;<?php echo @$lang['t31'];?></button>
                         </div>
                         <?php if (isset($error['warning'])) { ?>
                         <div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;<?php echo $error['warning']; ?>
@@ -93,13 +103,15 @@
                                     <?php foreach ($data_columns as $column) { ?>
                                     <th><?php echo $column['text']; ?></th>
                                     <?php } ?>
-                                    <th style="min-width:130px;">操作</th>
+                                    <th style="min-width:130px;"><?php echo @$lang['t35'];?></th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 <?php foreach ($data_rows as $data) { ?>
                                 <tr>
                                     <!--<td><input type="checkbox" name="selected[]" value="<?php echo $data['pdc_id']?>"></td>-->
+                                    <td><?php echo $data['region_name']?></td>
+                                    <td><?php echo $data['city_name']?></td>
                                     <td><?php echo $data['pdc_sn']?></td>
                                     <td><?php echo $data['pdc_user_name']?></td>
                                     <td><?php echo $data['pdc_type_name']?></td>
@@ -109,13 +121,16 @@
                                     <td><?php echo $data['pdc_payment_type']?></td>
                                     <td><?php echo $data['pdc_payment_time']?></td>
                                     <td><?php echo $data['pdc_payment_state_text']?></td>
-                                    <td><button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i>查看</button>
+                                    <td><button data-url="<?php echo $data['info_action']; ?>" type="button" class="btn btn-info link"><i class="fa fa-fw fa-eye"></i><?php echo @$lang['t36'];?></button>
                                     <?php if($data['pdc_payment_state'] == '0' && $data['pdc_type'] == 1){ ?>
-                                    <button data-url="<?php echo $data['apply_deposit_action']; ?>" type="button" class="btn btn-primary link"><i class="fa fa-fw fa-exchange"></i>押金退款申请</button>
+                                    <button data-url="<?php echo $data['apply_deposit_action']; ?>" type="button" class="btn btn-primary link"><i class="fa fa-fw fa-exchange"></i><?php echo @$lang['t48'];?></button>
+                                    <?php } ?>
+                                    <?php if($data['pdc_payment_state'] == '0' && $data['pdc_type'] == 2){ ?>
+                                    <button data-url="<?php echo $data['apply_regin_action']; ?>" type="button" class="btn btn-primary link"><i class="fa fa-fw fa-exchange"></i><?php echo @$lang['t49'];?></button>
                                     <?php } ?>
 									<!-- add vincent :2017-08-10 转账申请[目前仅支持支付宝] -->
-                                    <?php if($data['pdc_payment_state'] == '4' && $data['pdc_payment_code']=='alipay'){ ?>
-                                    <button data-url="<?php echo $data['apply_trans_action']; ?>" type="button" class="btn btn-primary link"><i class="fa fa-fw fa-exchange"></i>转账申请</button>
+                                    <?php if($data['pdc_payment_state'] == '4' && $data['pdc_payment_code']=='stripe'){ ?>
+                                    <button data-url="<?php echo $data['apply_trans_action']; ?>" type="button" class="btn btn-primary link"><i class="fa fa-fw fa-exchange"></i><?php echo @$lang['t50'];?></button>
                                     <?php } ?>
                                 </tr>
                                 <?php } ?>
@@ -130,7 +145,53 @@
     </div>
 </section>
 <!-- /.content -->
+<script>
+  var region_data=new Array();
+    <?php
+        foreach($filter_regions as $key=>$val){
+    ?>
+            region_data[<?php echo $val['region_id']?>]=new Array();
+            <?php
+                foreach($val['city'] as $key2=>$val2){
+            ?>
+                region_data[<?php echo $val['region_id']?>][<?php echo $val2['city_id']?>]="<?php echo $val2['city_name']?>";
+            <?php
+                }
+            ?>
+    <?php
+        } 
+    ?>
+    function show_city(t){
+        var region_id=$(t).val();
+        var a='<option value="">--<?php echo @$lang['t24'];?>--</option>';
+        if(region_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index+">"+item+"</option>";
+            });
+            $("#city_id").html(a); 
+        }
 
+    }
+    function init_city(){
+        var region_id="<?php echo $filter['region_id'];?>";
+        var city_id="<?php echo $filter['city_id'];?>";
+        var a='<option value="">--<?php echo @$lang['t24'];?>--</option>';
+        if(region_id&&city_id){
+            region_data[region_id].forEach(function (item,index,input) {
+        a+="<option value="+index;
+                if(index==city_id){
+                    a+=" selected ";
+                }
+                a+=">"+item+"</option>";
+            });
+        }
+        $("#city_id").html(a); 
+    }
+    $(function(){
+         init_city();
+    });
+    
+</script>
 <script type="text/javascript">
     $(function(){
             addrat();

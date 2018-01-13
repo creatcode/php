@@ -185,21 +185,66 @@ class ControllerSystemCommon extends Controller {
      * 获取当前的常规广告
      */
     public function ad() {
-file_put_contents('/dev/shm/UA.log', date('Y-m-d H:i:s ') . getIP() . PHP_EOL . $_SERVER['HTTP_USER_AGENT'] . PHP_EOL, FILE_APPEND);
+//file_put_contents('/dev/shm/UA.log', date('Y-m-d H:i:s ') . getIP() . PHP_EOL . $_SERVER['HTTP_USER_AGENT'] . PHP_EOL, FILE_APPEND);
         $get_data = $this->request->get;
         $this->load->library('logic/advertisement', true);
         $lat = isset($this->request->post['lat']) ? ($this->request->post['lat'] + 0) : 0;
         $lng = isset($this->request->post['lng']) ? ($this->request->post['lng'] + 0) : 0;
         //判断坐标是否在已开通的区域内；
-        $this->load->library('sys_model/region', true);
-        $where = array(
-            'region_bounds_southwest_lat' => array('elt', $lat),
-            'region_bounds_northeast_lat' => array('egt', $lat),
-            'region_bounds_southwest_lng' => array('elt', $lng),
-            'region_bounds_northeast_lng' => array('egt', $lng),
+        $this->load->library('sys_model/city');
+        $city_where = array(
+            'city_bounds_southwest_lat' => array('elt', $lat),
+            'city_bounds_northeast_lat' => array('egt', $lat),
+            'city_bounds_southwest_lng' => array('elt', $lng),
+            'city_bounds_northeast_lng' => array('egt', $lng),
         );
-        $region_list = $this->sys_model_region->getRegionList($where);
-        if(empty($region_list)){
+        $city_list=$this->sys_model_city->getCityList($city_where, '',  '','city_id',[]);
+        $area_list=array();
+        if(empty($city_list)){//如果空，则去查地区列表
+            $this->load->library('sys_model/region', true);
+            $region_where = array(
+                'region_bounds_southwest_lat' => array('elt', $lat),
+                'region_bounds_northeast_lat' => array('egt', $lat),
+                'region_bounds_southwest_lng' => array('elt', $lng),
+                'region_bounds_northeast_lng' => array('egt', $lng),
+            );
+            $region_list = $this->sys_model_region->getRegionList($region_where);
+            $area_list=array();
+            foreach($region_list as $key=>$val){
+                $area_list[]=$val['region_id'];
+            }
+            $where['adv_region_id']=array('in',$area_list);
+        }else{//不空，则按城市自己的广告
+            foreach($city_list as $key=>$val){
+                $area_list[]=$val['region_id'];  
+            }
+            $where['adv_city_id']=array('in',$area_list);
+        }
+        if(empty($area_list)){
+            $where['adv_region_id']=0;
+        }
+        $where['adv_approved']=1;
+        $where['adv_start_time']=array('elt',time());
+        $where['adv_end_time']=array('egt',time());
+        $where['adv_type']=0;
+        $today = date('Ymd');
+        $field="distinct(adv_id),adv_image,adv_image_1x,adv_image_2x,adv_image_3x,adv_image_4x,adv_image_5x,adv_link,adv_max_version_android,adv_max_version_ios,ios_link"
+            /*."CONCAT('" . HTTP_STATIC . "', adv_image,'?t=$today') AS image, "
+            ."CONCAT('" . HTTP_STATIC . "', adv_image_1x,'?t=$today') AS image1x, "
+            ."CONCAT('" . HTTP_STATIC . "', adv_image_2x,'?t=$today') AS image2x, "
+            ."CONCAT('" . HTTP_STATIC . "', adv_image_3x,'?t=$today') AS image3x, "
+            ."CONCAT('" . HTTP_STATIC . "', adv_image_4x,'?t=$today') AS image4x, "
+            ."CONCAT('" . HTTP_STATIC . "', adv_image_5x,'?t=$today') AS image5x, "
+            ."adv_link AS link, "
+            ."adv_max_version_android AS adv_max_version_android, "
+            ."adv_max_version_ios AS adv_max_version_ios, "
+            ."ios_link AS ios_link";*/;
+        $order="((adv_sort<>0) * adv_effect_time + 10000000000 * adv_sort) ASC, adv_id ASC";
+        $this->load->library('sys_model/advertisement');
+        //
+        $items = $this->sys_model_advertisement->getAdvertisementList($where , $order ,  '', $field, []);
+ 
+        /*if(empty($region_list)){
             //取出未开通区域的广告；
             $this->load->library('sys_model/advertisement', true);
             $items = $this->sys_model_advertisement->getAdvertisementList(array('adv_region_id' => '-99999'));
@@ -214,9 +259,19 @@ file_put_contents('/dev/shm/UA.log', date('Y-m-d H:i:s ') . getIP() . PHP_EOL . 
         }else{
             //取出相应地区的广告
             $items = $this->logic_advertisement->getAdvertisementByLocation($lat, $lng, 0);
-        }
+        }*/
 
         foreach($items as $k => $v){
+            $items[$k]['image']=HTTP_STATIC.$v['adv_image'].'?t='.$today;
+            $items[$k]['image_1x']=HTTP_STATIC.$v['adv_image_1x'].'?t='.$today;
+            $items[$k]['image_2x']=HTTP_STATIC.$v['adv_image_2x'].'?t='.$today;
+            $items[$k]['image_3x']=HTTP_STATIC.$v['adv_image_3x'].'?t='.$today;
+            $items[$k]['image_4x']=HTTP_STATIC.$v['adv_image_4x'].'?t='.$today;
+            $items[$k]['image_5x']=HTTP_STATIC.$v['adv_image_5x'].'?t='.$today;
+            $items[$k]['link']=$v['adv_link'];
+            $items[$k]['adv_max_version_android']=$v['adv_max_version_android'];
+            $items[$k]['adv_max_version_ios']=$v['adv_max_version_ios'];
+            $items[$k]['ios_link']=$v['ios_link'];
             // android已经是最高版本则不提示
             if($v['adv_max_version_android'] && $get_data['fromApi'] == 'android' ){
                 if($get_data['version'] >= $v['adv_max_version_android']){
@@ -243,11 +298,89 @@ file_put_contents('/dev/shm/UA.log', date('Y-m-d H:i:s ') . getIP() . PHP_EOL . 
      * 不能用常规广告接口，兼容就版本
      */
     public function launch_ad() {
-        $this->load->library('logic/advertisement', true);
+       /* $this->load->library('logic/advertisement', true);
         $lat = isset($this->request->post['lat']) ? ($this->request->post['lat'] + 0) : 0;
         $lng = isset($this->request->post['lng']) ? ($this->request->post['lng'] + 0) : 0;
         $items = $this->logic_advertisement->getAdvertisementByLocation($lat, $lng, 1);
 		$this->db->getLastSql();
+
+        $this->response->showSuccessResult(array(
+            'has_ad' => !empty($items),
+            'items' => $items
+        ));*/
+        $get_data = $this->request->get;
+        $this->load->library('logic/advertisement', true);
+        $lat = isset($this->request->post['lat']) ? ($this->request->post['lat'] + 0) : 0;
+        $lng = isset($this->request->post['lng']) ? ($this->request->post['lng'] + 0) : 0;
+        //判断坐标是否在已开通的区域内；
+        $this->load->library('sys_model/city');
+        $city_where = array(
+            'city_bounds_southwest_lat' => array('elt', $lat),
+            'city_bounds_northeast_lat' => array('egt', $lat),
+            'city_bounds_southwest_lng' => array('elt', $lng),
+            'city_bounds_northeast_lng' => array('egt', $lng),
+        );
+        $city_list=$this->sys_model_city->getCityList($city_where, '',  '','city_id',[]);
+        $area_list=array();
+        if(empty($city_list)){//如果空，则去查地区列表
+            $this->load->library('sys_model/region', true);
+            $region_where = array(
+                'region_bounds_southwest_lat' => array('elt', $lat),
+                'region_bounds_northeast_lat' => array('egt', $lat),
+                'region_bounds_southwest_lng' => array('elt', $lng),
+                'region_bounds_northeast_lng' => array('egt', $lng),
+            );
+            $region_list = $this->sys_model_region->getRegionList($region_where);
+            $area_list=array();
+            foreach($region_list as $key=>$val){
+                $area_list[]=$val['region_id'];
+                //$where['adv_region_id']=array('in',$area_list);
+            }
+        }else{//不空，则按城市自己的广告
+            foreach($city_list as $key=>$val){
+                $area_list[]=$val['region_id'];
+                $where['adv_city_id']=array('in',$area_list);
+            }
+        }
+        if(empty($area_list)){
+            $where['adv_region_id']=0;
+        }
+        $where['adv_approved']=1;
+        $where['adv_start_time']=array('elt',time());
+        $where['adv_end_time']=array('egt',time());
+        $where['adv_type']=1;
+        $today = date('Ymd');
+        $field="distinct(adv_id),adv_image,adv_image_1x,adv_image_2x,adv_image_3x,adv_image_4x,adv_image_5x,adv_link,adv_max_version_android,adv_max_version_ios,ios_link";
+        $order="((adv_sort<>0) * adv_effect_time + 10000000000 * adv_sort) ASC, adv_id ASC";
+        $this->load->library('sys_model/advertisement');
+        //
+        $items = $this->sys_model_advertisement->getAdvertisementList($where , $order ,  '', $field, []);
+
+        foreach($items as $k => $v){
+            $items[$k]['image']=HTTP_STATIC.$v['adv_image'].'?t='.$today;
+            $items[$k]['image_1x']=HTTP_STATIC.$v['adv_image_1x'].'?t='.$today;
+            $items[$k]['image_2x']=HTTP_STATIC.$v['adv_image_2x'].'?t='.$today;
+            $items[$k]['image_3x']=HTTP_STATIC.$v['adv_image_3x'].'?t='.$today;
+            $items[$k]['image_4x']=HTTP_STATIC.$v['adv_image_4x'].'?t='.$today;
+            $items[$k]['image_5x']=HTTP_STATIC.$v['adv_image_5x'].'?t='.$today;
+            $items[$k]['link']=$v['adv_link'];
+            $items[$k]['adv_max_version_android']=$v['adv_max_version_android'];
+            $items[$k]['adv_max_version_ios']=$v['adv_max_version_ios'];
+            $items[$k]['ios_link']=$v['ios_link'];
+            // android已经是最高版本则不提示
+            if($v['adv_max_version_android'] && $get_data['fromApi'] == 'android' ){
+                if($get_data['version'] >= $v['adv_max_version_android']){
+                    unset($items[$k]);
+                }
+            }
+            // ios已经是最高版本则不提示
+            if($v['adv_max_version_ios'] && $get_data['fromApi'] ==  'ios' ){
+                if($get_data['version'] >= $v['adv_max_version_ios']){
+                    unset($items[$k]);
+                }
+            }
+
+        }
 
         $this->response->showSuccessResult(array(
             'has_ad' => !empty($items),

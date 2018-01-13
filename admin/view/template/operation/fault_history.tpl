@@ -9,7 +9,7 @@
 </style>
 <section class="content-header clearfix">
     <h1 class="pull-left">
-        <span>故障详情</span>
+        <span><?php echo @$lang['t20'];?></span>
         <a href="javascript:;" onclick="collect('<?php echo $menu_id ?>', this)"><i class="<?php echo $menu_collect_status == 1? 'fa fa-star no-margin text-yellow' : 'fa fa-star-o text-gray'; ?>"></i></a>
     </h1>
     <?php echo $statistics_in_page_header;?>
@@ -21,14 +21,14 @@
             <div class="nav-tabs-custom">
                 <!-- tab 标签 -->
                 <ul class="nav nav-tabs">
-                    <li><a href="<?php echo $info_action; ?>">故障详情</a></li>
-                    <li class="active"><a href="javascirpt:;">故障历史</a></li>
+                    <li><a href="<?php echo $info_action; ?>"><?php echo @$lang['t20'];?></a></li>
+                    <li class="active"><a href="javascirpt:;"><?php echo @$lang['t21'];?></a></li>
                 </ul>
-                <div class="tab-content">
+                <div class="tab-content" style="    padding-bottom: 45px;">
                     <!-- 故障历史 -->
                     <div class="box box-widget">
                         <div class="box-header with-border">
-                            <h3 class="box-title">故障历史 (<?php echo !empty($faultHistoryList) ? count($faultHistoryList) : 0; ?>) <small>单车编号<?php echo $bicycle['bicycle_sn'];?></small></h3>
+                            <h3 class="box-title"><?php echo @$lang['t21'];?> (<?php echo !empty($faultHistoryList) ? count($faultHistoryList) : 0; ?>) <small><?php echo @$lang['t23'];?><?php echo $bicycle['bicycle_sn'];?></small></h3>
                             <div class="box-tools pull-right">
                                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
                             </div>
@@ -47,31 +47,31 @@
                                     </div>
                                     <div class="panel-body collapse in" id="<?php echo 'collapse_fault_history'.$k; ?>" style="border:solid 1px #d6e9c6;border-bottom-left-radius: 4px!important;; border-bottom-right-radius: 4px!important;">
                                         <div class="form-group col-sm-4">
-                                            <label for="" class="col-sm-4 control-label">故障类型</label>
+                                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t30'];?></label>
                                             <div class="col-sm-8">
                                                 <span><?php echo $faultHistory['fault_type']; ?></span>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-4">
-                                            <label for="" class="col-md-4 control-label">上报人</label>
+                                            <label for="" class="col-md-4 control-label"><?php echo @$lang['t31'];?></label>
                                             <div class="col-sm-8">
                                                 <span><?php echo $faultHistory['user_name']; ?></span>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-4">
-                                            <label for="" class="col-sm-4 control-label">上报时间</label>
+                                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t32'];?></label>
                                             <div class="col-sm-8">
                                                 <span><?php echo $faultHistory['add_time']; ?></span>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-12">
-                                            <label for="" class="col-sm-2 control-label" style="width:10%">故障描述</label>
+                                            <label for="" class="col-sm-2 control-label" style="width:10%"><?php echo @$lang['t33'];?></label>
                                             <div class="col-sm-10">
                                                 <span><?php echo $faultHistory['fault_content']; ?></span>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-12">
-                                            <label for="" class="col-sm-2 control-label" style="width:10%">故障图片</label>
+                                            <label for="" class="col-sm-2 control-label" style="width:10%"><?php echo @$lang['t34'];?></label>
                                             <div class="col-sm-10">
                                                 <?php if($faultHistory['fault_image']) {?>
                                                 <span><a target="_blank" href="<?php echo $faultHistory['fault_image']; ?>"><i class="fa fa-file-image-o text-danger"></i></a></span>
@@ -79,31 +79,31 @@
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-4">
-                                            <label for="" class="col-sm-4 control-label">故障处理</label>
+                                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t35'];?></label>
                                             <div class="col-sm-8">
-                                                <span title="处理时长：<?php echo $faultHistory['repair_time_delta']; ?>"><?php echo $faultHistory['repair_time']; ?></span>
+                                                <span title="<?php echo @$lang['t'];?>处理时长：<?php echo $faultHistory['repair_time_delta']; ?>"><?php echo $faultHistory['repair_time']; ?></span>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-4">
-                                            <label for="" class="col-md-4 control-label">处理时长</label>
+                                            <label for="" class="col-md-4 control-label"><?php echo @$lang['t54'];?></label>
                                             <div class="col-sm-8">
                                                 <span><?php echo $faultHistory['repair_time_delta']; ?></span>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-4">
-                                            <label for="" class="col-sm-4 control-label">处理人</label>
+                                            <label for="" class="col-sm-4 control-label"><?php echo @$lang['t10'];?></label>
                                             <div class="col-sm-8">
                                                 <span><?php echo $faultHistory['admin_name']; ?></span>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-12">
-                                            <label for="" class="col-sm-2 control-label" style="width:10%">维修方式</label>
+                                            <label for="" class="col-sm-2 control-label" style="width:10%"><?php echo @$lang['t41'];?></label>
                                             <div class="col-sm-10">
                                                 <?php echo $faultHistory['repair_type']; ?>
                                             </div>
                                         </div>
                                         <div class="form-group col-sm-12">
-                                            <label for="" class="col-sm-2 control-label" style="width:10%">备注说明</label>
+                                            <label for="" class="col-sm-2 control-label" style="width:10%"><?php echo @$lang['t46'];?></label>
                                             <div class="col-sm-10">
                                                 <?php echo $faultHistory['repair_remarks']; ?>
                                             </div>
@@ -124,7 +124,14 @@
                         <?php endif; ?>
                         </div>
                     </div>
-                    
+                    <div class="form-group">
+                                <div class="col-sm-12">
+                                    <div style="text-align:center">
+                   
+                                        <a href="<?php echo $return_action; ?>" class="btn btn-sm btn-default"  style="padding:0 30px;height:40px;font-size:14px;line-height:40px"><?php echo @$lang['t51'];?></a>
+                                    </div>
+                                </div>
+                            </div>
                 </div>
             </div>
         </div>
@@ -137,46 +144,46 @@
                     <button type="button" class="close" data-dismiss="modal">
                         <span aria-hidden="true">×</span>
                     </button>
-                    <h4 class="modal-title" id="myModalLabel">统一故障处理</h4>
+                    <h4 class="modal-title" id="myModalLabel"><?php echo @$lang['t52'];?></h4>
                 </div>
                 <div class="modal-body">
                     <form method="post" action="<?php echo $batch_handling_action; ?>">
                         <div class="box-body">
                             <div class="form-group col-sm-12">
-                                <label for="" class="col-sm-2 control-label" style="width:12%">处理人</label>
+                                <label for="" class="col-sm-2 control-label" style="width:12%"><?php echo @$lang['t10'];?></label>
                                 <div class="col-sm-10">
                                     <span><?php echo $admin_name; ?></span>
                                 </div>
                             </div>
                             <div class="form-group col-sm-12 repair_type">
-                                <label for="" class="col-sm-3 control-label" style="width:12%">维修方式</label>
+                                <label for="" class="col-sm-3 control-label" style="width:12%"><?php echo @$lang['t41'];?></label>
                                 <div class="col-sm-9">
                                     <label class="radio-inline pull-left">
-                                        <input type="radio" name="repair_type" value="1" />现场维修
+                                        <input type="radio" name="repair_type" value="1" /><?php echo @$lang['t42'];?>
                                     </label>
                                     <label class="radio-inline pull-left">
-                                        <input type="radio" name="repair_type" value="2" />返仓维修
+                                        <input type="radio" name="repair_type" value="2" /><?php echo @$lang['t43'];?>
                                     </label>
                                     <label class="radio-inline pull-left">
-                                        <input type="radio" name="repair_type" value="3" />报废回收
+                                        <input type="radio" name="repair_type" value="3" /><?php echo @$lang['t44'];?>
                                     </label>
                                     <label class="radio-inline pull-left">
-                                        <input type="radio" name="repair_type" value="4" />其他
+                                        <input type="radio" name="repair_type" value="4" /><?php echo @$lang['t45'];?>
                                     </label>
                                 </div>
                             </div>
                             <div class="form-group col-sm-12 handle_content">
-                                <label for="" class="col-sm-2 control-label" style="width:12%">备注说明</label>
+                                <label for="" class="col-sm-2 control-label" style="width:12%"><?php echo @$lang['t46'];?></label>
                                 <div class="col-sm-10">
-                                    <span><textarea class="col-sm-10" rows="3" name="handle_content" placeholder="请输入处理说明"></textarea></span>
+                                    <span><textarea class="col-sm-10" rows="3" name="handle_content" placeholder="<?php echo @$lang['t47'];?>"></textarea></span>
                                 </div>
                             </div>
                             <div class="form-group col-sm-12 handle_image">
-                                <label for="" class="col-sm-2 control-label" style="width:12%">上传图片</label>
+                                <label for="" class="col-sm-2 control-label" style="width:12%"><?php echo @$lang['t48'];?></label>
                                 <div class="col-sm-10">
                                     <button type="button" class="btn btn-primary btn-sm button-upload" style="outline: none;" data-tag="image" data-action="<?php echo $upload_url; ?>" data-tage="image">
                                         <i class="fa fa-upload"></i>
-                                        <div class="inline">上传</div>
+                                        <div class="inline"><?php echo @$lang['t49'];?></div>
                                         <input type="hidden" name="handle_image" value="" class="filepath"/>
                                         <span class="filepath"></span>
                                     </button>
@@ -188,8 +195,8 @@
                                     <div class="pull-right">
                                         <input type="hidden" name="is_batch_handling" value="1" />
                                         <input type="hidden" name="fault_ids" value="" />
-                                        <a href="javascript:;" class="btn btn-sm btn-primary batchHandlingSubmit">提交处理</a>
-                                        <a href="javascript:;" class="btn btn-sm btn-default" data-dismiss="modal">取消</a>
+                                        <a href="javascript:;" class="btn btn-sm btn-primary batchHandlingSubmit"><?php echo @$lang['t50'];?></a>
+                                        <a href="javascript:;" class="btn btn-sm btn-default" data-dismiss="modal"><?php echo @$lang['t55'];?></a>
                                     </div>
                                 </div>
                             </div>
@@ -241,7 +248,7 @@
             return false;
         }
         if ( ! $(this).parents('form:first').find('input[name=repair_type]:radio:checked').size()) {
-            alert('请选择一种维修方式');
+            alert('<?php echo @$lang['t53'];?>');
             return false;
         }
         $.ajax('index.php?route=operation/fault/handling', {
@@ -257,7 +264,7 @@
     //批量故障处理提交
     $(document).on('click', '.batchHandlingSubmit', function () {
         if ( ! $(this).parents('form:first').find('input[name=repair_type]:radio:checked').size()) {
-            alert('请选择一种维修方式');
+            alert('<?php echo @$lang['t53'];?>');
             return false;
         }
         var fault_ids = [];

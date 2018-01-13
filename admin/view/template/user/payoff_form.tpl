@@ -25,24 +25,16 @@
                         <?php } ?>
                         <form class="form-horizontal" method="post" action="<?php echo $action; ?>">
                             <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
-                                <select class="input-sm" name="cooperator_id">
-                                    <option value="">合伙人</option>
-                                    <?php if (is_array($cooperators) && !empty($cooperators)) { ?>
-                                    <?php foreach($cooperators as $cooperator) { ?>
-                                    <option value="<?php echo $cooperator['cooperator_id']; ?>" <?php echo $cooperator['cooperator_id']==$data['cooperator_id'] ? 'selected' : ''; ?>><?php echo $cooperator['cooperator_name']; ?></option>
-                                    <?php } ?>
-                                    <?php } ?>
-                                </select>
                                 <select class="input-sm" name="city">
                                     <option value>用户类型</option>
                                     <?php foreach($user_types as $k => $v) { ?>
-                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == $filter['user_type'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
+                                    <option value="<?php echo $k; ?>" <?php echo (string)$k == $info['user_type'] ? 'selected' : ''; ?>><?php echo $v; ?></option>
                                     <?php } ?>
                                 </select>
                                 <input type="text" name="payoff_time" value="<?php echo $data['payoff_time']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 200px" placeholder="结算时间段"/>
-                                <div class="pull-right">
+                                <!-- <div class="pull-right">
                                     <button type='button' class="btn btn-primary btn-sm" onclick='search_lock()'><i class="fa fa-search"></i>&nbsp;搜索</button>
-                                </div>
+                                </div> -->
                             </div>
                             <div class="row">
                                 <div class="form-group">

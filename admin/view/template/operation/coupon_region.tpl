@@ -27,6 +27,14 @@ echo $header; ?>
                         <form class="search_form" id="search_form" action="<?php echo $action; ?>" method="get">
                             <!-- 搜索 -->
                             <div class="dataTables_length fa-border" style="margin: 10px 0; padding: 10px">
+                                <select name="time_type" id="time_select"  class="input-sm" onchange="addrat()">
+                                    <option value="0">选择时间区</option>
+                                    <?php if(!empty($time_type)) {?>
+                                    <?php foreach($time_type as $k=>$v){?>
+                                    <option value="<?php echo $k?>" <?php echo $k == @$filter['time_type'] ? 'selected' : ''; ?>><?php echo $v?></option>
+                                    <?php }?>
+                                    <?php }?>
+                                </select>
                                 <input type="text" name="date" value="<?php echo $filter['date']; ?>" class="input-sm date-range" style="border: 1px solid #a9a9a9;width: 180px;" placeholder="使用时间(默认本月)"/>
                                 <select name="region_id" style="height: 30px; margin-left: 8px; width:160px; ">
                                     <?php foreach($regionList as $v){
@@ -130,24 +138,30 @@ echo $header; ?>
 <!-- /.content -->
 
 <script type="text/javascript">
-    $('.date-range').daterangepicker({
-        locale:{
-            format: 'YYYY-MM-DD',
-            isAutoVal:false,
-            customRangeLabel:'自定义'
-        },
-        ranges : {
-            
-            '今日': [moment(), moment()],
-            '本周': [moment().startOf('week'), moment()],
-			'本月': [moment().startOf('month'), moment()],
-            '本季': [moment().startOf('quarter'), moment()],
-            '今年': [moment().startOf('year'), moment()],
-            /*'最近7日': [moment().subtract('days', 6), moment()],
-            '最近30日': [moment().subtract('days', 29), moment()],
-            '全部': ['2016-01-01', moment()] //起始日期别设置太小*/
-        }
+    $(function(){
+            addrat();
     });
+        var b = "";
+        function addrat(){
+        var a = $("#time_select").val();
+        if(a==1){
+            b = "YYYY";
+        }else if(a==2){
+            b = "YYYY-MM";
+        }else if(a==3){
+            b = "YYYY-MM-DD";
+        }else if(a==0){
+            b = "YYYY-MM-DD";
+        }
+        $('.date-range').daterangepicker({
+            "showDropdowns": true,
+            locale:{
+                format: b,
+                isAutoVal:false,
+            }
+      });
+        
+    };
  
     var line = new Morris.Line({
         element: 'coupon-chart',

@@ -1,98 +1,126 @@
 <?php
+
+use Enum\ErrorCode;
+use Tool\IosPush;
+use Enum\PushCode;
+use Tool\AndroidPush;
+use Tool\Email;
+
 class ControllerAccountAccount extends Controller {
 
     /**
-     * 注册
+     * 优先手机注册
+     *  modify by yangjifang
      */
     public function register() {
-        if (!isset($this->request->post['mobile']) || !isset($this->request->post['uuid']) || !isset($this->request->post['code']) || !isset($this->request->post['lat']) || !isset($this->request->post['lng'])) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
-        }
 
-        if (empty($this->request->post['mobile']) || empty($this->request->post['uuid']) || empty($this->request->post['code'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_login_param'), 101);
-        }
+        $post_param = $this->request->post();
+        $get_param = $this->request->get();
 
-        $mobile = trim($this->request->post['mobile']);
-        $uuid = $this->request->post['uuid'];
-        $code = $this->request->post['code'];
-        $register_lat = $this->request->post['lat'];
-        $register_lng = $this->request->post['lng'];
-
-        if (!is_mobile($mobile)) {
-            $this->response->showErrorResult($this->language->get('error_mobile'), 2);
-        }
-
-        $this->load->library('logic/user', true);
-        $this->load->library('logic/sms', true);
-
-        $data = array(
-            'mobile' => $mobile,
-            'uuid' => $uuid,
-            'register_lat' => $register_lat,
-            'register_lng' => $register_lng
-        );
-
-        //注册端来源
-        $gets = $this->request->get(array('fromApi'));
-        if ($gets['fromApi'] == 'android') {
-            $data['from'] = 'android';
-        } elseif ($gets['fromApi'] == 'ios') {
-            $data['from'] = 'ios';
-        } else {
-            if ($this->request->get_request_header('client') == 'wechat') {
-                $data['from'] = 'wechat';
-            } elseif ($this->request->get_request_header('client') == 'miniapp') {
-                $data['from'] = 'mini_app';
-            } else {
-                $data['from'] = 'web';
-            }
-        }
-
-        //注册区域
-        $this->load->library('sys_model/region', true);
-        $region_info = $this->sys_model_region->getRegionInfo(array(
-            'region_bounds_northeast_lng' => array('gt', $register_lng),
-            'region_bounds_southwest_lng' => array('lt', $register_lng),
-            'region_bounds_northeast_lat' => array('gt', $register_lat),
-            'region_bounds_southwest_lat' => array('lt', $register_lat)
-        ));
-        if (!empty($region_info)) {
-            $data['register_region_id'] = $region_info['region_id'];
-            //$cooperator_info = $this->db->table('cooperator_to_region')->field('cooperator_id')->where(array('region_id' => $region_info['region_id']))->find();
-            //if (!empty($cooperator_info)) $data['cooperator_id'] = $cooperator_info['cooperator_id'];
-        }
-
-        if (!$this->logic_sms->disableInvalid($mobile, $code)) {
-            $this->response->showErrorResult($this->language->get('error_invalid_message_code'), 3);
-        }
-
-        //更新短信的
-        $update = $this->logic_sms->enInvalid($mobile, $code);
-
-        if (!$update) {
-            $this->response->showErrorResult($this->language->get('error_database_failure'), 4);
-        }
-        //防止前端状态码判断错误，即把登录接口的数据传到注册接口，产生重复的手机注册用户
-        $user_info = $this->logic_user->getUserInfo(array('mobile' => $mobile));
-
-        if (!$user_info) {
-            $result = $this->logic_user->register($data);
-            if (!$result['state']) {
-                $this->response->showErrorResult($result['msg'], 102);
-            }
-            $this->load->library('logic/credit', true);
-            $this->logic_credit->addCreditPointOnRegister($result['data']['user_id']);
-
-            //后面的两位可以写常量，或者写入配置文件
-            if ($this->config->get('config_register_direct_coupon')) {
-                $time = $this->config->get('config_register_coupon_number');
-                $this->addCoupon(array('user_id' => $result['data']['user_id'], 'mobile' => $mobile), $time, 1, 1);
-            }
-
+        $this->load->library('logic/register');
+        try {
+            $result = $this->logic_register->register($post_param, $get_param);
+            //如果没有异常到这里肯定是 注册成功了
             $this->response->showSuccessResult($result['data'], $this->language->get('success_register'));
+        } catch (\Exception $e) {
+            $this->response->showErrorResult($this->language->get($e->getMessage()), $e->getCode());
         }
-        $this->response->showSuccessResult($user_info, $this->language->get('success_login'));
+    }
+
+    /**
+     * 用邮箱注册 用户点击邮件激活用户
+     * 需要添加一个 用户是否激活的状态 以前统一手机注册 不需要这个状体 添加了这个状态后续的判断都需要增加对这个状态的判断 牵涉到的接口 有用户登录 好像就是用户登录
+     * 这里应该是一个页面展示
+     * 设置密码的逻辑应该直接在网页 而不应该在手机端
+     */
+    public function emailRegisterActive() {
+        $code = $this->request->get('code');
+        $code = json_decode(base64_decode($code), true);
+
+        $sign = md5(API_ACCESSKEY . $code['email'] . $code['time']);
+        if ($sign !== $code['sign']) {
+            $this->response->showErrorResult($this->language->get('error_invalid_url'), ErrorCode::ERROR_INVALID_URL);
+        }
+        if (time() - intval($code['time']) > EMAIL_EXPIRE_TIME) {
+            $this->response->showErrorResult($this->language->get('error_url_overtime'), ErrorCode::ERROR_URL_OVERTIME);
+        }
+
+        $this->load->library('sys_model/user');
+        $user_info = $this->sys_model_user->getUserInfo(array('email' => $code['email']));
+        if (!$user_info) {
+            $this->response->showErrorResult($this->language->get('user_not_exists'), ErrorCode::USER_NOT_EXISTS);
+        } else if ($user_info['is_active'] == 1) {
+            $this->response->showErrorResult($this->language->get('user_already_active'), ErrorCode::USER_ALREADY_ACTIVE);
+        }
+
+        $res = $this->sys_model_user->updateUser(['user_id' => $user_info['user_id']], ['is_active' => 1]);
+        if ($res) {
+
+            //推送邮件验证成功的消息
+            //目前不知道安卓推送是什么 结构 所以先不做统一
+            if ($user_info['ios_token']) {
+                $ios_push = new IosPush();
+                $ios_push->push($user_info['ios_token'], $this->language->get('email_activation_success'), PushCode::EMAIL_ACTIVATION_SUCCESS);
+            }
+            if ($user_info['android_token']) {
+                $android_push = new AndroidPush();
+                $android_push->push($user_info['android_token'], ['content' => '已激活，请登录', 'type' => 1]);
+            }
+            $this->response->showSuccessResult([], $this->language->get('success_active'));
+        } else {
+            $this->response->showErrorResult([], $this->language->get('failure_active'), ErrorCode::FAILURE_ACTIVE);
+        }
+    }
+
+    /**
+     * 获取当前邮箱注册状态 这一个接口需要授权验证的 道理应该是 每次重新打开 都应该算是重新注册 这个功能只需要在每次邮箱注册更新uuid 就行了
+     * uuid 可以保证用户是在同一台机子上
+     */
+    public function getEmailStatus() {
+        $email = trim($this->request->post('email'));
+        $this->load->library('sys_model/user');
+        if (empty($email)) {
+            $this->response->showErrorResult($this->language->get('error_email'), ErrorCode::ERROR_EMAIL);
+        }
+        $user = $this->sys_model_user->getUserInfo(['email' => $email]);
+        if (!$user) {
+            $this->response->showErrorResult([], 501, $this->language->get('email_not_register'));
+        } else {
+            $this->response->showSuccessResult([
+                'user_id' => $user['user_id'],
+                'user_sn' => $user['user_sn'],
+                'email' => $user['email'],
+                //'register_type'=>$user['register_type'],
+                'is_active' => $user['is_active']
+                    ], $this->language->get('success'));
+        }
+    }
+
+    /**
+     * 设置用户密码
+     */
+    public function setPassword() {
+        $user_id = $this->request->post('user_id');
+        $pass = $this->request->post(['password', 're_password']);
+        if ($pass['password'] != $pass['re_password']) {
+            $this->response->showErrorResult($this->language->get('两次密码输入不正确'), 2);
+        }
+        if (!preg_match('/\w{6,20}/i', $pass['password'])) {
+            $this->response->showErrorResult($this->language->get('密码不符合规则'), 2);
+        }
+        $this->load->library('sys_model/user', true);
+        $user_info = $this->sys_model_user->getUserInfo(['user_id' => $user_id], 'is_ready_mail');
+        if($user_info['is_ready_mail']==1){//发送了邮件没点确定
+           $this->response->showErrorResult([], '请先确认修改密码邮件链接', 2002);
+        }
+        
+
+        $res = $this->logic_user->setPassword($user_id, $pass['password']);
+        if ($res) {
+            $this->response->showSuccessResult([], $this->language->get('success'));
+        }
+
+        $this->response->showErrorResult([], $this->language->get('failure'), 1);
     }
 
     private function getSMSConfig() {
@@ -108,7 +136,7 @@ class ControllerAccountAccount extends Controller {
             $this->response->showErrorResult('一分钟之内请勿重复请求');
         }
         $start = array('EGT', strtotime(date('Y-m-d')));
-        $end = array('ELT', (int)bcadd(86399, strtotime(date('Y-m-d'))));
+        $end = array('ELT', (int) bcadd(86399, strtotime(date('Y-m-d'))));
         $count = $this->db->table('sms')->where(array('mobile' => $mobile, array('add_time' => array($start, $end))))->count('sms_id');
         if ($count >= 6) {
             $this->response->showErrorResult('同一个手机号码每天只能请求6次');
@@ -121,17 +149,16 @@ class ControllerAccountAccount extends Controller {
      * @Author   vincent
      * @DateTime 2017-08-30T17:20:42+0800
      */
-    public function startCaptchaSer(){
+    public function startCaptchaSer() {
         $this->load->library('gt3/captcha');
         $this->gt3_captcha->wb_start();
     }
-
 
     /**
      * 分享获取优惠券接口验证码
      */
     public function sendShareCode() {
-	file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendShareCode '. getIP() . ' ' . $_SERVER['HTTP_USER_AGENT'] . ' '. $_SERVER['HTTP_VIA'].' '. $this->request->post['mobile'] . PHP_EOL, FILE_APPEND);
+       // file_put_contents('/dev/shm/sms.log', '[' . date('Y-m-d H:i:s ') . '] sendShareCode ' . getIP() . ' ' . $_SERVER['HTTP_USER_AGENT'] . ' ' . $_SERVER['HTTP_VIA'] . ' ' . $this->request->post['mobile'] . PHP_EOL, FILE_APPEND);
         if (!isset($this->request->post['mobile']) || !isset($this->request->post['encrypt_code'])) {
             $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
         }
@@ -139,7 +166,7 @@ class ControllerAccountAccount extends Controller {
         //add vincent : 2017-08-29 增加极验验证
         $this->load->library('gt3/captcha');
         $ver_geetest = $this->gt3_captcha->wb_verify();
-        if(!$ver_geetest['state']){
+        if (!$ver_geetest['state']) {
             $this->response->showErrorResult($ver_geetest['msg'], 128);
         }
 
@@ -150,7 +177,7 @@ class ControllerAccountAccount extends Controller {
         $alert = $this->language->get('text_message_upper_limit');
         $mobile = trim($this->request->post['mobile']);
         if (!is_mobile($mobile)) {
-            $this->response->showJsonResult($this->language->get('error_mobile'), 0, array('alert'=>$alert), 2);
+            $this->response->showJsonResult($this->language->get('error_mobile'), 0, array('alert' => $alert), 2);
         }
 
         //限制发送次数
@@ -203,19 +230,19 @@ class ControllerAccountAccount extends Controller {
 
         //vincent:2017-07-27 增加短信防轰炸
         //modify vincent : 2017-08-30 增加极验验证，取消防轰炸
-        /*if($this->logic_sms->isOutOfSendLimit($mobile,$type,getIP())){
-            $this->response->showJsonResult('您发送短信过于频繁，请您稍后重试！', 0, array('alert'=>'您发送短信过于频繁，请您稍后重试！'), 5);
-        }*/
+        /* if($this->logic_sms->isOutOfSendLimit($mobile,$type,getIP())){
+          $this->response->showJsonResult('您发送短信过于频繁，请您稍后重试！', 0, array('alert'=>'您发送短信过于频繁，请您稍后重试！'), 5);
+          } */
 
         $code = $this->logic_sms->createVerifyCode();
         $result_id = $this->logic_sms->sendSms($mobile, $code, $type);
         if ($result_id['state']) {
-            $this->response->showSuccessResult(array('type' => $share_type, 'alert'=>$alert));
+            $this->response->showSuccessResult(array('type' => $share_type, 'alert' => $alert));
         } else {
             if (isset($result_id['data']['code']) && $result_id['data']['code']) {
-                $this->response->showJsonResult($this->language->get('error_send_message_failure_limit'), 0, array('alert'=>$alert), 5);
+                $this->response->showJsonResult($this->language->get('error_send_message_failure_limit'), 0, array('alert' => $alert), 5);
             } else {
-                $this->response->showJsonResult($this->language->get('error_send_message_failure'), 0, array('alert'=>$alert), 4);
+                $this->response->showJsonResult($this->language->get('error_send_message_failure'), 0, array('alert' => $alert), 4);
             }
         }
     }
@@ -224,7 +251,7 @@ class ControllerAccountAccount extends Controller {
      * 发送注册|登录验证码
      */
     public function sendRegisterCode() {
-file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterCode '. getIP() . ' ' . $_SERVER['HTTP_USER_AGENT'] . ' '. $_SERVER['HTTP_VIA'].' '. $this->request->post['mobile'] . PHP_EOL, FILE_APPEND);
+        //file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterCode '. getIP() . ' ' . $_SERVER['HTTP_USER_AGENT'] . ' '. $_SERVER['HTTP_VIA'].' '. $this->request->post['mobile'] . PHP_EOL, FILE_APPEND);
         if (!isset($this->request->post['mobile'])) {
             $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
         }
@@ -234,7 +261,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $alert = $this->language->get('text_message_upper_limit');
         $mobile = trim($this->request->post['mobile']);
         if (!is_mobile($mobile)) {
-            $this->response->showJsonResult($this->language->get('error_mobile'), 0, array('alert'=>$alert), 2);
+            $this->response->showJsonResult($this->language->get('error_mobile'), 0, array('alert' => $alert), 2);
         }
 
         //限制发送次数
@@ -245,17 +272,16 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $result = $this->logic_user->existMobile($mobile);
 
         $type = 'register';
-
         if ($result['state']) {
             $type = 'login';
             if ($result['data']['deposit_state'] == 0) {
                 $state = 0; //未交押金
             } elseif ($result['data']['verify_state'] == 0) {
-                $state = 1;//未实名认证
+                $state = 1; //未实名认证
             } elseif ($result['data']['available_deposit'] == 0) {
-                $state = 2;//未充值
+                $state = 2; //未充值
             } else {
-                $state = 3;//正常状态
+                $state = 3; //正常状态
             }
             if ($result['data']['deposit_state'] == 0 && $result['data']['verify_state'] == 1 && $result['data']['available_deposit'] > 0) {
                 $state = 4;
@@ -266,22 +292,45 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         }
 
         //vincent:2017-07-27 增加短信防轰炸
-        if($this->logic_sms->isOutOfSendLimit($mobile,$type,getIP())){
-            $this->response->showJsonResult('您发送短信过于频繁，请您稍后重试！', 0, array('alert'=>'您发送短信过于频繁，请您稍后重试！'), 5);
+        if ($this->logic_sms->isOutOfSendLimit($mobile, $type, getIP())) {
+            $this->response->showJsonResult('您发送短信过于频繁，请您稍后重试！', 0, array('alert' => '您发送短信过于频繁，请您稍后重试！'), 5);
         }
 
         $state = isset($state) ? $state : '0';
         $code = $this->logic_sms->createVerifyCode();
         $result_id = $this->logic_sms->sendSms($mobile, $code, $type);
+        $result_id['state'] = 'true';
         if ($result_id['state']) {
-            $this->response->showSuccessResult(array('type' => $type, 'state' => $state, 'alert'=>$alert));
+            $this->response->showSuccessResult(array('type' => $type, 'state' => $state, 'alert' => $alert));
         } else {
             if ($result_id['data']['code']) {
-                $this->response->showJsonResult($this->language->get('error_send_message_failure_limit'), 0, array('alert'=>$alert), 5);
+                $this->response->showJsonResult($this->language->get('error_send_message_failure_limit'), 0, array('alert' => $alert), 5);
             } else {
-                $this->response->showJsonResult($this->language->get('error_send_message_failure'), 0, array('alert'=>$alert), 4);
+                $this->response->showJsonResult($this->language->get('error_send_message_failure'), 0, array('alert' => $alert), 4);
             }
         }
+    }
+
+    /**
+     * 密码登陆
+     */
+    public function passwordLogin() {
+        if (!isset($this->request->post['uuid']) || !isset($this->request->post['password'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+        $username = empty($this->request->post['mobile']) ? $this->request->post['email'] : $this->request->post['mobile'];
+
+        if (empty($username)) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 2);
+        }
+
+        $this->load->library('logic/user', true);
+
+        $result = $this->logic_user->passwordLogin($username, trim($this->request->post['password']), trim($this->request->post['uuid']));
+        if (!$result['state']) {
+            $this->response->showErrorResult($this->language->get($result['msg']), 106);
+        }
+        $this->response->showSuccessResult($result['data'], $this->language->get($result['msg']));
     }
 
     /**
@@ -330,6 +379,21 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         if (!$result['state']) {
             $this->response->showErrorResult($this->language->get($result['msg']), 106);
         }
+
+        //相同账号在不同设备登录
+        $this->load->library('sys_model/user', true);
+        $userinfo = $this->sys_model_user->getUserInfo(['mobile' => $mobile], '*');
+        if (!empty($userinfo['uuid'])) {
+            if (strcmp($userinfo['uuid'], $device_id) != 0) {//不相同的设备登录
+                if (!empty($userinfo['android_token'])) {
+                    $android_push = new AndroidPush();
+                    $android_push->push($userinfo['android_token'], ['content' => '账号在其他设备登录', 'type' => PushCode::DIFFERENT_DEVICE, 'old_device' => $userinfo['uuid'], 'user_id' => $userinfo['user_id'], 'new_device' => $device_id]);
+                }
+            }
+        }
+
+
+
         $this->response->showSuccessResult($result['data'], $this->language->get($result['msg']));
     }
 
@@ -337,7 +401,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      * 获取个人信息
      */
     public function info() {
-        $result =  $this->startup_user->getUserInfo();
+        $result = $this->startup_user->getUserInfo();
         $info = array(
             'user_id' => $result['user_id'],
             'user_sn' => $result['user_sn'],
@@ -355,7 +419,8 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
             'verify_state' => $result['verify_state'],
             'available_state' => $result['available_state'],
             'recommend_num' => $result['recommend_num'],
-            'has_month_card' => (int)$result['card_expired_time'] > time() ? 1 : 0,
+            'has_month_card' => (int) $result['card_expired_time'] > time() ? 1 : 0,
+            'email' => empty($result['email']) ? '' : $result['email']
         );
         if ($result['deposit_state'] == 0) {
             $info['user_state'] = $result['verify_state'] ? 4 : 0;
@@ -372,20 +437,38 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $user_id = $this->startup_user->userId();
         //是否有新消息
         $this->load->library('logic/message', true);
-        $count = $this->logic_message->getMessagesCount('user_id = '.$user_id.' AND m.msg_time > '.$result['read_news_last_time']);
-        $info['new_message'] = $count? 1 : 0;
+        $count = $this->logic_message->getMessagesCount('user_id = ' . $user_id . ' AND m.msg_time > ' . $result['read_news_last_time']);
+        $info['new_message'] = $count ? 1 : 0;
         //是否有新优惠券
         $this->load->library('sys_model/coupon', true);
         $condition = array(
             'user_id' => $user_id,
             'failure_time' => array('gt', time()),
-            'add_time' => array('gt',$result['read_wallet_last_time']),
+            'add_time' => array('gt', $result['read_wallet_last_time']),
             'used' => '0'
         );
         $total = $this->sys_model_coupon->getCouponCount($condition);
         $info['new_coupon'] = $total ? 1 : 0;
 
-        if(!empty($result)) {
+        $this->load->library('sys_model/credit_card', true);
+        $car_info = $this->sys_model_credit_card->getCreditcardInfo(['user_id' => $user_id, 'isvalid' => 1]);
+        if (!empty($car_info['number'])) {
+            if (strlen($car_info['number']) > 4) {//外国的信用卡不知道多少位的，反正保留最后4位，其他变*
+                $replace_string = '';
+                for ($i = 0; $i < strlen($car_info['number']) - 4; $i++) {
+                    $replace_string .= '*';
+                }
+                $creditcard_number = $replace_string . substr($car_info['number'], strlen($car_info['number']) - 4, 4);
+            } else {
+                $creditcard_number = $car_info['number'];
+            }
+        } else {
+            $creditcard_number = '';
+        }
+        $info['creditcard'] = $creditcard_number;
+
+
+        if (!empty($result)) {
             $this->response->showSuccessResult($info, $this->language->get('success_operation'));
         } else {
             $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
@@ -401,7 +484,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         }
 
         $user_id = $this->startup_user->userId();
-        $result = $this->startup_user->updateUserInfo($user_id, array('nickname'=>$this->request->post['nickname']));
+        $result = $this->startup_user->updateUserInfo($user_id, array('nickname' => $this->request->post['nickname']));
         if ($result['state']) {
             $this->response->showSuccessResult();
         } else {
@@ -414,18 +497,17 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      */
     public function updateAvatar() {
         $uploader = new \Uploader(
-            'avatar',  //字段名
-            array( // 配置项
-                'allowFiles'=>array('.jpg', '.jpeg', '.png'),
-                'maxSize'=>10*1024*1024,
-                'pathFormat'=>'avatar/{yyyy}{mm}{dd}{hh}{ii}{ss}{rand:4}'
-            ),
-            empty($this->request->files['avatar']) ? 'base64' : 'upload', //类型，可以是upload，base64或者remote
-            $this->request->files //文件上传变量数组，base64的不用提供，内部直接用$_POST[字段名]作为数据
+                'avatar', //字段名
+                array(// 配置项
+            'allowFiles' => array('.jpg', '.jpeg', '.png'),
+            'maxSize' => 10 * 1024 * 1024,
+            'pathFormat' => 'avatar/{yyyy}{mm}{dd}{hh}{ii}{ss}{rand:4}'
+                ), empty($this->request->files['avatar']) ? 'base64' : 'upload', //类型，可以是upload，base64或者remote
+                $this->request->files //文件上传变量数组，base64的不用提供，内部直接用$_POST[字段名]作为数据
         );
 
         $fileInfo = $uploader->getFileInfo();
-        if($fileInfo['state']=='SUCCESS') {
+        if ($fileInfo['state'] == 'SUCCESS') {
             // 图片压缩
             $image_obj = new \Image(DIR_STATIC . $fileInfo['filePath']);
             $w = $image_obj->getWidth();
@@ -440,14 +522,13 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
                 @unlink(DIR_STATIC . 'avatar/' . retrieve($user_info['avatar']));
             }
 
-            $result = $this->startup_user->updateUserInfo($user_id, array('avatar'=>$fileInfo['url']));
+            $result = $this->startup_user->updateUserInfo($user_id, array('avatar' => $fileInfo['url']));
             if ($result['state']) {
-                $this->response->showSuccessResult(array('user_id'=>$user_id, 'avatar'=>$fileInfo['url']), $this->language->get('success_operation'));
+                $this->response->showSuccessResult(array('user_id' => $user_id, 'avatar' => $fileInfo['url']), $this->language->get('success_operation'));
             } else {
                 $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
             }
-        }
-        else {
+        } else {
             $this->response->showErrorResult($fileInfo['state'], 5);
         }
     }
@@ -459,66 +540,65 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         //能进来到这里都是有userInfo的
         $userInfo = $this->startup_user->getUserInfo();
         $this->log->write(print_r($userInfo, true));
-        if (empty($userInfo['verify_state']) //  verify_state=='0'，没有通过实名验证
-            || empty($userInfo['real_name']) || empty($userInfo['identification']) ) // 用户实名或者身份证信息为空
-        {
-            $this->response->showErrorResult($this->language->get('error_not_identification'), 115);
-        }
+        /* if (empty($userInfo['verify_state']) //  verify_state=='0'，没有通过实名验证
+          || empty($userInfo['real_name']) || empty($userInfo['identification'])) { // 用户实名或者身份证信息为空
+          $this->response->showErrorResult($this->language->get('error_not_identification'), 115);
+          } */
 
         if (!isset($this->request->post['code']) || empty($this->request->post['code'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_message_code'),116);
+            $this->response->showErrorResult($this->language->get('error_empty_message_code'), 116);
         }
 
-        if (!isset($this->request->post['real_name']) || empty($this->request->post['real_name'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_real_name'),117);
-        }
+        /* if (!isset($this->request->post['real_name']) || empty($this->request->post['real_name'])) {
+          $this->response->showErrorResult($this->language->get('error_empty_real_name'),117);
+          }
 
-        if (!isset($this->request->post['identification']) || empty($this->request->post['identification'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_identification'),118);
-        }
+          if (!isset($this->request->post['identification']) || empty($this->request->post['identification'])) {
+          $this->response->showErrorResult($this->language->get('error_empty_identification'),118);
+          } */
 
         if (!isset($this->request->post['mobile']) || empty($this->request->post['mobile'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_new_mobile'),119);
+            $this->response->showErrorResult($this->language->get('error_empty_new_mobile'), 119);
         }
 
         if (!is_mobile($this->request->post['mobile'])) {
-            $this->response->showErrorResult($this->language->get('error_mobile'),2);
+            $this->response->showErrorResult($this->language->get('error_mobile'), 2);
         }
 
-        if($this->request->post['real_name']!=$userInfo['real_name']) {
-            $this->response->showErrorResult($this->language->get('error_name_inconsistent'), 122);
-        }
+        /* if($this->request->post['real_name']!=$userInfo['real_name']) {
+          $this->response->showErrorResult($this->language->get('error_name_inconsistent'), 122);
+          }
 
-        if($this->request->post['identification']!=$userInfo['identification']) {
-            $this->response->showErrorResult($this->language->get('error_identification_inconsistent'), 123);
-        }
+          if($this->request->post['identification']!=$userInfo['identification']) {
+          $this->response->showErrorResult($this->language->get('error_identification_inconsistent'), 123);
+          } */
 
         if (time() < $userInfo['last_update_mobile_time'] + UPDATE_MOBILE_INTERVAL) {
             $this->response->showErrorResult($this->language->get('error_replace_mobile_limit'), 120);
         }
 
         $existMobile = $this->startup_user->existMobile($this->request->post['mobile']);
-        if($existMobile['state']) {
+        if ($existMobile['state']) {
             $this->response->showErrorResult($this->language->get('error_mobile_existed'), 121);
         }
 
         // 验证短信码
         $this->load->library('logic/sms', true);
-        if (!$this->logic_sms->disableInvalid($this->request->post['mobile'], $this->request->post['code'], 'register')) {
+        if (!$this->logic_sms->disableInvalid($this->request->post['mobile'], $this->request->post['code'], 'changemobile')) {
             $this->response->showErrorResult($this->language->get('error_invalid_message_code'), 3);
         }
         //更新短信的
-        $update = $this->logic_sms->enInvalid($this->request->post['mobile'], $this->request->post['code'], 'register');
+        $update = $this->logic_sms->enInvalid($this->request->post['mobile'], $this->request->post['code'], 'changemobile');
 
         $result = $this->startup_user->updateUserInfo($userInfo['user_id'], array(
-            'mobile'=>$this->request->post['mobile'],
+            'mobile' => $this->request->post['mobile'],
             'last_update_mobile_time' => time()
         ));
 
         if ($result['state']) {
             $this->response->showSuccessResult();
         } else {
-            $this->response->showErrorResult($this->language->get('error_database_operation_failure'),4);
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
         }
     }
 
@@ -535,9 +615,9 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $count = $this->logic_credit->getCreditPointsCount($userInfo['user_id']);
 
         $result = array(
-            'credit_point' => $userInfo['credit_point'] ,
+            'credit_point' => $userInfo['credit_point'],
             'total_items_count' => $count + 0,
-            'total_pages' => ceil($count/10.0),
+            'total_pages' => ceil($count / 10.0),
             'page' => $page + 0,
             'items' => $this->logic_credit->getCreditPoints($userInfo['user_id'], $page)
         );
@@ -567,9 +647,9 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $has_new = $this->sys_model_coupon->getCouponCount($condition);
 
         $result = array(
-            'deposit' => $userInfo['deposit'],  //押金
+            'deposit' => $userInfo['deposit'], //押金
             'deposit_state' => $userInfo['deposit_state'], //是否已交押金（0未交，1已交）
-            'available_deposit' => (string)($userInfo['available_deposit'] + $userInfo['present_amount']), //余额
+            'available_deposit' => (string) ($userInfo['available_deposit'] + $userInfo['present_amount']), //余额
             'freeze_deposit' => $userInfo['freeze_deposit'], //未退回的押金
             'freeze_recharge' => $userInfo['freeze_recharge'], // 被冻结的余额
             'available_recharge' => $userInfo['available_deposit'], //原始金额
@@ -581,7 +661,6 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
             'card_end_time' => $userInfo['card_expired_time'] ? ($userInfo['card_expired_time'] >= time() ? '至' . date('Y-m-d', $userInfo['card_expired_time']) : '已过期') : 'is_hot',
         );
         $this->response->showSuccessResult($result);
-
     }
 
     /**
@@ -597,17 +676,16 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $count = $this->logic_deposit->getDepositLogCountByUserId($userInfo['user_id']);
         $items = $this->logic_deposit->getDepositLogByUserId($userInfo['user_id'], $page, true);
 
-        if($items['state']) {
+        if ($items['state']) {
             $result = array(
                 'total_items_count' => $count + 0,
-                'total_pages' => ceil($count/10.0),
+                'total_pages' => ceil($count / 10.0),
                 'page' => $page + 0,
                 'items' => $items['data']
             );
             $this->response->showSuccessResult($result);
-        }
-        else {
-            $this->response->showErrorResult($this->language->get('error_database_operation_failure'),4);
+        } else {
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
         }
     }
 
@@ -625,11 +703,11 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $items = $this->logic_orders->getOrdersByUserId($userInfo['user_id'], $page, true);
 
         $recharge_sns = array();
-        foreach ($items as $item) {
-            if ($item['recharge_sn'] > 0) {
-                $recharge_sns[$item['recharge_sn']] = $item['recharge_sn'];
-            }
-        }
+        /* foreach ($items as $item) {
+          if ($item['recharge_sn'] > 0) {
+          $recharge_sns[$item['recharge_sn']] = $item['recharge_sn'];
+          }
+          } */
         if (!empty($recharge_sns)) {
             $in = implode(',', $recharge_sns);
             $collections = $this->db->table('deposit_recharge')->field('pdr_sn,pdr_amount')->where(array('pdr_sn' => array('in', $in)))->select();
@@ -643,25 +721,26 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $this->load->library('sys_model/coupon');
         //语言包判断，两种语言就够了，不然呛，下面的方式得换了
         $gets = $this->request->get(array('lang'));
-        foreach($items as &$item){
+        foreach ($items as &$item) {
             $item['pay_amount'] = $item['pay_amount'] - $item['refund_amount'];
             //$coupon = $this->sys_model_coupon->getCouponInfo(array('coupon_id'=>$item['coupon_id']));
-            switch($item['coupon_type']){
+            switch ($item['coupon_type']) {
                 case 1 :
                     $show_hour = false;
-                    if ($item['number'] / 60 >= 1) $show_hour = true;//半小时取整
+                    if ($item['number'] / 60 >= 1)
+                        $show_hour = true; //半小时取整
                     $item['number'] = $show_hour ? round($item['number'] / 60, 2) : $item['number'];
                     $row['unit'] = $show_hour ? $this->language->get('text_hour') : $this->language->get('text_minute');
-                    $item['coupon_type'] = $gets['lang'] == 'en' ? '(used' . $item['number'] . $row['unit'] . 'coupon)' : '(已抵'. $item['number'] . $row['unit'] . '用车券)';
+                    $item['coupon_type'] = $gets['lang'] == 'en' ? '(used' . $item['number'] . $row['unit'] . 'coupon)' : '(已抵' . $item['number'] . $row['unit'] . '用车券)';
                     break;
                 case 2 :
                     $item['coupon_type'] = $gets['lang'] == 'en' ? '(Coupon for Once used)' : '(单次体验券)';
                     break;
                 case 3 :
-                    $item['coupon_type'] = $gets['lang'] == 'en' ? '(reduce ' . $item['number'] . ')' : '('.$item['number'].'元现金券)';
+                    $item['coupon_type'] = $gets['lang'] == 'en' ? '(reduce ' . $item['number'] . ')' : '(' . $item['number'] . '元现金券)';
                     break;
                 case 4 :
-                    $item['coupon_type'] = $gets['lang'] == 'en' ? '(reduce ' . $item['number'] . '%)' : '('. $item['number'] . '折折扣券)';
+                    $item['coupon_type'] = $gets['lang'] == 'en' ? '(reduce ' . $item['number'] . '%)' : '(' . $item['number'] . '折折扣券)';
                     break;
                 default :
                     $item['coupon_type'] = '';
@@ -675,16 +754,16 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
                 $item['coupon_type'] = '免费车';
             }
 
-            if (isset($recharge_sns[$item['recharge_sn']])) {
-                $item['recharge_amount'] = $recharge_sns[$item['recharge_sn']];
-            } else {
-                $item['recharge_amount'] = 0;
-            }
+            /* if (isset($recharge_sns[$item['recharge_sn']])) {
+              $item['recharge_amount'] = $recharge_sns[$item['recharge_sn']];
+              } else {
+              $item['recharge_amount'] = 0;
+              } */
         }
 
         $result = array(
             'total_items_count' => $count + 0,
-            'total_pages' => ceil($count/10.0),
+            'total_pages' => ceil($count / 10.0),
             'page' => $page + 0,
             'items' => $items
         );
@@ -696,7 +775,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      */
     public function getOrderDetail() {
         if (!isset($this->request->post['order_id']) || empty($this->request->post['order_id'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_order_id'),124);
+            $this->response->showErrorResult($this->language->get('error_empty_order_id'), 124);
         }
 
         $this->load->library('logic/orders', true);
@@ -708,7 +787,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         }
 
         if (isset($result['order_info']['coupon_info'])) {
-
+            
         }
 
         if ($result['order_info']['coupon_id'] == 0) {
@@ -726,15 +805,15 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $output_user_info['available_deposit'] = $output_user_info['available_deposit'] + $output_user_info['present_amount'];
         $result['user_info'] = $output_user_info;
         $result['order_info']['month_card'] = '';
-		if ($result['order_info']['is_month_card']) {
+        if ($result['order_info']['is_month_card']) {
             $result['order_info']['month_card'] = date('Y年m月d日', $user_info['card_expired_time']);
         } else {
             $result['order_info']['month_card'] = '';
         }
 
-		// 输出给前端判断是否有此订单有评论
+        // 输出给前端判断是否有此订单有评论
         $this->load->library('sys_model/comment', true);
-        $has_comment = $this->sys_model_comment->getCommentInfo(['order_sn'=>$result['order_info']['order_sn']]);
+        $has_comment = $this->sys_model_comment->getCommentInfo(['order_sn' => $result['order_info']['order_sn']]);
         $has_comment ? $result['has_comment'] = '1' : $result['has_comment'] = '0';
 
         $this->response->showSuccessResult($result);
@@ -745,7 +824,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      */
     public function getOrderDetailByEncrypt() {
         if (!isset($this->request->post['order_id']) || empty($this->request->post['order_id'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_order_id'),124);
+            $this->response->showErrorResult($this->language->get('error_empty_order_id'), 124);
         }
 
         $encrypt_code = $this->request->post['encrypt_code'];
@@ -781,7 +860,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
 
         $user_id = $this->startup_user->userId();
         $condition = array(
-            '_string' => 'find_in_set(' . (int)$user_id . ', user_id) OR user_id=\'0\''
+            '_string' => 'find_in_set(' . (int) $user_id . ', user_id) OR user_id=\'0\''
         );
         $count = $this->logic_message->getMessagesCount($condition);
         $items = $this->logic_message->getMessages($condition, $page);
@@ -799,14 +878,14 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
 
         $result = array(
             'total_items_count' => $count + 0,
-            'total_pages' => ceil($count/10.0),
+            'total_pages' => ceil($count / 10.0),
             'page' => $page + 0,
             'items' => $items
         );
 
         //记录前端查看消息时间
         $this->load->library('sys_model/user');
-        $this->sys_model_user->updateUser(array('user_id'=>$user_id), array('read_news_last_time'=>time()));
+        $this->sys_model_user->updateUser(array('user_id' => $user_id), array('read_news_last_time' => time()));
 
         $this->response->showSuccessResult($result);
     }
@@ -815,12 +894,26 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      * 生成押金充值订单
      */
     public function deposit() {
-        $amount = $this->config->get('config_operator_deposit') ? $this->config->get('config_operator_deposit') : DEPOSIT;
-        if (floatval($amount) == 0) {
-            $this->response->showErrorResult($this->language->get('error_deposit_amount'), 200);
+
+        if(empty($this->request->post['city_id'])&&empty($this->request->post['region_id'])){
+            $this->response->showErrorResult('city_id和region_id不能同时空');
         }
+        
+        if(empty($this->request->post['city_id'])){//押金交区域数据设置的押金
+            $this->load->library('sys_model/region');
+            $area_info = $this->sys_model_region->getRegionInfo(['region_id'=>$this->request->post['region_id']]);
+            $data['amount'] = $area_info['deposit'];
+        }else{//交城市设置的押金
+            $this->load->library('sys_model/city');
+            $area_info = $this->sys_model_city->getCityInfo(['city_id'=>$this->request->post['city_id']]);
+            $data['amount'] = $area_info['deposit'];
+        }
+        
+       
+            
+        
         $data['type'] = 1; //押金充值
-        $data['amount'] = floatval($amount);
+        //$data['amount'] = floatval($amount);
         $user_info = $this->startup_user->getUserInfo();
         $data['user_id'] = $user_info['user_id'];
         $data['user_name'] = $user_info['mobile'];
@@ -836,10 +929,9 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         if ($result['state']) {
             $this->response->showSuccessResult($result['data'], $this->language->get('success_deposit_checkout'));
         } else {
-            $this->response->showErrorResult($this->language->get('error_database_operation_failure'),4);
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
         }
     }
-
 
     /**
      * 申请退押金
@@ -862,7 +954,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         if ($order_info && isset($order_info['order_state'])) {
             if ($order_info['order_state'] == '1') {
                 $this->response->showErrorResult($this->language->get('account_ongoing'));
-            } else if($order_info['order_state'] == '3') {
+            } else if ($order_info['order_state'] == '3') {
                 $this->response->showErrorResult($this->language->get('account_waiting_checkout_refund'));
             }
         }
@@ -870,7 +962,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $this->load->library('sys_model/deposit', true);
         //是否存在提现申请
         //fix vincent:2017-08-09 查询条件 'pdc_payment_state' => '0' 更改为 'pdc_payment_state' => array('neq','1')
-        $cash_info = $this->sys_model_deposit->getDepositCashInfo(array('pdc_user_id' => $user_info['user_id'], 'pdc_payment_state' => array('neq','1')));
+        $cash_info = $this->sys_model_deposit->getDepositCashInfo(array('pdc_user_id' => $user_info['user_id'], 'pdc_payment_state' => array('neq', '1')));
         if (!empty($cash_info)) {
             $this->response->showErrorResult($this->language->get('error_repeat_refund'), 202);
         }
@@ -934,7 +1026,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
             }
             $this->response->showSuccessResult('', $this->language->get('success_application'));
         } else {
-            $this->response->showErrorResult($result['msg'],204);
+            $this->response->showErrorResult($result['msg'], 204);
         }
     }
 
@@ -942,22 +1034,25 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      * 生成充值订单
      */
     public function charging() {
-        $amount = $this->request->post['amount'];
-        $amount = floatval($amount);
+        $recharge_id = $this->request->post['recharge_id'];
+        /*$amount = floatval($amount);
 
         if ($this->request->get_request_header('sing') != 'BBC' && $amount > MAX_RECHARGE) {
             $this->response->showErrorResult($this->language->get('error_recharge_upper_limit'), 205);
         }
 
-        if($this->request->get_request_header('sing') != 'BBC' && $amount < MIN_RECHARGE) {
+        if ($this->request->get_request_header('sing') != 'BBC' && $amount < MIN_RECHARGE) {
             $this->response->showErrorResult($this->language->get('error_recharge_lower_limit'), 206);
+        }*/
+        $this->load->library('sys_model/present', true);
+        $info=$this->sys_model_present->getPresentInfo(['prc_id'=>$recharge_id]);
+        if(empty($info)){
+            $this->response->showErrorResult('充值优惠不存在');
         }
 
-
-
-        $data['type'] = '0';//普通充值
-        $data['amount'] = floatval($amount);
-
+        $data['type'] = '0'; //普通充值
+        $data['amount'] = $info['recharge_amount'];
+        $data['pdr_present_amount'] = $info['present_amount'];
         $user_info = $this->startup_user->getUserInfo();
         if ($user_info['deposit_state'] == 0) {
             $this->response->showErrorResult($this->language->get('account_refund_recharge'), 506);
@@ -1034,10 +1129,9 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         if ($result['state']) {
             $this->response->showSuccessResult($result['data'], $this->language->get('success_deposit_checkout'));
         } else {
-            $this->response->showErrorResult($this->language->get('error_database_operation_failure'),4);
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
         }
     }
-
 
     /**
      * 获取月卡充值信息
@@ -1045,11 +1139,11 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
     public function getMonthCardSetting() {
         $this->load->library('sys_model/month_card_setting');
         $userInfo = $this->startup_user->getUserInfo();
-        $where = array('state'=>1);
+        $where = array('state' => 1);
         $month_setting_list = $this->sys_model_month_card_setting->getMonthCardSettingList($where);
         foreach ($month_setting_list as &$setting) {
             $setting['title'] = $setting['title'] . ' ' . intval($setting['amount']) . '元';
-            $setting['expired'] = empty($userInfo['card_expired_time']) ? '未购买' : ( $userInfo['card_expired_time'] < time() ? '已过期' :  '有效期至' . date('Y年m月d日', ($userInfo['card_expired_time'])));
+            $setting['expired'] = empty($userInfo['card_expired_time']) ? '未购买' : ( $userInfo['card_expired_time'] < time() ? '已过期' : '有效期至' . date('Y年m月d日', ($userInfo['card_expired_time'])));
         }
         $this->response->showSuccessResult($month_setting_list);
     }
@@ -1065,35 +1159,35 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
             $this->response->showErrorResult($this->language->get('error_empty_real_name'), 107);
         }
         if (empty($data['identity'])) {
-            $this->response->showErrorResult($this->language->get('error_empty_identification'),108);
+            $this->response->showErrorResult($this->language->get('error_empty_identification'), 108);
         }
 
         //vincent: 2017-07-28 加入年龄限制12-60岁
-        $date   = strtotime(substr($data['identity'],6,8));//获得出生年月日的时间戳
-        $today  = strtotime('today');//获得今日的时间戳
-        $diff   = floor(($today-$date)/86400/365);//得到两个日期相差的大体年数
+        $date = strtotime(substr($data['identity'], 6, 8)); //获得出生年月日的时间戳
+        $today = strtotime('today'); //获得今日的时间戳
+        $diff = floor(($today - $date) / 86400 / 365); //得到两个日期相差的大体年数
         //strtotime加上这个年数后得到那日的时间戳后与今日的时间戳相比
-        $age    = strtotime(substr($id,6,8).' +'.$diff.'years')>$today?($diff+1):$diff;
-        if($age<12 || $age>60){
-            $this->response->showErrorResult($this->language->get('error_age_limit'),211);
+        $age = strtotime(substr($id, 6, 8) . ' +' . $diff . 'years') > $today ? ($diff + 1) : $diff;
+        if ($age < 12 || $age > 60) {
+            $this->response->showErrorResult($this->language->get('error_age_limit'), 211);
         }
 
         //加入限制，1个身份证正能验证一次
         $exist = $this->startup_user->getUserInfo(array('identification' => $data['identity']));
         if ($exist) {
-            $this->response->showErrorResult($this->language->get('error_identification_existed'),109);
+            $this->response->showErrorResult($this->language->get('error_identification_existed'), 109);
         }
 
         $user_info = $this->startup_user->getUserInfo();
         if (empty($user_info)) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
         }
         if (intval($user_info['verify_state']) > 0) {
-            $this->response->showErrorResult($this->language->get('error_identified'),110);
+            $this->response->showErrorResult($this->language->get('error_identified'), 110);
         }
 
         if (!intval($user_info['deposit_state'])) {
-            $this->response->showErrorResult($this->language->get('error_non_payment_deposit'),111);
+            $this->response->showErrorResult($this->language->get('error_non_payment_deposit'), 111);
         }
 
         $this->load->library('YinHan/YinHan');
@@ -1101,16 +1195,16 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $result = $this->YinHan_YinHan->idCardAuth();
         //判断验证结果
         if (!$result->data) {
-            $this->response->showErrorResult($result->msg->codeDesc,112);
-        } elseif ($result->data[0]->record[0]->resCode && (string)$result->data[0]->record[0]->resCode != '00') {
-            $this->response->showErrorResult($result->data[0]->record[0]->resDesc,112);
-        } elseif ($result->data[0]->record[0]->resCode && (string)$result->data[0]->record[0]->resCode == '00') {
-            $res_arr = (json_decode(json_encode($result),true));
+            $this->response->showErrorResult($result->msg->codeDesc, 112);
+        } elseif ($result->data[0]->record[0]->resCode && (string) $result->data[0]->record[0]->resCode != '00') {
+            $this->response->showErrorResult($result->data[0]->record[0]->resDesc, 112);
+        } elseif ($result->data[0]->record[0]->resCode && (string) $result->data[0]->record[0]->resCode == '00') {
+            $res_arr = (json_decode(json_encode($result), true));
             $data['verify_sn'] = $result->header->qryBatchNo;
             //资料入库
             $this->load->library('sys_model/user');
             $this->load->library('sys_model/identity');
-            $user = $this->sys_model_user->getUserInfo(array('user_id'=>$this->request->post['user_id']));
+            $user = $this->sys_model_user->getUserInfo(array('user_id' => $this->request->post['user_id']));
             $arr = array();
             $arr['il_user_id'] = $user['user_id'];
             $arr['il_user_mobile'] = $user['mobile'];
@@ -1134,7 +1228,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
 
             $this->response->showSuccessResult('', $this->language->get('success_identity'));
         }
-        $this->response->showErrorResult($this->language->get('error_database_operation_failure'),4);
+        $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
     }
 
     /**
@@ -1142,7 +1236,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      */
     public function signRecommend() {
         if (!isset($this->request->post['mobile']) || empty($this->request->post['mobile'])) {
-            $this->response->showErrorResult($this->language->get('error_missing_parameter'),1);
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
         }
         $mobile = $this->request->post['mobile'];
         if (!is_mobile($mobile)) {
@@ -1154,7 +1248,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
 
         $user_info = $this->sys_model_user->getUserInfo(array('mobile' => $mobile), 'user_id');
         if (empty($user_info)) {
-            $this->response->showErrorResult($this->language->get('error_referrer'),113);
+            $this->response->showErrorResult($this->language->get('error_referrer'), 113);
         }
         //判断是否已分享
         $this->load->library('sys_model/coupon');
@@ -1174,7 +1268,7 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
 
         $update = $this->sys_model_user->updateUser(array('user_id' => $user_info['user_id']), $data);
         if (!$update) {
-            $this->response->showErrorResult($this->language->get('error_database_operation_failure'),4);
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
         }
         $this->response->showSuccessResult('', $this->language->get('success_referrer'));
     }
@@ -1225,14 +1319,15 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
     private function addCoupon($user_info, $number, $coupon_type, $obtain_type, $order_id = 0) {
         $this->load->library('sys_model/coupon');
 
-        if (empty($user_info)) return false;
+        if (empty($user_info))
+            return false;
         $description = '';
         if ($coupon_type == 1) {
             $description = ($number / 60) . $this->language->get('text_hour_coupon');
         } elseif ($coupon_type == 2) {
-
+            
         } elseif ($coupon_type == 3) {
-
+            
         }
 
         $data = array(
@@ -1260,7 +1355,8 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
         $row['failure_time'] = date('Y-m-d', $row['failure_time']);
         if ($row['coupon_type'] == 1) {
             $show_hour = false;
-            if ($row['number'] / 60 >= 1) $show_hour = true;//半小时取整
+            if ($row['number'] / 60 >= 1)
+                $show_hour = true; //半小时取整
             $row['number'] = $show_hour ? round($row['number'] / 60, 2) : $row['number'];
             $row['unit'] = $show_hour ? $this->language->get('text_hour') : $this->language->get('text_minute');
         } elseif ($row['coupon_type'] == 2) {
@@ -1276,21 +1372,21 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
     /**
      * 获取故障详情
      */
-    public function getFaultInfo(){
+    public function getFaultInfo() {
         $this->load->library('sys_model/fault');
         $this->load->library('sys_model/user');
         if (!isset($this->request->post['fault_id']) || empty($this->request->post['fault_id'])) {
             $this->response->showErrorResult($this->language->get('error_missing_parameter'));
         }
-        $faultInfo = $this->sys_model_fault->getFaultInfo(array('fault_id'=>$this->request->post['fault_id']));
-        $userInfo =  $this->sys_model_user->getUserInfo(array('user_id'=>$this->request->post['user_id']));
+        $faultInfo = $this->sys_model_fault->getFaultInfo(array('fault_id' => $this->request->post['fault_id']));
+        $userInfo = $this->sys_model_user->getUserInfo(array('user_id' => $this->request->post['user_id']));
 
         $faultInfo['nickname'] = $userInfo['nickname'];
         $faultInfo['add_time'] = date('Y-m-d H:i:s', $faultInfo['add_time']);
         $get_fault_status = get_fault_status();
         $fault_type = '';
-        foreach(explode(',', $faultInfo['fault_type']) as $v){
-            $fault_type .= $get_fault_status[$v].',';
+        foreach (explode(',', $faultInfo['fault_type']) as $v) {
+            $fault_type .= $get_fault_status[$v] . ',';
         }
         $faultInfo['fault_type'] = substr($fault_type, 0, -1);
         $this->response->showSuccessResult($faultInfo);
@@ -1300,20 +1396,578 @@ file_put_contents('/dev/shm/sms.log', '['.date('Y-m-d H:i:s ') .'] sendRegisterC
      * 获取充值优惠
      */
     public function getRechargeOffer() {
+        if (!isset($this->request->post['lat']) || empty($this->request->post['lng'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'));
+        }
+        $lat = $this->request->post['lat'] ;
+        $lng = $this->request->post['lng'] ;
+        //判断坐标是否在已开通的区域内；
+        $this->load->library('sys_model/city');
+        $city_where = array(
+            'city_bounds_southwest_lat' => array('elt', $lat),
+            'city_bounds_northeast_lat' => array('egt', $lat),
+            'city_bounds_southwest_lng' => array('elt', $lng),
+            'city_bounds_northeast_lng' => array('egt', $lng),
+        );
+        $city_list=$this->sys_model_city->getCityList($city_where, '',  '','city_id',[]);
+
+        $area_list=array();
+        if(empty($city_list)){//如果空，则去查地区列表
+            $this->load->library('sys_model/region', true);
+            $region_where = array(
+                'region_bounds_southwest_lat' => array('elt', $lat),
+                'region_bounds_northeast_lat' => array('egt', $lat),
+                'region_bounds_southwest_lng' => array('elt', $lng),
+                'region_bounds_northeast_lng' => array('egt', $lng),
+            );
+            $region_list = $this->sys_model_region->getRegionList($region_where);
+            foreach($region_list as $key=>$val){
+                $area_list[]=$val['region_id'];
+            }
+            $where['present_region_id']=array('in',$area_list);
+        }else{
+            foreach($city_list as $key=>$val){
+                $area_list[]=$val['city_id'];
+            }
+            $where['present_city_id']=array('in',$area_list);
+        }
+        if(empty($area_list)){//当前位置没有充值优惠
+            $this->response->showErrorResult('当前位置没有充值活动');
+        }
         $this->load->library('sys_model/recharge_offer', true);
-        $recharge_list = $this->sys_model_recharge_offer->getRechargeOfferList();
+        $where['state']=1;
+        $order='recharge_amount desc,present_amount desc';
+        $recharge_list = $this->sys_model_recharge_offer->getRechargeOfferList($where,$order);
+        //var_dump($recharge_list);
         $output = array();
         foreach ($recharge_list as $item) {
             $output[] = array(
-                'recharge_amount' => intval($item['recharge_amount']),
-                'gift_amount' => ($item['start_time'] < time() && $item['end_time'] > time()) && $item['state'] == 1 ? intval($item['present_amount']) : 0,
-                'gift_desc' => intval($item['present_amount']) && $item['start_time'] < time() && $item['end_time'] > time() && $item['state'] == 1 ? '送' . intval($item['present_amount']) . '元' : ''
+                'recharge_id' => $item['prc_id'],
+                'recharge_amount' => $item['recharge_amount'],
+                'gift_amount' =>  $item['present_amount'],
+                'gift_desc' => $item['recharge_amount']. '送' . $item['present_amount'] . '元'
             );
         }
         $this->response->showSuccessResult($output);
     }
 
     public function getOrders2() {
-       $this->response->showSuccessResult($this->request->post);
+        $this->response->showSuccessResult($this->request->post);
     }
+
+    /**
+     * 获取区域列表 注册用
+     */
+    public function getRegions() {
+        $this->load->library('sys_model/region');
+        $regions = $this->sys_model_region->getRegionList([], '', '', 'region_id,region_name,code');
+
+        $this->response->showSuccessResult($regions);
+    }
+
+    /**
+     * 获取注册年龄大小，用户协议地址
+     */
+    public function getLanguageSetting() {
+        $code = $this->request->post('code');
+        if (empty($code)) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'));
+        }
+        $this->load->library('sys_model/language');
+        $language = $this->sys_model_language->getLanguageInfo(['code' => $code]);
+
+        $language['agreement_url'] = HTTP_IMAGE . 'language/agreement/' . $code . '.html';
+
+        $this->response->showSuccessResult([
+            'language_id' => $language['language_id'],
+            'code' => $language['code'],
+            'age_lower_limit' => $language['age_lower_limit'],
+            'age_lower_limit_text' => $language['age_lower_limit_text'],
+            'agreement' => $language['agreement'],
+            'agreement_url' => $language['agreement_url']
+        ]);
+    }
+
+    /**
+     * 获取ios推送的token
+     */
+    public function setIosToken() {
+        $param = $this->request->post(['ios_token', 'user_id']);
+        if (empty($param['ios_token']) || empty($param['user_id'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), ErrorCode::ERROR_MISSING_PARAMETER);
+        }
+        $param['ios_token'] = str_replace(array('&lt;', '&gt;', ' '), '', $param['ios_token']);
+
+        $this->load->library('sys_model/user');
+        $a = $this->sys_model_user->updateUser(['user_id' => $param['user_id']], ['ios_token' => $param['ios_token']]);
+        $this->response->showSuccessResult([]);
+    }
+
+    /**
+     * 更新谷歌推送的token
+     */
+    public function setAndroidToken() {
+        $param = $this->request->post(['android_token', 'user_id']);
+        if (empty($param['android_token']) || empty($param['user_id'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), ErrorCode::ERROR_MISSING_PARAMETER);
+        }
+        $param['android_token'] = str_replace(array('&lt;', '&gt;', ' '), '', $param['android_token']);
+
+        $this->load->library('sys_model/user');
+        $this->sys_model_user->updateUser(['user_id' => $param['user_id']], ['android_token' => $param['android_token']]);
+        $this->response->showSuccessResult([]);
+    }
+
+    public function test() {
+        $ios_push = new \Tool\IosPush();
+        $ios_push->push('99117114db49ed0377b0d7ac39657645f68f4f0d68da487f82f5a295fefcb109', 'hello json', 1);
+        //$title = $this->language->get('email_register_title');
+        //var_dump($title);exit;
+    }
+
+    /**
+     * 申请更新邮箱
+     */
+    public function updateEmail() {
+        //能进来到这里都是有userInfo的
+        $userInfo = $this->startup_user->getUserInfo();
+        $this->log->write(print_r($userInfo, true));
+        /* if (empty($userInfo['verify_state']) //  verify_state=='0'，没有通过实名验证
+          || empty($userInfo['real_name']) || empty($userInfo['identification'])) { // 用户实名或者身份证信息为空
+          $this->response->showErrorResult($this->language->get('error_not_identification'), 115);
+          } */
+        if (empty($this->request->post['email'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+
+        $old_user = $this->startup_user->getUserInfo(['user_id' => array('neq', $userInfo['user_id']), 'email' => $this->request->post['email']]);
+        if (!empty($old_user['user_id'])) {
+            $this->response->showErrorResult('此邮箱已被注册');
+        }
+
+
+
+        $now = time();
+        $code = [
+            'email' => $this->request->post['email'],
+            'time' => $now,
+            'sign' => md5(API_ACCESSKEY . $this->request->post['email'] . $now),
+            'user_id' => $userInfo['user_id']
+        ];
+        $code = base64_encode(json_encode($code));
+        $active_url = $this->url->link('account/account/updateEmail_confirm', ['code' => $code]);
+
+        //发送邮件
+        $this->load->library('sys_model/setting');
+        $config_from_db = $this->sys_model_setting->getSettingList(['key' => ['in', ['smtp_server', 'smtp_server_port', 'smtp_user_mail', 'smtp_pass', 'mail_type', 'smtp_user']]]);
+        foreach ($config_from_db as $key => $val) {
+            $config[$val['key']] = $val['value'];
+        }
+        $config['smtp_pass'] = '';
+        $email_tool = new Email($config);
+        $title = $this->language->get('email_register_title');
+        $title = 'Active your account!';
+        $content = $this->language->get('email_register_content');
+        $content = 'please click #anchor# to change your email';
+        $content = str_replace('#anchor#', '<a href="' . $active_url . '">' . $this->language->get('click_me_to_change_email') . '</a>', $content);
+
+        $res = $email_tool->sendEmail(null, $this->request->post['email'], $title, $content);
+        if (!$res) {
+            throw new \Exception($this->language->get('error_send_email_failure'), ErrorCode::ERROR_SEND_EMAIL_FAILURE);
+        } else {
+            $this->response->showSuccessResult();
+        }
+    }
+
+    /**
+     * 确认更新邮箱
+     */
+    public function updateEmail_confirm() {
+        $this->load->library('sys_model/user');
+        $code = $this->request->get('code');
+        $code = json_decode(base64_decode($code), true);
+
+        $sign = md5(API_ACCESSKEY . $code['email'] . $code['time']);
+        if ($sign !== $code['sign']) {
+            $this->response->showErrorResult($this->language->get('error_invalid_url'), ErrorCode::ERROR_INVALID_URL);
+        }
+        if (time() - intval($code['time']) > EMAIL_EXPIRE_TIME) {
+            $this->response->showErrorResult($this->language->get('error_url_overtime'), ErrorCode::ERROR_URL_OVERTIME);
+        }
+        $userInfo = $this->sys_model_user->getUserInfo(['user_id' => $code['user_id']]);
+        $this->log->write(print_r($userInfo, true));
+
+        if (empty($code['email'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+
+        $old_user = $this->sys_model_user->getUserInfo(['user_id' => array('neq', $userInfo['user_id']), 'email' => $code['email']]);
+        if (!empty($old_user['user_id'])) {
+            $this->response->showErrorResult('此邮箱已被注册');
+        }
+
+        $result = $this->sys_model_user->updateUser(['user_id' => $code['user_id']], array(
+            'is_active' => 1,
+            'email' => $code['email']
+        ));
+
+        if ($result) {
+            $this->response->showSuccessResult();
+        } else {
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
+        }
+    }
+
+    /**
+     * 发送验证码
+     */
+    public function sendChangemobileCode() {
+        if (!isset($this->request->post['mobile'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+
+        //加载短信配置，使用常量
+        $this->getSMSConfig();
+
+        $alert = $this->language->get('text_message_upper_limit');
+        $mobile = trim($this->request->post['mobile']);
+        if (!is_mobile($mobile)) {
+            $this->response->showJsonResult($this->language->get('error_mobile'), 0, array('alert' => $alert), 2);
+        }
+
+        //限制发送次数
+        $this->getMobileTodaySendTimes($mobile);
+
+        $this->load->library('logic/sms', true);
+        $this->load->library('logic/user', true);
+        $result = $this->logic_user->existMobile($mobile);
+
+        $type = 'changemobile';
+
+
+        //vincent:2017-07-27 增加短信防轰炸
+        if ($this->logic_sms->isOutOfSendLimit($mobile, $type, getIP())) {
+            $this->response->showJsonResult('您发送短信过于频繁，请您稍后重试！', 0, array('alert' => '您发送短信过于频繁，请您稍后重试！'), 5);
+        }
+
+        $state = isset($state) ? $state : '0';
+        $code = $this->logic_sms->createVerifyCode();
+        $result_id = $this->logic_sms->sendSms($mobile, $code, $type);
+
+        if ($result_id['state']) {
+            $this->response->showSuccessResult(array('type' => $type, 'state' => 3, 'alert' => $alert));
+        } else {
+            if ($result_id['data']['code']) {
+                $this->response->showJsonResult($this->language->get('error_send_message_failure_limit'), 0, array('alert' => $alert), 5);
+            } else {
+                $this->response->showJsonResult($this->language->get('error_send_message_failure'), 0, array('alert' => $alert), 4);
+            }
+        }
+    }
+
+    /**
+     * 发送忘记密码验证码,虽然这堆发送验证码函数都很像，单还是分开写好，感觉随时会改，2018-01-08
+     */
+    public function sendForgetCode() {
+        if (!isset($this->request->post['mobile'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+
+        //加载短信配置，使用常量
+        $this->getSMSConfig();
+
+        $alert = $this->language->get('text_message_upper_limit');
+        $mobile = trim($this->request->post['mobile']);
+        if (!is_mobile($mobile)) {
+            $this->response->showJsonResult($this->language->get('error_mobile'), 0, array('alert' => $alert), 2);
+        }
+
+        //限制发送次数
+        $this->getMobileTodaySendTimes($mobile);
+
+        $this->load->library('logic/sms', true);
+        $this->load->library('logic/user', true);
+        $result = $this->logic_user->existMobile($mobile);
+
+        $type = 'forgetpwd';
+
+
+        //vincent:2017-07-27 增加短信防轰炸
+        if ($this->logic_sms->isOutOfSendLimit($mobile, $type, getIP())) {
+            $this->response->showJsonResult('您发送短信过于频繁，请您稍后重试！', 0, array('alert' => '您发送短信过于频繁，请您稍后重试！'), 5);
+        }
+
+        $state = isset($state) ? $state : '0';
+        $code = $this->logic_sms->createVerifyCode();
+        $result_id = $this->logic_sms->sendSms($mobile, $code, $type);
+
+        if ($result_id['state']) {
+            $this->response->showSuccessResult(array('type' => $type, 'state' => 0, 'alert' => $alert));
+        } else {
+            if ($result_id['data']['code']) {
+                $this->response->showJsonResult($this->language->get('error_send_message_failure_limit'), 0, array('alert' => $alert), 5);
+            } else {
+                $this->response->showJsonResult($this->language->get('error_send_message_failure'), 0, array('alert' => $alert), 4);
+            }
+        }
+    }
+
+    /**
+     * 验证忘记密码的验证码
+     */
+    public function checkForgetCode() {
+        if (!isset($this->request->post['mobile']) || !isset($this->request->post['code'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+        $mobile = $this->request->post['mobile'];
+        $code = $this->request->post['code'];
+        $this->load->library('sys_model/sms', true);
+        $this->load->library('sys_model/user', true);
+        $sms_record = $this->sys_model_sms->getSmsInfo(['mobile' => $mobile, 'code' => $code, 'state' => 0]);
+        if (empty($sms_record)) {
+            $this->response->showErrorResult('没有发送记录', 1901, []);
+        } else {
+            if (strcmp($code, $sms_record['code']) == 0) {//验证码正确
+                $this->sys_model_sms->updateSmsStatus(['mobile' => $mobile, 'code' => $code]); //更新验证状态
+                $user_info = $this->sys_model_user->getUserInfo(['mobile' => $mobile], 'user_id');
+                if (empty($user_info)) {
+                    $this->response->showErrorResult('没有此用户记录', 1903, []);
+                } else {
+                    $this->response->showSuccessResult(['user_id' => $user_info['user_id']], '验证成功');
+                }
+            } else {//验证码不正确
+                $this->response->showErrorResult('验证码错误', 1902, []);
+            }
+        }
+    }
+
+    /**
+     * 更改密码
+     */
+    public function resetPassword() {
+        $mobile = $this->request->post('mobile');
+        $email = $this->request->post('email');
+        $pass = $this->request->post(['password', 're_password']);
+        if ($pass['password'] != $pass['re_password']) {
+            $this->response->showErrorResult($this->language->get('两次密码输入不正确'), 2);
+        }
+        if (!preg_match('/\w{6,20}/i', $pass['password'])) {
+            $this->response->showErrorResult($this->language->get('密码不符合规则'), 2);
+        }
+        if (empty($mobile) && empty($email)) {
+            $this->response->showErrorResult('邮箱或手机号不能同时空', 2001);
+        }
+        $password = md5($pass['password'] . 'thisispassword');
+        $this->load->library('sys_model/user', true);
+        if (!empty($mobile) && is_mobile($mobile)) {//用手机修改密码
+            $this->sys_model_user->updateUser(['mobile' => $mobile], ['password' => $password]);
+            $user_inof = $this->sys_model_user->getUserInfo(['mobile' => $mobile], '*');
+        } else if (!empty($email) && is_email($email)) {//用邮箱修改密码
+            $user_inof = $this->sys_model_user->getUserInfo(['email' => $email], '*');
+            if ($user_inof['is_ready_mail'] == 1) {//没有点确认邮箱
+                $this->response->showErrorResult([], '请先确认修改密码邮件链接', 2002);
+            }
+            $this->sys_model_user->updateUser(['email' => $email], ['password' => $password]);
+            $user_inof = $this->sys_model_user->getUserInfo(['email' => $email], '*');
+        } else {//其他都是错误修改密码的方式
+            $this->response->showErrorResult([], $this->language->get('failure'), 1);
+        }
+        $this->response->showSuccessResult($user_inof, $this->language->get('success'));
+    }
+
+    /**
+     * 忘记密码用邮箱确认
+     */
+    public function sendForgetEmail() {
+
+        if (empty($this->request->post['email'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+
+        $this->load->library('sys_model/user', true);
+        $user_info = $this->sys_model_user->getUserInfo(['email' => $this->request->post['email']], 'user_id');
+        if (empty($user_info)) {
+            $this->response->showErrorResult('没有此用户邮箱', 2101);
+        }
+        $now = time();
+        $code = [
+            'email' => $this->request->post['email'],
+            'time' => $now,
+            'sign' => md5(API_ACCESSKEY . $this->request->post['email'] . $now),
+                // 'user_id' => $user_info['user_id']
+        ];
+        $code = base64_encode(json_encode($code));
+        $active_url = $this->url->link('account/account/checkForgetEmail', ['code' => $code]);
+
+        //发送邮件
+        $this->load->library('sys_model/setting');
+        $config_from_db = $this->sys_model_setting->getSettingList(['key' => ['in', ['smtp_server', 'smtp_server_port', 'smtp_user_mail', 'smtp_pass', 'mail_type', 'smtp_user']]]);
+        foreach ($config_from_db as $key => $val) {
+            $config[$val['key']] = $val['value'];
+        }
+        $config['smtp_pass'] = '';
+        $email_tool = new Email($config);
+        $title = $this->language->get('email_register_title');
+        $title = 'Active your email to change password!';
+        $content = $this->language->get('email_register_content');
+        $content = 'please click #anchor# to change your password';
+        $content = str_replace('#anchor#', '<a href="' . $active_url . '">' . $this->language->get('click_me_to_change_password') . '</a>', $content);
+
+        $res = $email_tool->sendEmail(null, $this->request->post['email'], $title, $content);
+        if (!$res) {
+            throw new \Exception($this->language->get('error_send_email_failure'), ErrorCode::ERROR_SEND_EMAIL_FAILURE);
+        } else {
+            $this->load->library('sys_model/user');
+            $this->sys_model_user->updateUser(['email' => $this->request->post['email']], ['is_ready_mail' => 1]);
+            $this->response->showSuccessResult();
+        }
+    }
+
+    /**
+     * 确认忘记密码邮箱
+     */
+    public function checkForgetEmail() {
+        $this->load->library('sys_model/user');
+        $code = $this->request->get('code');
+        $code = json_decode(base64_decode($code), true);
+
+        $sign = md5(API_ACCESSKEY . $code['email'] . $code['time']);
+        if ($sign !== $code['sign']) {
+            $this->response->showErrorResult($this->language->get('error_invalid_url'), ErrorCode::ERROR_INVALID_URL);
+        }
+        if (time() - intval($code['time']) > EMAIL_EXPIRE_TIME) {
+            $this->response->showErrorResult($this->language->get('error_url_overtime'), ErrorCode::ERROR_URL_OVERTIME);
+        }
+
+
+
+        if (empty($code['email'])) {
+            $this->response->showErrorResult($this->language->get('error_missing_parameter'), 1);
+        }
+        $this->sys_model_user->updateUser(['email' => $code['email']], ['is_ready_mail' => 0]);
+        $userinfo = $this->sys_model_user->getUserInfo(['email' => $code['email']]);
+
+        if (!empty($userinfo['android_token'])) {
+            $android_push = new AndroidPush();
+            $android_push->push($userinfo['android_token'], ['content' => '请修改密码', 'type' => PushCode::EMAIL_SET_PASSWORD, 'user_id' => $userinfo['user_id']]);
+        }
+        if ($userinfo['ios_token']) {
+            $ios_push = new IosPush();
+            $ios_push->push($userinfo['ios_token'], '请修改密码', PushCode::EMAIL_SET_PASSWORD);
+        }
+        if (!empty($userinfo)) {
+            $this->response->showSuccessResult();
+        } else {
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
+        }
+    }
+
+    /**
+     * 生成注册金
+     */
+    public function registration_gold() {
+        $lat = $this->request->post['lat'];
+        $lng = $this->request->post['lng'];
+        $type = $this->request->post('type');
+        if (empty($lat) || empty($lng) || empty($type)) {
+            $this->response->showErrorResult('缺少参数', 2502);
+        }
+        $user_info = $this->startup_user->getUserInfo();
+        if ($user_info['deposit_state'] == 0) {
+            $this->response->showErrorResult($this->language->get('account_refund_recharge'), 506);
+        }
+
+        //判断坐标是否在已开通的区域内；
+        $this->load->library('sys_model/city');
+        $city_where = array(
+            'city_bounds_southwest_lat' => array('elt', $lat),
+            'city_bounds_northeast_lat' => array('egt', $lat),
+            'city_bounds_southwest_lng' => array('elt', $lng),
+            'city_bounds_northeast_lng' => array('egt', $lng),
+        );
+        $area_list = $this->sys_model_city->getCityInfo($city_where);
+        if (empty($area_list)) {
+            $this->load->library('sys_model/region');
+            $region_where = array(
+                'region_bounds_southwest_lat' => array('elt', $lat),
+                'region_bounds_northeast_lat' => array('egt', $lat),
+                'region_bounds_southwest_lng' => array('elt', $lng),
+                'region_bounds_northeast_lng' => array('egt', $lng),
+            );
+            $area_list = $this->sys_model_region->getRegionInfo($region_where);
+        }
+        if (empty($area_list)) {//城市和区域都没有，不同意充值注册金
+            $this->response->showErrorResult('你所在地没有开通注册金功能', 2501);
+        }
+        //$data['type'] = '3'; //注册金充值
+        if ($type == 1) {//月注册金
+            $data['amount'] = $area_list['monthly_card_money'];
+           // $affect_time = 60 * 60 * 24 * 30;
+            $data['type'] = '2';
+        } else {//年注册金
+            $data['amount'] = $area_list['yearly_card_money'];
+           // $affect_time = 60 * 60 * 24 * 30 * 12;
+            $data['type'] = '3';
+        }
+
+
+        $data['user_id'] = $user_info['user_id'];
+        $data['user_name'] = $user_info['mobile'];
+        $this->load->library('logic/deposit', true);
+        $result = $this->logic_deposit->addRecharge($data);
+        if (!$result) {
+            $this->response->showErrorResult($this->language->get('error_database_operation_failure'), 4);
+        }
+        $this->response->showSuccessResult($result['data'], $this->language->get('success_recharge_checkout'));
+    }
+    /**
+     * 获取用户应该充值多少押金
+     */
+    public function getdepositamount(){
+        $input = $this->request->post(array('lng','lat'));
+        if (empty($input['lat']) || empty($input['lng'])) {
+            $this->response->showErrorResult('缺少参数');
+        }
+        $lat=$input['lat'];
+        $lng=$input['lng'];
+        $this->load->library('sys_model/city');
+        $area_list=array();
+        $city_where = array(
+            'city_bounds_southwest_lat' => array('elt', $lat),
+            'city_bounds_northeast_lat' => array('egt', $lat),
+            'city_bounds_southwest_lng' => array('elt', $lng),
+            'city_bounds_northeast_lng' => array('egt', $lng),
+        );
+        $area_list = $this->sys_model_city->getCityInfo($city_where);
+        if (empty($area_list)) {
+            $this->load->library('sys_model/region');
+            $region_where = array(
+                'region_bounds_southwest_lat' => array('elt', $lat),
+                'region_bounds_northeast_lat' => array('egt', $lat),
+                'region_bounds_southwest_lng' => array('elt', $lng),
+                'region_bounds_northeast_lng' => array('egt', $lng),
+            );
+            $area_list = $this->sys_model_region->getRegionInfo($region_where);
+        }
+        if(empty($area_list)){
+            $this->response->showErrorResult('当前位置不支持押金充值');
+        }
+        if(isset($area_list['city_id'])){//查到城市数据
+            $return_data=array(
+                'city_id'=>$area_list['city_id'],
+                'deposit'=>$area_list['deposit'],
+                'deposit_type'=>'city',
+            );
+            $this->response->showSuccessResult($return_data);
+        }else if(isset($area_list['region_id'])){//查到区域数据
+            $return_data=array(
+                'region_id'=>$area_list['region_id'],
+                'deposit'=>$area_list['deposit'],
+                'deposit_type'=>'region',
+            );
+            $this->response->showSuccessResult($return_data);
+        }
+        
+    }
+
 }

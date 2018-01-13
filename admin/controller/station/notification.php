@@ -9,6 +9,10 @@
 use Tool\ArrayUtil;
 
 class ControllerStationNotification extends Controller {
+    public function __construct($registry) {
+        parent::__construct($registry);
+        $this->assign('lang',$this->language->all());
+    }
 
     public function index() {
         $filter = array();
@@ -113,7 +117,7 @@ class ControllerStationNotification extends Controller {
 
         $rows = $this->config->get('config_limit_admin');
         $total = 100;
-
+        $offset = ($page - 1) * $rows;
         for ($i = 0; $i <= 10; $i++) {
             $a = array(
                 'station_name' => '站点名称',
@@ -172,7 +176,7 @@ class ControllerStationNotification extends Controller {
 
         $rows = $this->config->get('config_limit_admin');
         $total = 100;
-
+        $offset = ($page - 1) * $rows;
         for ($i = 0; $i <= 10; $i++) {
             $a = array(
                 'station_name' => '站点名称',
